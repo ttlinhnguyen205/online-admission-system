@@ -40,6 +40,12 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
+    /** @var array<string, mixed> */
+    protected $attributes = [
+        'role' => UserRole::Candidate->value,
+        'status' => UserStatus::Active->value,
+    ];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -95,6 +101,26 @@ class User extends Authenticatable implements MustVerifyEmail
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === UserStatus::Active;
+    }
+
+    public function isCandidate(): bool
+    {
+        return $this->role === UserRole::Candidate;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::Admin;
+    }
+
+    public function canReviewAdmissions(): bool
+    {
+        return in_array($this->role, [UserRole::Staff, UserRole::Admin], true);
     }
 
     /**
