@@ -18,6 +18,19 @@
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
+            @can('viewAny', App\Models\AdmissionRound::class)
+                <flux:sidebar.nav>
+                    <flux:sidebar.group :heading="__('Admission configuration')">
+                        <flux:sidebar.item :href="route('admin.home')" :current="request()->routeIs('admin.home')" wire:navigate>{{ __('Configuration home') }}</flux:sidebar.item>
+                        @foreach ([['admission-rounds', 'Admission Rounds', App\Models\AdmissionRound::class], ['majors', 'Majors', App\Models\Major::class], ['admission-methods', 'Admission Methods', App\Models\AdmissionMethod::class], ['admission-programs', 'Admission Programs', App\Models\AdmissionProgram::class]] as [$path, $label, $model])
+                            @can('viewAny', $model)
+                                <flux:sidebar.item :href="route('admin.'.$path.'.index')" :current="request()->routeIs('admin.'.$path.'.*')" wire:navigate>{{ __($label) }}</flux:sidebar.item>
+                            @endcan
+                        @endforeach
+                    </flux:sidebar.group>
+                </flux:sidebar.nav>
+            @endcan
+
             <flux:spacer />
 
             <flux:sidebar.nav>
