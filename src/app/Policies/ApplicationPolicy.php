@@ -46,6 +46,11 @@ class ApplicationPolicy
         return $user->canReviewAdmissions();
     }
 
+    public function submit(User $user, Application $application): bool
+    {
+        return $this->update($user, $application);
+    }
+
     public function delete(User $user, Application $application): bool
     {
         return false;

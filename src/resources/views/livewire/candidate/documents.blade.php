@@ -1,6 +1,12 @@
 <section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
     <div><flux:heading size="xl" level="1">{{ __('Tài liệu hồ sơ') }}</flux:heading><flux:text class="mt-2">{{ __('Documents belong to an admission application. Select an application to manage its files.') }}</flux:text></div>
     <flux:error name="cleanup" />
+    <div class="flex flex-wrap gap-3">
+        <flux:button :href="route('candidate.applications.index')" wire:navigate>{{ __('Admission applications') }}</flux:button>
+        @if ($application)
+            <flux:button :href="route('candidate.applications.show', $application->id)" wire:navigate>{{ __('Back to application and wishes') }}</flux:button>
+        @endif
+    </div>
     @if ($applications->isEmpty())
         <flux:callout>{{ __('No admission application yet. Documents can be uploaded after an admission application exists.') }}</flux:callout>
         @if (! $profile)<flux:button :href="route('candidate.profile.edit')" wire:navigate>{{ __('Complete your candidate profile') }}</flux:button>@endif
