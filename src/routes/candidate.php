@@ -10,6 +10,9 @@ Route::middleware(['auth', 'active', 'verified'])->group(function (): void {
         Route::livewire('profile', Candidate\Profile::class)->name('profile.edit');
         Route::livewire('scores', Candidate\Scores::class)->name('scores.index');
         Route::livewire('documents', Candidate\Documents::class)->name('documents.index');
+        Route::livewire('applications', Candidate\Applications::class)->name('applications.index');
+        Route::livewire('applications/{application}', Candidate\ApplicationDetails::class)
+            ->whereNumber('application')->name('applications.show');
         Route::livewire('applications/{application}/documents', Candidate\Documents::class)
             ->whereNumber('application')->name('applications.documents.index');
     });

@@ -4,11 +4,19 @@ namespace App\Policies;
 
 use App\Concerns\RequiresActiveAccount;
 use App\Models\AdmissionProgram;
+use App\Models\Application;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 class AdmissionProgramPolicy
 {
     use RequiresActiveAccount;
+
+    public function browseForApplication(User $user, Application $application): bool
+    {
+        return $user->isCandidate() && $user->hasVerifiedEmail()
+            && Gate::forUser($user)->allows('view', $application);
+    }
 
     public function viewAny(User $user): bool
     {

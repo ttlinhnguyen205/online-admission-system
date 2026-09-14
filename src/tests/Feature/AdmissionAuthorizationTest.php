@@ -54,7 +54,7 @@ function admissionAuthorizationSubject(string $model, User $owner): array
 
 dataset('admission abilities', [
     'profile' => [CandidateProfile::class, ['view', 'update'], ['viewAny', 'view'], ['viewAny', 'view']],
-    'application' => [Application::class, ['view', 'create', 'update'], ['viewAny', 'view', 'review'], ['viewAny', 'view', 'review']],
+    'application' => [Application::class, ['view', 'create', 'update', 'submit'], ['viewAny', 'view', 'review'], ['viewAny', 'view', 'review']],
     'document' => [CandidateDocument::class, ['view', 'download', 'create', 'update', 'delete'], ['viewAny', 'view', 'download', 'verify', 'reject'], ['viewAny', 'view', 'download', 'verify', 'reject']],
     'score' => [CandidateScore::class, ['view', 'create', 'update', 'delete'], ['viewAny', 'view', 'verify'], ['viewAny', 'view', 'verify']],
     'wish' => [AdmissionWish::class, ['view', 'create', 'update', 'delete'], ['viewAny', 'view'], ['viewAny', 'view']],
@@ -79,7 +79,7 @@ test('policies enforce the complete role and account status ability matrix', fun
         UserRole::Admin => $admin,
     } : [];
 
-    foreach (['viewAny', 'view', 'create', 'update', 'delete', 'download', 'review', 'verify', 'reject', 'publish', 'changeRole', 'restore', 'forceDelete', 'unknownAbility'] as $ability) {
+    foreach (['viewAny', 'view', 'create', 'update', 'submit', 'delete', 'download', 'review', 'verify', 'reject', 'publish', 'changeRole', 'restore', 'forceDelete', 'unknownAbility'] as $ability) {
         $arguments = match ($ability) {
             'viewAny' => [$model],
             'create' => $createArguments,
@@ -116,6 +116,7 @@ test('candidate application and child mutations follow the persisted application
     $application->status = ApplicationStatus::Draft;
 
     expect(Gate::forUser($user)->allows('update', $application))->toBe($editable);
+    expect(Gate::forUser($user)->allows('submit', $application))->toBe($editable);
     expect(Gate::forUser($user)->allows('delete', $application))->toBeFalse();
 
     foreach ([$document, $wish] as $child) {
@@ -258,4 +259,30 @@ test('guests cannot authorize private admission access', function () {
     $profile = CandidateProfile::factory()->create();
 
     expect(Gate::allows('view', $profile))->toBeFalse();
+});
+
+test('contextual catalog browsing is limited to active verified candidates and owned context', function (UserRole $role, UserStatus $status) {
+    $user = User::factory()->create(['role' => $role, 'status' => $status]);
+    $profile = CandidateProfile::factory()->for($user)->create();
+    $application = Application::factory()->for($profile)->create();
+    $allowed = $role === UserRole::Candidate && $status === UserStatus::Active;
+    expect(Gate::forUser($user)->allows('browseForCandidate', [AdmissionRound::class, $profile]))->toBe($allowed);
+    expect(Gate::forUser($user)->allows('browseForApplication', [AdmissionProgram::class, $application]))->toBe($allowed);
+    if ($allowed) {
+        expect(Gate::forUser($user)->allows('viewAny', AdmissionRound::class))->toBeFalse();
+        expect(Gate::forUser($user)->allows('viewAny', AdmissionProgram::class))->toBeFalse();
+        expect(Gate::forUser($user)->allows('view', $application->admissionRound))->toBeFalse();
+    }
+})->with(UserRole::cases())->with(UserStatus::cases());
+
+test('foreign or unverified context cannot authorize candidate catalog browsing or submission', function () {
+    $application = Application::factory()->create();
+    $intruder = User::factory()->create();
+    expect(Gate::forUser($intruder)->allows('browseForCandidate', [AdmissionRound::class, $application->candidateProfile]))->toBeFalse();
+    expect(Gate::forUser($intruder)->allows('browseForApplication', [AdmissionProgram::class, $application]))->toBeFalse();
+    expect(Gate::forUser($intruder)->allows('submit', $application))->toBeFalse();
+    $owner = $application->candidateProfile->user;
+    $owner->forceFill(['email_verified_at' => null])->save();
+    expect(Gate::forUser($owner)->allows('browseForCandidate', [AdmissionRound::class, $application->candidateProfile]))->toBeFalse();
+    expect(Gate::forUser($owner)->allows('browseForApplication', [AdmissionProgram::class, $application]))->toBeFalse();
 });

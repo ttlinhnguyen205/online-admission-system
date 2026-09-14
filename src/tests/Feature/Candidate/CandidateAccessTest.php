@@ -1,10 +1,14 @@
 <?php
 
+use App\Enums\AdmissionRoundStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Livewire\Candidate\ApplicationDetails;
+use App\Livewire\Candidate\Applications;
 use App\Livewire\Candidate\Documents;
 use App\Livewire\Candidate\Profile;
 use App\Livewire\Candidate\Scores;
+use App\Models\AdmissionWish;
 use App\Models\Application;
 use App\Models\CandidateDocument;
 use App\Models\CandidateProfile;
@@ -15,7 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 
-dataset('candidate pages', [['candidate.profile.edit', Profile::class], ['candidate.scores.index', Scores::class], ['candidate.documents.index', Documents::class]]);
+dataset('candidate pages', [['candidate.profile.edit', Profile::class], ['candidate.scores.index', Scores::class], ['candidate.documents.index', Documents::class], ['candidate.applications.index', Applications::class]]);
 
 test('candidate routes require authenticated verified candidates', function (string $route, string $component) {
     $this->get(route($route))->assertRedirect(route('login'));
@@ -36,7 +40,7 @@ test('candidate navigation respects role and account status while account settin
     $this->actingAs(User::factory()->create(['role' => $role, 'status' => $status]));
     $response = $this->get(route('profile.edit'))->assertOk();
     if ($role === UserRole::Candidate && $status === UserStatus::Active) {
-        $response->assertSee(route('candidate.profile.edit'))->assertSee(route('candidate.scores.index'))->assertSee(route('candidate.documents.index'));
+        $response->assertSee(route('candidate.profile.edit'))->assertSee(route('candidate.scores.index'))->assertSee(route('candidate.documents.index'))->assertSee(route('candidate.applications.index'));
     } else {
         $response->assertDontSee(route('candidate.profile.edit'));
     }
@@ -124,3 +128,63 @@ test('ownership is rechecked from storage before saving an already opened score'
     expect(fn () => $page->set('form.score', '9')->call('save'))->toThrow(ModelNotFoundException::class);
     expect($score->fresh()->score)->toBe('8.250');
 });
+
+test('application context and order cannot be replaced through Livewire hydration', function (string $property) {
+    $application = Application::factory()->create();
+    $this->actingAs($application->candidateProfile->user);
+    $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id]);
+    expect(fn () => $page->set($property, $property === 'expectedOrder' ? [999999] : 999999))
+        ->toThrow(CannotUpdateLockedPropertyException::class);
+})->with(['applicationId', 'deleteId', 'expectedOrder']);
+
+test('real application update requests reject changed account permissions', function (string $change) {
+    $application = Application::factory()->create();
+    $user = $application->candidateProfile->user;
+    $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password']);
+    $response = $this->get(route('candidate.applications.show', $application->id));
+    preg_match('/wire:snapshot="([^"]+)"/', $response->getContent(), $matches);
+    $attributes = match ($change) {
+        'inactive' => ['status' => UserStatus::Inactive], 'locked' => ['status' => UserStatus::Locked],
+        'staff' => ['role' => UserRole::Staff], 'admin' => ['role' => UserRole::Admin], 'unverified' => ['email_verified_at' => null],
+    };
+    User::query()->whereKey($user->id)->update($attributes);
+    Auth::forgetGuards();
+    Livewire::flushState();
+    $response = $this->postJson(Livewire::getUpdateUri(), ['components' => [[
+        'snapshot' => html_entity_decode($matches[1], ENT_QUOTES), 'updates' => [],
+        'calls' => [['path' => '', 'method' => 'submit', 'params' => []]],
+    ]]], ['X-Livewire' => 'true']);
+    $response->assertForbidden();
+    expect($application->fresh()->submitted_at)->toBeNull();
+})->with(['inactive', 'locked', 'staff', 'admin', 'unverified']);
+
+test('application actions recheck ownership after the page was mounted', function (string $action) {
+    $application = Application::factory()->create();
+    $application->admissionRound->update(['status' => AdmissionRoundStatus::Open]);
+    $wish = AdmissionWish::factory()->for($application)->create();
+    $this->actingAs($application->candidateProfile->user);
+    $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmDeletion', $wish->id)
+        ->set('form.admission_program_id', $wish->admission_program_id);
+    $application->update(['candidate_profile_id' => CandidateProfile::factory()->create()->id]);
+    expect(fn () => $page->call($action, ...($action === 'reorderWishes' ? [[$wish->id]] : [])))->toThrow(ModelNotFoundException::class);
+    $this->assertModelExists($wish);
+    expect($application->fresh()->submitted_at)->toBeNull();
+})->with(['addWish', 'deleteWish', 'reorderWishes', 'submit']);
+
+test('actions reject a changed role status or verification after application forms opened', function (string $change, string $action) {
+    $application = Application::factory()->create();
+    $application->admissionRound->update(['status' => AdmissionRoundStatus::Open]);
+    $wish = AdmissionWish::factory()->for($application)->create();
+    $user = $application->candidateProfile->user;
+    $this->actingAs($user);
+    $page = $action === 'save' ? Livewire::test(Applications::class)->set('form.admission_round_id', $application->admission_round_id)
+        : Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmDeletion', $wish->id)->set('form.admission_program_id', $wish->admission_program_id);
+    User::query()->whereKey($user->id)->update(match ($change) {
+        'inactive' => ['status' => UserStatus::Inactive], 'locked' => ['status' => UserStatus::Locked],
+        'staff' => ['role' => UserRole::Staff], 'admin' => ['role' => UserRole::Admin], 'unverified' => ['email_verified_at' => null],
+    });
+    $page->call($action, ...($action === 'reorderWishes' ? [[$wish->id]] : []))->assertForbidden();
+    $this->assertModelExists($wish);
+    $this->assertDatabaseCount('applications', 1);
+    expect($application->fresh()->submitted_at)->toBeNull();
+})->with(['inactive', 'locked', 'staff', 'admin', 'unverified'])->with(['save', 'addWish', 'deleteWish', 'reorderWishes', 'submit']);
