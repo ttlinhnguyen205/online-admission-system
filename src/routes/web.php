@@ -10,3 +10,4 @@ Route::middleware(['auth', 'active', 'verified'])->group(function () {
 
 require __DIR__.'/settings.php';
 require __DIR__.'/admin.php';
+require __DIR__.'/candidate.php';

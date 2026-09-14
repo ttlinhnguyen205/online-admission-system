@@ -1,0 +1,21 @@
+<?php
+
+use App\Http\Controllers\CandidateDocumentDownloadController;
+use App\Http\Controllers\CandidatePhotoController;
+use App\Livewire\Candidate;
+use Illuminate\Support\Facades\Route;
+
+Route::middleware(['auth', 'active', 'verified'])->group(function (): void {
+    Route::prefix('candidate')->name('candidate.')->group(function (): void {
+        Route::livewire('profile', Candidate\Profile::class)->name('profile.edit');
+        Route::livewire('scores', Candidate\Scores::class)->name('scores.index');
+        Route::livewire('documents', Candidate\Documents::class)->name('documents.index');
+        Route::livewire('applications/{application}/documents', Candidate\Documents::class)
+            ->whereNumber('application')->name('applications.documents.index');
+    });
+
+    Route::get('admission/documents/{document}/download', CandidateDocumentDownloadController::class)
+        ->whereNumber('document')->name('admission.documents.download');
+    Route::get('admission/profiles/{profile}/photo', CandidatePhotoController::class)
+        ->whereNumber('profile')->name('admission.profiles.photo');
+});

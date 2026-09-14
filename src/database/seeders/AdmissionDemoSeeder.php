@@ -81,15 +81,27 @@ class AdmissionDemoSeeder extends Seeder
                 ['D3', '7340301', 'DGNL', 15, 650, null, 26000000, 'inactive'],
                 ['D3', '7810103', 'THANG', 5, null, null, null, 'inactive'],
             ] as [$round, $major, $method, $quota, $minimum, $cutoff, $fee, $status]) {
+                $admissionRound = $rounds['DEMO-2026-'.$round]
+                    ?? throw new \RuntimeException("Missing demo admission round: DEMO-2026-{$round}");
+
+                $majorModel = $majors[$major]
+                    ?? throw new \RuntimeException("Missing demo major: {$major}");
+
+                $admissionMethod = $methods[$method]
+                    ?? throw new \RuntimeException("Missing demo admission method: {$method}");
+
                 AdmissionProgram::query()->updateOrCreate([
-                    'admission_round_id' => $rounds['DEMO-2026-'.$round]->id,
-                    'major_id' => $majors[$major]->id,
-                    'admission_method_id' => $methods[$method]->id,
+                    'admission_round_id' => $admissionRound->id,
+                    'major_id' => $majorModel->id,
+                    'admission_method_id' => $admissionMethod->id,
                 ], [
-                    'quota' => $quota, 'minimum_score' => $minimum,
-                    'previous_cutoff_score' => $cutoff, 'tuition_fee' => $fee, 'status' => $status,
+                    'quota' => $quota,
+                    'minimum_score' => $minimum,
+                    'previous_cutoff_score' => $cutoff,
+                    'tuition_fee' => $fee,
+                    'status' => $status,
                 ]);
-            }
-        });
+                }
+            });
     }
 }
