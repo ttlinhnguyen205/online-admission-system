@@ -101,7 +101,7 @@ class AdmissionDemoSeeder extends Seeder
                     'tuition_fee' => $fee,
                     'status' => $status,
                 ]);
-                }
-            });
+            }
+        });
     }
 }
