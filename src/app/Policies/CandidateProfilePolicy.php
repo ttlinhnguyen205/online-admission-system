@@ -11,6 +11,11 @@ class CandidateProfilePolicy
 {
     use RequiresActiveAccount;
 
+    public function create(User $user): bool
+    {
+        return $user->isCandidate() && ! $user->candidateProfile()->exists();
+    }
+
     public function viewAny(User $user): bool
     {
         return $user->canReviewAdmissions();

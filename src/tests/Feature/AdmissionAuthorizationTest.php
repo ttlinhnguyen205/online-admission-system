@@ -102,7 +102,9 @@ test('candidates cannot access or mutate another candidates private records', fu
         expect(Gate::forUser($intruder)->allows($ability, $subject))->toBeFalse();
     }
 
-    expect(Gate::forUser($intruder)->allows('create', $createArguments))->toBeFalse();
+    if ($model !== CandidateProfile::class) {
+        expect(Gate::forUser($intruder)->allows('create', $createArguments))->toBeFalse();
+    }
 })->with([CandidateProfile::class, Application::class, CandidateDocument::class, CandidateScore::class, AdmissionWish::class, AdmissionResult::class]);
 
 test('candidate application and child mutations follow the persisted application lifecycle', function (ApplicationStatus $status, bool $editable) {

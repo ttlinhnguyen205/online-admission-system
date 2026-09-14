@@ -31,6 +31,16 @@
                 </flux:sidebar.nav>
             @endcan
 
+            @if (auth()->user()->isActive() && auth()->user()->isCandidate())
+                <flux:sidebar.nav>
+                    <flux:sidebar.group :heading="__('Candidate admissions')">
+                        <flux:sidebar.item :href="route('candidate.profile.edit')" :current="request()->routeIs('candidate.profile.*')" wire:navigate>{{ __('Hồ sơ thí sinh') }}</flux:sidebar.item>
+                        <flux:sidebar.item :href="route('candidate.scores.index')" :current="request()->routeIs('candidate.scores.*')" wire:navigate>{{ __('Điểm xét tuyển') }}</flux:sidebar.item>
+                        <flux:sidebar.item :href="route('candidate.documents.index')" :current="request()->routeIs('candidate.documents.*', 'candidate.applications.documents.*')" wire:navigate>{{ __('Tài liệu hồ sơ') }}</flux:sidebar.item>
+                    </flux:sidebar.group>
+                </flux:sidebar.nav>
+            @endif
+
             <flux:spacer />
 
             <flux:sidebar.nav>
