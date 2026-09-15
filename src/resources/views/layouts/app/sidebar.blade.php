@@ -18,6 +18,14 @@
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
+            @can('viewAny', App\Models\Application::class)
+                <flux:sidebar.nav>
+                    <flux:sidebar.group :heading="__('Application review')">
+                        <flux:sidebar.item :href="route('admin.applications.index')" :current="request()->routeIs('admin.applications.*')" wire:navigate>{{ __('Review applications') }}</flux:sidebar.item>
+                    </flux:sidebar.group>
+                </flux:sidebar.nav>
+            @endcan
+
             @can('viewAny', App\Models\AdmissionRound::class)
                 <flux:sidebar.nav>
                     <flux:sidebar.group :heading="__('Admission configuration')">

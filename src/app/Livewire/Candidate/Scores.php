@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Candidate;
 
+use App\Actions\CandidateApplications;
 use App\Models\CandidateScore;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
@@ -58,8 +59,10 @@ class Scores extends CandidatePage
     public function save(): void
     {
         $profile = $this->profile();
-        $profile->getConnection()->transaction(function () use ($profile): void {
+        $profile->getConnection()->transaction(function (): void {
+            $profile = CandidateApplications::lockProfile();
             $score = $this->recordId === null ? null : $profile->scores()->lockForUpdate()->findOrFail($this->recordId);
+            abort_if($score?->getAttribute('verified'), 403);
             Gate::authorize($score === null ? 'create' : 'update', $score === null ? [CandidateScore::class, $profile] : $score);
             $this->form = $this->normalize($this->form);
             if (is_string($this->form['score_type'] ?? null)) {
@@ -100,8 +103,10 @@ class Scores extends CandidatePage
     {
         $profile = $this->profile();
         abort_if($this->deleteId === null, 404);
-        $profile->getConnection()->transaction(function () use ($profile): void {
+        $profile->getConnection()->transaction(function (): void {
+            $profile = CandidateApplications::lockProfile();
             $score = $profile->scores()->lockForUpdate()->findOrFail($this->deleteId);
+            abort_if($score->getAttribute('verified'), 403);
             Gate::authorize('delete', $score);
             if (! $score->delete()) {
                 throw ValidationException::withMessages(['deletion' => __('The score could not be deleted.')]);
