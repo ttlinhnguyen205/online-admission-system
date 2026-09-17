@@ -12,6 +12,11 @@ class AdmissionRoundPolicy
 {
     use RequiresActiveAccount;
 
+    public function process(User $user): bool
+    {
+        return $user->isAdmin() && $user->hasVerifiedEmail();
+    }
+
     public function browseForCandidate(User $user, CandidateProfile $profile): bool
     {
         return $user->isCandidate() && $user->hasVerifiedEmail()

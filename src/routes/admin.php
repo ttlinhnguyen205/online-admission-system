@@ -9,6 +9,7 @@ use App\Models\Major;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active', 'verified'])->prefix('admin')->name('admin.')->group(function (): void {
+    Route::livewire('admission-engine', Admin\AdmissionEngine::class)->can('process', AdmissionRound::class)->name('admission-engine');
     Route::livewire('applications', Admin\Applications::class)->can('viewAny', Application::class)->name('applications.index');
     Route::livewire('applications/{application}', Admin\ApplicationDetails::class)->whereNumber('application')
         ->can('viewAny', Application::class)->name('applications.show');
