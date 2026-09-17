@@ -19,6 +19,11 @@
             </flux:sidebar.nav>
 
             @can('viewAny', App\Models\Application::class)
+                @can('process', App\Models\AdmissionRound::class)
+                    <flux:sidebar.nav>
+                        <flux:sidebar.item :href="route('admin.admission-engine')" :current="request()->routeIs('admin.admission-engine')" wire:navigate>{{ __('Admission engine') }}</flux:sidebar.item>
+                    </flux:sidebar.nav>
+                @endcan
                 <flux:sidebar.nav>
                     <flux:sidebar.group :heading="__('Application review')">
                         <flux:sidebar.item :href="route('admin.applications.index')" :current="request()->routeIs('admin.applications.*')" wire:navigate>{{ __('Review applications') }}</flux:sidebar.item>
