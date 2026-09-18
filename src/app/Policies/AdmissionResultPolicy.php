@@ -11,6 +11,13 @@ class AdmissionResultPolicy
 {
     use RequiresActiveAccount;
 
+    public function confirm(User $user, AdmissionResult $result): Response
+    {
+        return $user->isCandidate() && $user->hasVerifiedEmail()
+            && AdmissionResult::query()->visibleToCandidate($user)->whereKey($result->getKey())->where('decision', 'admitted')->exists()
+            ? Response::allow() : Response::denyAsNotFound();
+    }
+
     public function viewAny(User $user): bool
     {
         return $user->canReviewAdmissions();
@@ -42,6 +49,6 @@ class AdmissionResultPolicy
 
     public function publish(User $user, AdmissionResult $result): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() && $user->hasVerifiedEmail();
     }
 }

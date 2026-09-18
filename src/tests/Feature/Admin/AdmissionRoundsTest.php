@@ -76,10 +76,17 @@ test('round dates preserve seconds in the configured timezone and allow historic
     $this->assertDatabaseHas('admission_rounds', ['id' => $record->id, 'start_date' => '2000-12-31 23:59:12', 'end_date' => '2001-01-01 00:00:34', 'result_date' => '2001-01-01 00:00:34']);
 })->with(['UTC', 'Asia/Ho_Chi_Minh']);
 
-test('rounds accept both year boundaries and all defined statuses', function (int $year, AdmissionRoundStatus $status) {
+test('rounds accept year boundaries but reserve publication for the results workflow', function (int $year, AdmissionRoundStatus $status) {
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
     $record = AdmissionRound::factory()->create();
-    Livewire::test(AdmissionRounds::class)->call('edit', $record->id)->set('form.year', $year)->set('form.status', $status->value)->call('save')->assertHasNoErrors();
+    $page = Livewire::test(AdmissionRounds::class)->call('edit', $record->id)->set('form.year', $year)->set('form.status', $status->value)->call('save');
+    if ($status === AdmissionRoundStatus::Published) {
+        $page->assertHasErrors('form.status');
+        expect($record->fresh()->status)->toBe(AdmissionRoundStatus::Draft);
+
+        return;
+    }
+    $page->assertHasNoErrors();
     $this->assertDatabaseHas('admission_rounds', ['id' => $record->id, 'year' => $year, 'status' => $status->value]);
 })->with([2000, 2100])->with(AdmissionRoundStatus::cases());
 

@@ -70,6 +70,7 @@
                 <option wire:key="form.status-{{ $status->value }}" value="{{ $status->value }}">{{ ucfirst($status->value) }}</option>
             @endforeach
         </flux:select>
+        <flux:text>{{ __('Use Admission results to publish results. Published rounds cannot be reopened here.') }}</flux:text>
         <div class="sm:col-span-2">
             <flux:callout>All date and time values use {{ config('app.timezone') }} (application timezone). Enter times in this timezone; no automatic local-time conversion is applied.</flux:callout>
         </div>

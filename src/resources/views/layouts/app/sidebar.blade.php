@@ -19,6 +19,11 @@
             </flux:sidebar.nav>
 
             @can('viewAny', App\Models\Application::class)
+                @can('publishResults', App\Models\AdmissionRound::class)
+                    <flux:sidebar.nav>
+                        <flux:sidebar.item :href="route('admin.results.index')" :current="request()->routeIs('admin.results.*')" wire:navigate>{{ __('Admission results') }}</flux:sidebar.item>
+                    </flux:sidebar.nav>
+                @endcan
                 @can('process', App\Models\AdmissionRound::class)
                     <flux:sidebar.nav>
                         <flux:sidebar.item :href="route('admin.admission-engine')" :current="request()->routeIs('admin.admission-engine')" wire:navigate>{{ __('Admission engine') }}</flux:sidebar.item>
@@ -47,6 +52,8 @@
             @if (auth()->user()->isActive() && auth()->user()->isCandidate())
                 <flux:sidebar.nav>
                     <flux:sidebar.group :heading="__('Candidate admissions')">
+                        <flux:sidebar.item :href="route('candidate.results.index')" :current="request()->routeIs('candidate.results.*')" wire:navigate>{{ __('My results') }}</flux:sidebar.item>
+                        <flux:sidebar.item :href="route('candidate.notifications.index')" :current="request()->routeIs('candidate.notifications.*')" wire:navigate>{{ __('Notifications') }}</flux:sidebar.item>
                         <flux:sidebar.item :href="route('candidate.applications.index')" :current="request()->routeIs('candidate.applications.index', 'candidate.applications.show')" wire:navigate>{{ __('Applications / Nguyện vọng') }}</flux:sidebar.item>
                         <flux:sidebar.item :href="route('candidate.profile.edit')" :current="request()->routeIs('candidate.profile.*')" wire:navigate>{{ __('Hồ sơ thí sinh') }}</flux:sidebar.item>
                         <flux:sidebar.item :href="route('candidate.scores.index')" :current="request()->routeIs('candidate.scores.*')" wire:navigate>{{ __('Điểm xét tuyển') }}</flux:sidebar.item>

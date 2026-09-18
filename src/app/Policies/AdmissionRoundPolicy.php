@@ -12,6 +12,11 @@ class AdmissionRoundPolicy
 {
     use RequiresActiveAccount;
 
+    public function publishResults(User $user): bool
+    {
+        return $user->isAdmin() && $user->hasVerifiedEmail();
+    }
+
     public function process(User $user): bool
     {
         return $user->isAdmin() && $user->hasVerifiedEmail();
