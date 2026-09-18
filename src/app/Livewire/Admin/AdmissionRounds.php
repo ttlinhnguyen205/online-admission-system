@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 
@@ -58,6 +59,11 @@ class AdmissionRounds extends ConfigurationPage
 
     protected function attributesForSave(array $validated, ?Model $record): array
     {
+        $currentStatus = $record?->getRawOriginal('status');
+        if (($validated['status'] === 'published' && $currentStatus !== 'published')
+            || ($currentStatus === 'published' && $validated['status'] !== 'published')) {
+            throw ValidationException::withMessages(['form.status' => __('Publish results from Admission results. Published rounds cannot be reopened here.')]);
+        }
         foreach (['start_date', 'end_date', 'result_date'] as $field) {
             $validated[$field] = ($validated[$field] ?? null) === null ? null
                 : CarbonImmutable::parse($validated[$field], config('app.timezone'))->format('Y-m-d H:i:s');
