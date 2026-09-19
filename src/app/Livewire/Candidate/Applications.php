@@ -35,7 +35,7 @@ class Applications extends CandidatePage
         $this->candidate();
         $this->resetValidation();
         $application = $applications->create($this->form);
-        Flux::toast(variant: 'success', text: __('Draft application created.'));
+        Flux::toast(variant: 'success', text: __('Đã tạo hồ sơ bản nháp.'));
         $this->redirectRoute('candidate.applications.show', ['application' => $application->getKey()], navigate: true);
     }
 

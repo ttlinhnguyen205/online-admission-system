@@ -115,7 +115,7 @@ class Documents extends CandidatePage
                     $document->fill(['status' => DocumentStatus::Pending, 'verified_by' => null, 'verified_at' => null, 'rejection_reason' => null]);
                 }
                 if (! $document->save()) {
-                    throw ValidationException::withMessages(['form' => __('The document could not be saved.')]);
+                    throw ValidationException::withMessages(['form' => __('Không thể lưu tài liệu.')]);
                 }
             });
         } catch (Throwable $exception) {
@@ -126,9 +126,9 @@ class Documents extends CandidatePage
         $this->showEditor = false;
         $this->resetPage();
         if (! $files->remove($oldPath)) {
-            $this->addError('cleanup', __('Saved, but the previous file could not be removed. Please contact support.'));
+            $this->addError('cleanup', __('Đã lưu nhưng không thể xóa tệp cũ. Vui lòng liên hệ bộ phận hỗ trợ.'));
         }
-        Flux::toast(variant: 'success', text: __('Document saved.'));
+        Flux::toast(variant: 'success', text: __('Đã lưu tài liệu.'));
     }
 
     public function confirmDeletion(int $id): void
@@ -150,7 +150,7 @@ class Documents extends CandidatePage
             Gate::authorize('delete', $document);
             $path = (string) $document->getAttribute('file_path');
             if (! $document->delete()) {
-                throw ValidationException::withMessages(['deletion' => __('The document could not be deleted.')]);
+                throw ValidationException::withMessages(['deletion' => __('Không thể xóa tài liệu.')]);
             }
 
             return $path;
@@ -159,11 +159,11 @@ class Documents extends CandidatePage
         $this->deleteId = null;
         $this->resetPage();
         if (! $files->remove($path)) {
-            $this->addError('cleanup', __('The record was removed, but file cleanup failed. Please contact support.'));
+            $this->addError('cleanup', __('Đã xóa bản ghi nhưng không thể dọn tệp. Vui lòng liên hệ bộ phận hỗ trợ.'));
 
             return;
         }
-        Flux::toast(variant: 'success', text: __('Document deleted.'));
+        Flux::toast(variant: 'success', text: __('Đã xóa tài liệu.'));
     }
 
     public function render(): View

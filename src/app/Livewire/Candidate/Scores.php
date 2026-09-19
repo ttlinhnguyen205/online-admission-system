@@ -82,12 +82,12 @@ class Scores extends CandidatePage
             $score ??= $profile->scores()->make();
             $score->fill($attributes);
             if (! $score->save()) {
-                throw ValidationException::withMessages(['form' => __('The score could not be saved.')]);
+                throw ValidationException::withMessages(['form' => __('Không thể lưu điểm.')]);
             }
         });
         $this->showEditor = false;
         $this->resetPage();
-        Flux::toast(variant: 'success', text: __('Score saved.'));
+        Flux::toast(variant: 'success', text: __('Đã lưu điểm.'));
     }
 
     public function confirmDeletion(int $id): void
@@ -109,13 +109,13 @@ class Scores extends CandidatePage
             abort_if($score->getAttribute('verified'), 403);
             Gate::authorize('delete', $score);
             if (! $score->delete()) {
-                throw ValidationException::withMessages(['deletion' => __('The score could not be deleted.')]);
+                throw ValidationException::withMessages(['deletion' => __('Không thể xóa điểm.')]);
             }
         });
         $this->showDeletion = false;
         $this->deleteId = null;
         $this->resetPage();
-        Flux::toast(variant: 'success', text: __('Score deleted.'));
+        Flux::toast(variant: 'success', text: __('Đã xóa điểm.'));
     }
 
     public function updatedTypeFilter(): void

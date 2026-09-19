@@ -59,7 +59,7 @@ class Profile extends CandidatePage
             'form.phone' => ['nullable', 'string', 'max:20', 'regex:/\A\+?[0-9 ()\-]+\z/D', function (string $attribute, mixed $value, \Closure $fail): void {
                 $digits = preg_replace('/\D/', '', (string) $value);
                 if (strlen($digits) < 8 || strlen($digits) > 15) {
-                    $fail(__('The phone number must contain 8 to 15 digits.'));
+                    $fail(__('Số điện thoại phải gồm từ 8 đến 15 chữ số.'));
                 }
             }],
             'form.address' => ['nullable', 'string', 'max:500'],
@@ -89,7 +89,7 @@ class Profile extends CandidatePage
                 $attributes = array_intersect_key($validated['form'], array_flip(self::FIELDS));
                 if (($attributes['date_of_birth'] ?? null) !== null && ($attributes['graduation_year'] ?? null) !== null
                     && (int) $attributes['graduation_year'] <= (int) substr($attributes['date_of_birth'], 0, 4)) {
-                    throw ValidationException::withMessages(['form.graduation_year' => __('Graduation year must be after the birth year.')]);
+                    throw ValidationException::withMessages(['form.graduation_year' => __('Năm tốt nghiệp phải sau năm sinh.')]);
                 }
                 if ($profile === null) {
                     $profile = $user->candidateProfile()->make(['candidate_code' => 'C'.Str::ulid()]);
@@ -105,7 +105,7 @@ class Profile extends CandidatePage
                     $profile->setAttribute('profile_status', $complete ? ProfileStatus::Complete : ProfileStatus::Incomplete);
                 }
                 if (! $profile->save()) {
-                    throw ValidationException::withMessages(['form' => __('The profile could not be saved.')]);
+                    throw ValidationException::withMessages(['form' => __('Không thể lưu hồ sơ.')]);
                 }
 
                 return $profile;
@@ -113,16 +113,16 @@ class Profile extends CandidatePage
         } catch (Throwable $exception) {
             $files->remove($newPath);
             if ($exception instanceof UniqueConstraintViolationException) {
-                throw ValidationException::withMessages(['form.citizen_id' => __('The citizen ID or profile identifier is already in use. Reload the page and try again.')]);
+                throw ValidationException::withMessages(['form.citizen_id' => __('CCCD hoặc mã định danh hồ sơ đã được sử dụng. Hãy tải lại trang và thử lại.')]);
             }
             throw $exception;
         }
         $this->profileId = $profile->getKey();
         $this->photo = null;
         if (! $files->remove($oldPath)) {
-            $this->addError('cleanup', __('Saved, but the previous file could not be removed. Please contact support.'));
+            $this->addError('cleanup', __('Đã lưu nhưng không thể xóa tệp cũ. Vui lòng liên hệ bộ phận hỗ trợ.'));
         }
-        Flux::toast(variant: 'success', text: __('Profile saved.'));
+        Flux::toast(variant: 'success', text: __('Đã lưu hồ sơ.'));
     }
 
     public function render(): View
