@@ -10,7 +10,27 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'candidate_code', 'date_of_birth', 'gender', 'citizen_id', 'phone', 'address', 'province_code', 'high_school_code', 'high_school_name', 'graduation_year', 'priority_area', 'priority_object', 'photo_path', 'profile_status'])]
+#[Fillable([
+    'user_id',
+    'candidate_code',
+    'date_of_birth',
+    'gender',
+    'ethnicity',
+    'religion',
+    'citizen_id',
+    'citizen_id_issued_date',
+    'citizen_id_issued_place',
+    'phone',
+    'address',
+    'province_code',
+    'high_school_code',
+    'high_school_name',
+    'graduation_year',
+    'priority_area',
+    'priority_object',
+    'photo_path',
+    'profile_status',
+])]
 class CandidateProfile extends Model
 {
     /** @use HasFactory<CandidateProfileFactory> */
@@ -23,6 +43,7 @@ class CandidateProfile extends Model
     {
         return [
             'date_of_birth' => 'date',
+            'citizen_id_issued_date' => 'date',
             'graduation_year' => 'integer',
             'profile_status' => ProfileStatus::class,
         ];
