@@ -55,14 +55,14 @@ test('restricted accounts retain profile and security recovery paths', function 
     Livewire::test(Profile::class)->set('name', 'Updated Name')->call('updateProfileInformation')->assertHasNoErrors();
     Livewire::test(Security::class)
         ->set('current_password', 'password')
-        ->set('password', 'new-password')
-        ->set('password_confirmation', 'new-password')
+        ->set('password', 'StrongPass123!')
+        ->set('password_confirmation', 'StrongPass123!')
         ->call('updatePassword')->assertHasNoErrors();
 
     expect($user->fresh()->status)->toBe($status);
     expect($user->fresh()->role)->toBe(UserRole::Candidate);
     expect($user->fresh()->name)->toBe('Updated Name');
-    expect(Hash::check('new-password', $user->fresh()->password))->toBeTrue();
+    expect(Hash::check('StrongPass123!', $user->fresh()->password))->toBeTrue();
 })->with([UserStatus::Inactive, UserStatus::Locked]);
 
 test('restricted unverified accounts can verify their email', function (UserStatus $status) {
@@ -92,10 +92,10 @@ test('restricted accounts can reset passwords while logged out', function (UserS
     $this->get(route('password.reset', $notification->token))->assertOk();
     $this->post(route('password.update'), [
         'email' => $user->email, 'token' => $notification->token,
-        'password' => 'new-password', 'password_confirmation' => 'new-password',
+        'password' => 'StrongPass123!', 'password_confirmation' => 'StrongPass123!',
     ])->assertSessionHasNoErrors()->assertRedirect(route('login', absolute: false));
 
-    expect(Hash::check('new-password', $user->fresh()->password))->toBeTrue();
+    expect(Hash::check('StrongPass123!', $user->fresh()->password))->toBeTrue();
     expect($user->fresh()->status)->toBe($status);
 })->with([UserStatus::Inactive, UserStatus::Locked]);
 

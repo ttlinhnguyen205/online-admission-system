@@ -52,7 +52,7 @@ class HighSchoolSeeder extends Seeder
             }
 
             [$provinceCode, $schoolCode, $schoolName] = array_map(
-                'trim',
+                static fn (?string $value): string => trim($value ?? ''),
                 $row
             );
 

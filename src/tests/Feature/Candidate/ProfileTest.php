@@ -1,13 +1,13 @@
 <?php
 
 use App\Actions\CandidateFiles;
-use App\Models\HighSchool;
-use App\Models\Province;
 use App\Enums\ProfileStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Livewire\Candidate\Profile;
 use App\Models\CandidateProfile;
+use App\Models\HighSchool;
+use App\Models\Province;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;

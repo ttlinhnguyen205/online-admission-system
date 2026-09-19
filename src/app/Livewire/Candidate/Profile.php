@@ -65,7 +65,9 @@ class Profile extends CandidatePage
 
     #[Locked]
     public ?int $profileId = null;
+
     public ?int $selectedProvinceId = null;
+
     public ?int $selectedHighSchoolId = null;
 
     public function mount(): void
@@ -88,30 +90,30 @@ class Profile extends CandidatePage
         $this->form['citizen_id_issued_date'] = $profile
             ?->getAttribute('citizen_id_issued_date')
             ?->format('Y-m-d');
-            if ($profile !== null) {
-                $provinceCode = $profile->getAttribute('province_code');
+        if ($profile !== null) {
+            $provinceCode = $profile->getAttribute('province_code');
 
-                if (filled($provinceCode)) {
-                    $province = Province::where('code', $provinceCode)->first();
+            if (filled($provinceCode)) {
+                $province = Province::where('code', $provinceCode)->first();
 
-                    $this->selectedProvinceId = $province?->getKey();
+                $this->selectedProvinceId = $province?->getKey();
 
-                    if ($province !== null) {
-                        $schoolCode = $profile->getAttribute('high_school_code');
+                if ($province !== null) {
+                    $schoolCode = $profile->getAttribute('high_school_code');
 
-                        if (filled($schoolCode)) {
-                            $school = HighSchool::where(
-                                'province_id',
-                                $province->getKey()
-                            )
-                                ->where('code', $schoolCode)
-                                ->first();
+                    if (filled($schoolCode)) {
+                        $school = HighSchool::where(
+                            'province_id',
+                            $province->getKey()
+                        )
+                            ->where('code', $schoolCode)
+                            ->first();
 
-                            $this->selectedHighSchoolId = $school?->getKey();
-                        }
+                        $this->selectedHighSchoolId = $school?->getKey();
                     }
                 }
             }
+        }
     }
 
     public function updatedSelectedProvinceId(): void
@@ -324,8 +326,7 @@ class Profile extends CandidatePage
                     if ($this->selectedHighSchoolId !== null) {
                         if ($province === null) {
                             throw ValidationException::withMessages([
-                                'selectedProvinceId' =>
-                                    __('Vui lòng chọn tỉnh/thành phố trước.'),
+                                'selectedProvinceId' => __('Vui lòng chọn tỉnh/thành phố trước.'),
                             ]);
                         }
 
@@ -336,8 +337,7 @@ class Profile extends CandidatePage
 
                         if ($school === null) {
                             throw ValidationException::withMessages([
-                                'selectedHighSchoolId' =>
-                                    __('Trường THPT không thuộc tỉnh/thành phố đã chọn.'),
+                                'selectedHighSchoolId' => __('Trường THPT không thuộc tỉnh/thành phố đã chọn.'),
                             ]);
                         }
 
@@ -359,8 +359,7 @@ class Profile extends CandidatePage
                             )
                     ) {
                         throw ValidationException::withMessages([
-                            'form.graduation_year' =>
-                                __('Năm tốt nghiệp phải sau năm sinh.'),
+                            'form.graduation_year' => __('Năm tốt nghiệp phải sau năm sinh.'),
                         ]);
                     }
 
@@ -389,8 +388,7 @@ class Profile extends CandidatePage
                         !== ProfileStatus::Verified
                     ) {
                         $complete = collect(self::COMPLETION)->every(
-                            fn (string $field): bool =>
-                                filled($profile->getAttribute($field))
+                            fn (string $field): bool => filled($profile->getAttribute($field))
                         );
 
                         $profile->setAttribute(
@@ -418,8 +416,7 @@ class Profile extends CandidatePage
                 instanceof UniqueConstraintViolationException
             ) {
                 throw ValidationException::withMessages([
-                    'form.citizen_id' =>
-                        __('Số CCCD này đã được sử dụng.'),
+                    'form.citizen_id' => __('Số CCCD này đã được sử dụng.'),
                 ]);
             }
 
