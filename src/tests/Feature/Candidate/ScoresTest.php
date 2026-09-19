@@ -82,7 +82,7 @@ test('multiple score attempts are allowed without overwriting or application res
 test('score filters pagination and missing profile states work', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
-    Livewire::test(Scores::class)->assertSee('Create your candidate profile');
+    Livewire::test(Scores::class)->assertSee('Hãy tạo hồ sơ thí sinh');
     $profile = CandidateProfile::factory()->for($user)->create();
     CandidateScore::factory()->for($profile)->count(16)->create();
     CandidateScore::factory()->for($profile)->create(['score_type' => 'sat', 'exam_year' => 2025]);

@@ -11,9 +11,9 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
+                <flux:sidebar.group :heading="__('Hệ thống')" class="grid">
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
+                        {{ __('Bảng điều khiển') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
@@ -26,21 +26,21 @@
                 @endcan
                 @can('process', App\Models\AdmissionRound::class)
                     <flux:sidebar.nav>
-                        <flux:sidebar.item :href="route('admin.admission-engine')" :current="request()->routeIs('admin.admission-engine')" wire:navigate>{{ __('Admission engine') }}</flux:sidebar.item>
+                        <flux:sidebar.item :href="route('admin.admission-engine')" :current="request()->routeIs('admin.admission-engine')" wire:navigate>{{ __('Công cụ xét tuyển') }}</flux:sidebar.item>
                     </flux:sidebar.nav>
                 @endcan
                 <flux:sidebar.nav>
-                    <flux:sidebar.group :heading="__('Application review')">
-                        <flux:sidebar.item :href="route('admin.applications.index')" :current="request()->routeIs('admin.applications.*')" wire:navigate>{{ __('Review applications') }}</flux:sidebar.item>
+                    <flux:sidebar.group :heading="__('Duyệt hồ sơ')">
+                        <flux:sidebar.item :href="route('admin.applications.index')" :current="request()->routeIs('admin.applications.*')" wire:navigate>{{ __('Duyệt hồ sơ xét tuyển') }}</flux:sidebar.item>
                     </flux:sidebar.group>
                 </flux:sidebar.nav>
             @endcan
 
             @can('viewAny', App\Models\AdmissionRound::class)
                 <flux:sidebar.nav>
-                    <flux:sidebar.group :heading="__('Admission configuration')">
-                        <flux:sidebar.item :href="route('admin.home')" :current="request()->routeIs('admin.home')" wire:navigate>{{ __('Configuration home') }}</flux:sidebar.item>
-                        @foreach ([['admission-rounds', 'Admission Rounds', App\Models\AdmissionRound::class], ['majors', 'Majors', App\Models\Major::class], ['admission-methods', 'Admission Methods', App\Models\AdmissionMethod::class], ['admission-programs', 'Admission Programs', App\Models\AdmissionProgram::class]] as [$path, $label, $model])
+                    <flux:sidebar.group :heading="__('Cấu hình tuyển sinh')">
+                        <flux:sidebar.item :href="route('admin.home')" :current="request()->routeIs('admin.home')" wire:navigate>{{ __('Trang cấu hình') }}</flux:sidebar.item>
+                        @foreach ([['admission-rounds', 'Đợt tuyển sinh', App\Models\AdmissionRound::class], ['majors', 'Ngành đào tạo', App\Models\Major::class], ['admission-methods', 'Phương thức xét tuyển', App\Models\AdmissionMethod::class], ['admission-programs', 'Chương trình tuyển sinh', App\Models\AdmissionProgram::class]] as [$path, $label, $model])
                             @can('viewAny', $model)
                                 <flux:sidebar.item :href="route('admin.'.$path.'.index')" :current="request()->routeIs('admin.'.$path.'.*')" wire:navigate>{{ __($label) }}</flux:sidebar.item>
                             @endcan
@@ -51,10 +51,10 @@
 
             @if (auth()->user()->isActive() && auth()->user()->isCandidate())
                 <flux:sidebar.nav>
-                    <flux:sidebar.group :heading="__('Candidate admissions')">
-                        <flux:sidebar.item :href="route('candidate.results.index')" :current="request()->routeIs('candidate.results.*')" wire:navigate>{{ __('My results') }}</flux:sidebar.item>
-                        <flux:sidebar.item :href="route('candidate.notifications.index')" :current="request()->routeIs('candidate.notifications.*')" wire:navigate>{{ __('Notifications') }}</flux:sidebar.item>
-                        <flux:sidebar.item :href="route('candidate.applications.index')" :current="request()->routeIs('candidate.applications.index', 'candidate.applications.show')" wire:navigate>{{ __('Applications / Nguyện vọng') }}</flux:sidebar.item>
+                    <flux:sidebar.group :heading="__('Tuyển sinh thí sinh')">
+                        <flux:sidebar.item :href="route('candidate.results.index')" :current="request()->routeIs('candidate.results.*')" wire:navigate>{{ __('Kết quả của tôi') }}</flux:sidebar.item>
+                        <flux:sidebar.item :href="route('candidate.notifications.index')" :current="request()->routeIs('candidate.notifications.*')" wire:navigate>{{ __('Thông báo') }}</flux:sidebar.item>
+                        <flux:sidebar.item :href="route('candidate.applications.index')" :current="request()->routeIs('candidate.applications.index', 'candidate.applications.show')" wire:navigate>{{ __('Hồ sơ xét tuyển và nguyện vọng') }}</flux:sidebar.item>
                         <flux:sidebar.item :href="route('candidate.profile.edit')" :current="request()->routeIs('candidate.profile.*')" wire:navigate>{{ __('Hồ sơ thí sinh') }}</flux:sidebar.item>
                         <flux:sidebar.item :href="route('candidate.scores.index')" :current="request()->routeIs('candidate.scores.*')" wire:navigate>{{ __('Điểm xét tuyển') }}</flux:sidebar.item>
                         <flux:sidebar.item :href="route('candidate.documents.index')" :current="request()->routeIs('candidate.documents.*', 'candidate.applications.documents.*')" wire:navigate>{{ __('Tài liệu hồ sơ') }}</flux:sidebar.item>
@@ -66,11 +66,11 @@
 
             <flux:sidebar.nav>
                 <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
+                    {{ __('Kho mã nguồn') }}
                 </flux:sidebar.item>
 
                 <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
+                    {{ __('Tài liệu hướng dẫn') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>
 
@@ -110,7 +110,7 @@
 
                     <flux:menu.radio.group>
                         <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                            {{ __('Settings') }}
+                            {{ __('Cài đặt') }}
                         </flux:menu.item>
                     </flux:menu.radio.group>
 
@@ -125,7 +125,7 @@
                             class="w-full cursor-pointer"
                             data-test="logout-button"
                         >
-                            {{ __('Log out') }}
+                            {{ __('Đăng xuất') }}
                         </flux:menu.item>
                     </form>
                 </flux:menu>

@@ -43,7 +43,7 @@ test('application pages require authenticated verified active candidates', funct
 
 test('applications require a saved profile and never create one on behalf of the candidate', function () {
     $this->actingAs(User::factory()->create());
-    Livewire::test(Applications::class)->assertSee('Create your candidate profile');
+    Livewire::test(Applications::class)->assertSee('Hãy tạo hồ sơ thí sinh');
     $this->get(route('candidate.applications.show', 999999))->assertNotFound();
     $round = AdmissionRound::factory()->create(['status' => AdmissionRoundStatus::Open]);
     $response = $this->get(route('candidate.applications.index'));
