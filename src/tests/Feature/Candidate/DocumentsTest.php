@@ -21,7 +21,7 @@ function phaseFourPdf(string $name = 'transcript.pdf'): UploadedFile
 
 test('documents without an application show an empty state and create no records', function () {
     $this->actingAs(User::factory()->create());
-    $this->get(route('candidate.documents.index'))->assertOk()->assertSee('No admission application yet');
+    $this->get(route('candidate.documents.index'))->assertOk()->assertSee('Chưa có hồ sơ đăng ký nhập học');
     $this->assertDatabaseCount('applications', 0);
     $this->assertDatabaseCount('candidate_documents', 0);
     $this->assertDatabaseCount('candidate_profiles', 0);
@@ -223,7 +223,7 @@ test('failed physical deletion reports cleanup failure without claiming complete
     $failedDisk = Mockery::mock(FilesystemAdapter::class);
     $failedDisk->shouldReceive('delete')->once()->with($document->file_path)->andReturn(false);
     Storage::set(CandidateFiles::DISK, $failedDisk);
-    $page->call('delete')->assertHasErrors('cleanup')->assertSee('file cleanup failed');
+    $page->call('delete')->assertHasErrors('cleanup')->assertSee('không thể dọn tệp');
     $this->assertModelMissing($document);
     $disk->assertExists($document->file_path);
 });
