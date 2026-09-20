@@ -29,6 +29,71 @@
                     <div wire:key="profile-{{ $field }}"><dt class="text-sm text-zinc-500">{{ __($label) }}</dt><dd class="break-words">{{ $field === 'date_of_birth' ? ($profile->date_of_birth?->format('Y-m-d') ?? '—') : ($profile->getAttribute($field) ?? '—') }}</dd></div>
                 @endforeach
             </dl>
+            <div class="space-y-3">
+                <flux:heading size="sm">
+                    {{ __('CCCD / Citizen ID images') }}
+                </flux:heading>
+
+                <div class="grid gap-4 md:grid-cols-2">
+                    {{-- CCCD mặt trước --}}
+                    <div class="space-y-2">
+                        <flux:text>{{ __('CCCD mặt trước / Front side') }}</flux:text>
+
+                        @if ($profile->citizen_id_front_path)
+                            <a
+                                href="{{ route('admission.profiles.citizen-id', [
+                                    'profile' => $profile->id,
+                                    'side' => 'front',
+                                ]) }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <img
+                                    src="{{ route('admission.profiles.citizen-id', [
+                                        'profile' => $profile->id,
+                                        'side' => 'front',
+                                    ]) }}"
+                                    alt="{{ __('CCCD mặt trước') }}"
+                                    class="max-h-64 rounded-lg border border-zinc-200 object-contain dark:border-zinc-700"
+                                />
+                            </a>
+                        @else
+                            <flux:badge color="amber">
+                                {{ __('Chưa tải lên CCCD mặt trước') }}
+                            </flux:badge>
+                        @endif
+                    </div>
+
+                    {{-- CCCD mặt sau --}}
+                    <div class="space-y-2">
+                        <flux:text>{{ __('CCCD mặt sau / Back side') }}</flux:text>
+
+                        @if ($profile->citizen_id_back_path)
+                            <a
+                                href="{{ route('admission.profiles.citizen-id', [
+                                    'profile' => $profile->id,
+                                    'side' => 'back',
+                                ]) }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <img
+                                    src="{{ route('admission.profiles.citizen-id', [
+                                        'profile' => $profile->id,
+                                        'side' => 'back',
+                                    ]) }}"
+                                    alt="{{ __('CCCD mặt sau') }}"
+                                    class="max-h-64 rounded-lg border border-zinc-200 object-contain dark:border-zinc-700"
+                                />
+                            </a>
+                        @else
+                            <flux:badge color="amber">
+                                {{ __('Chưa tải lên CCCD mặt sau') }}
+                            </flux:badge>
+                        @endif
+                    </div>
+                </div>
+            </div>
             <flux:text>{{ __('Profile information is shared and may change after review. A verified profile status does not identify which version was reviewed.') }}</flux:text>
         @else<flux:callout variant="warning">{{ __('Candidate profile unavailable.') }}</flux:callout>@endif
     </div>

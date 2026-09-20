@@ -56,12 +56,16 @@ class Profile extends CandidatePage
         'high_school_name',
         'graduation_year',
         'photo_path',
+        'citizen_id_front_path',
+        'citizen_id_back_path',
     ];
 
     /** @var array<string, mixed> */
     public array $form = [];
 
     public mixed $photo = null;
+    public mixed $citizenIdFront = null;
+    public mixed $citizenIdBack = null;
 
     #[Locked]
     public ?int $profileId = null;
@@ -263,6 +267,19 @@ class Profile extends CandidatePage
             ],
 
             'photo' => CandidateFiles::photoRules(),
+            'citizenIdFront' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png',
+                'max:5120',
+            ],
+
+            'citizenIdBack' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png',
+                'max:5120',
+            ],
         ];
     }
 
@@ -273,13 +290,23 @@ class Profile extends CandidatePage
         $newPath = null;
         $oldPath = null;
 
+        $newFrontPath = null;
+        $oldFrontPath = null;
+
+        $newBackPath = null;
+        $oldBackPath = null;
+
         try {
             $profile = $user->getConnection()->transaction(
                 function () use (
                     $user,
                     $files,
                     &$newPath,
-                    &$oldPath
+                    &$oldPath,
+                    &$newFrontPath,
+                    &$oldFrontPath,
+                    &$newBackPath,
+                    &$oldBackPath
                 ): CandidateProfile {
                     $user->newQuery()
                         ->whereKey($user->getKey())
@@ -382,6 +409,35 @@ class Profile extends CandidatePage
 
                         $profile->setAttribute('photo_path', $newPath);
                     }
+                    if ($this->citizenIdFront instanceof UploadedFile) {
+                        $oldFrontPath = $profile->getAttribute('citizen_id_front_path');
+
+                        $newFrontPath = $files->store(
+                            $this->citizenIdFront,
+                            'candidate-citizen-ids/'.$user->getKey(),
+                            'front'
+                        );
+
+                        $profile->setAttribute(
+                            'citizen_id_front_path',
+                            $newFrontPath
+                        );
+                    }
+
+                    if ($this->citizenIdBack instanceof UploadedFile) {
+                        $oldBackPath = $profile->getAttribute('citizen_id_back_path');
+
+                        $newBackPath = $files->store(
+                            $this->citizenIdBack,
+                            'candidate-citizen-ids/'.$user->getKey(),
+                            'back'
+                        );
+
+                        $profile->setAttribute(
+                            'citizen_id_back_path',
+                            $newBackPath
+                        );
+                    }
 
                     if (
                         $profile->getAttribute('profile_status')
@@ -410,6 +466,8 @@ class Profile extends CandidatePage
             );
         } catch (Throwable $exception) {
             $files->remove($newPath);
+            $files->remove($newFrontPath);
+            $files->remove($newBackPath);
 
             if (
                 $exception
@@ -425,11 +483,26 @@ class Profile extends CandidatePage
 
         $this->profileId = $profile->getKey();
         $this->photo = null;
+        $this->citizenIdFront = null;
+        $this->citizenIdBack = null;
 
         if (! $files->remove($oldPath)) {
             $this->addError(
                 'cleanup',
                 __('Đã lưu hồ sơ nhưng không thể xóa ảnh cũ.')
+            );
+        }
+        if (! $files->remove($oldFrontPath)) {
+            $this->addError(
+                'cleanup',
+                __('Đã lưu hồ sơ nhưng không thể xóa ảnh CCCD mặt trước cũ.')
+            );
+        }
+
+        if (! $files->remove($oldBackPath)) {
+            $this->addError(
+                'cleanup',
+                __('Đã lưu hồ sơ nhưng không thể xóa ảnh CCCD mặt sau cũ.')
             );
         }
 

@@ -30,6 +30,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'priority_object',
     'photo_path',
     'profile_status',
+
+    // Thêm 5 field mới ở đây
+    'citizen_id_front_path',
+    'citizen_id_back_path',
+    'verified_by',
+    'verified_at',
+    'verification_note',
 ])]
 class CandidateProfile extends Model
 {
@@ -46,13 +53,20 @@ class CandidateProfile extends Model
             'citizen_id_issued_date' => 'date',
             'graduation_year' => 'integer',
             'profile_status' => ProfileStatus::class,
+            'verified_at' => 'datetime',
         ];
+        
     }
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+    /** @return BelongsTo<User, $this> */
+    public function verifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 
     /** @return HasMany<Application, $this> */

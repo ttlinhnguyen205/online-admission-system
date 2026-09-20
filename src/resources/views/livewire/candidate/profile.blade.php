@@ -313,6 +313,52 @@
                     ></progress>
                 </div>
             </div>
+            {{-- CCCD --}}
+            <div class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+
+                <flux:heading>
+                    {{ __('CCCD / Citizen ID images') }}
+                </flux:heading>
+
+                <flux:text>
+                    {{ __('Tải lên ảnh rõ nét mặt trước và mặt sau của CCCD để nhân viên đối chiếu thông tin hồ sơ.') }}
+                </flux:text>
+
+                <div>
+                    <flux:input
+                        wire:model="citizenIdFront"
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        :label="__('CCCD mặt trước / Front side')"
+                    />
+
+                    @if ($profile?->citizen_id_front_path)
+                        <flux:text class="mt-2">
+                            ✓ {{ __('Đã tải lên CCCD mặt trước') }}
+                        </flux:text>
+                    @endif
+                </div>
+
+                <div>
+                    <flux:input
+                        wire:model="citizenIdBack"
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        :label="__('CCCD mặt sau / Back side')"
+                    />
+
+                    @if ($profile?->citizen_id_back_path)
+                        <flux:text class="mt-2">
+                            ✓ {{ __('Đã tải lên CCCD mặt sau') }}
+                        </flux:text>
+                    @endif
+                </div>
+
+                <flux:text>
+                    {{ __('JPEG/PNG, tối đa 5 MiB cho mỗi ảnh.') }}
+                </flux:text>
+
+            </div>
 
             {{-- Checklist --}}
             <div class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
@@ -337,6 +383,8 @@
                     'province_code' => 'Province code',
                     'high_school_name' => 'School name',
                     'graduation_year' => 'Graduation year',
+                    'citizen_id_front_path' => 'Citizen ID - Front',
+                    'citizen_id_back_path' => 'Citizen ID - Back',
                     'photo_path' => 'Photo',
                 ])
 

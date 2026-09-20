@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CandidateDocumentDownloadController;
+use App\Http\Controllers\CandidateCitizenIdController;
 use App\Http\Controllers\CandidatePhotoController;
 use App\Livewire\Candidate;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,15 @@ Route::middleware(['auth', 'active', 'verified'])->group(function (): void {
 
     Route::get('admission/documents/{document}/download', CandidateDocumentDownloadController::class)
         ->whereNumber('document')->name('admission.documents.download');
+
     Route::get('admission/profiles/{profile}/photo', CandidatePhotoController::class)
         ->whereNumber('profile')->name('admission.profiles.photo');
+
+    Route::get(
+        'admission/profiles/{profile}/citizen-id/{side}',
+        CandidateCitizenIdController::class
+    )
+        ->whereNumber('profile')
+        ->whereIn('side', ['front', 'back'])
+        ->name('admission.profiles.citizen-id');
 });

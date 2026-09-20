@@ -72,7 +72,7 @@ class CandidateFiles
 
     public static function safePath(?string $path): bool
     {
-        return $path !== null && preg_match('#\A(?:candidate-photos|candidate-documents)/[A-Za-z0-9/_\-.]+\z#D', $path) === 1
+        return $path !== null && preg_match('#\A(?:candidate-photos|candidate-documents|candidate-citizen-ids)/[A-Za-z0-9/_\-.]+\z#D', $path) === 1
             && ! str_contains($path, '..');
     }
 
