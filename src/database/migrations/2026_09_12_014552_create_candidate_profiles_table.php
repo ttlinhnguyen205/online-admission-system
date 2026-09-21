@@ -26,6 +26,18 @@ return new class extends Migration
             $table->string('photo_path', 500)->nullable();
             $table->string('profile_status', 30)->default('incomplete')->index();
             $table->timestamps();
+            $table->string('ethnicity')->nullable();
+            $table->string('religion')->nullable();
+            $table->date('citizen_id_issued_date')->nullable();
+            $table->string('citizen_id_issued_place')->nullable();
+            $table->string('citizen_id_front_path', 500)->nullable();
+            $table->string('citizen_id_back_path', 500)->nullable();
+            $table->foreignId('verified_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+            $table->timestamp('verified_at')->nullable();
+            $table->text('verification_note')->nullable();
         });
     }
 

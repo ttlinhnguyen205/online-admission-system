@@ -26,14 +26,22 @@ class CandidateFiles
         return [$required ? 'required' : 'nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'extensions:pdf,jpg,jpeg,png', 'max:10240'];
     }
 
+    /** @return list<string> */
+    public static function scoreEvidenceRules(bool $required): array
+    {
+        return [$required ? 'required' : 'nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,jpeg,png', 'max:2048'];
+    }
+
     /** Validate actual bytes independently of browser or temporary-upload metadata. */
     public function mime(UploadedFile $file, string $field): string
     {
         $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file->getRealPath());
-        $allowed = $field === 'photo' ? ['image/jpeg', 'image/png'] : ['application/pdf', 'image/jpeg', 'image/png'];
+        $allowed = in_array($field, ['photo', 'evidence'], true) ? ['image/jpeg', 'image/png'] : ['application/pdf', 'image/jpeg', 'image/png'];
         $extensions = ['image/jpeg' => ['jpg', 'jpeg'], 'image/png' => ['png'], 'application/pdf' => ['pdf']];
         if (! in_array($mime, $allowed, true) || ! in_array(strtolower($file->getClientOriginalExtension()), $extensions[$mime], true)) {
-            throw ValidationException::withMessages([$field => __('The file content must match its PDF, JPEG or PNG extension.')]);
+            throw ValidationException::withMessages([$field => $field === 'evidence'
+                ? __('Nội dung ảnh minh chứng phải khớp với đuôi JPG, JPEG hoặc PNG.')
+                : __('Nội dung tệp phải khớp với đuôi PDF, JPEG hoặc PNG.')]);
         }
 
         return $mime;
@@ -56,7 +64,9 @@ class CandidateFiles
         } catch (Throwable $exception) {
             $this->remove($path);
             report($exception);
-            throw ValidationException::withMessages([$field => __('The file could not be stored. Please try again.')]);
+            throw ValidationException::withMessages([$field => $field === 'evidence'
+                ? __('Không thể lưu ảnh minh chứng. Vui lòng thử lại.')
+                : __('Không thể lưu tệp. Vui lòng thử lại.')]);
         }
 
         return $path;
@@ -72,7 +82,7 @@ class CandidateFiles
 
     public static function safePath(?string $path): bool
     {
-        return $path !== null && preg_match('#\A(?:candidate-photos|candidate-documents|candidate-citizen-ids)/[A-Za-z0-9/_\-.]+\z#D', $path) === 1
+        return $path !== null && preg_match('#\A(?:candidate-photos|candidate-documents|candidate-citizen-ids|candidate-scores|candidate-exam-results|candidate-transcripts|candidate-certificates|candidate-admission-claims)/[A-Za-z0-9/_\-.]+\z#D', $path) === 1
             && ! str_contains($path, '..');
     }
 

@@ -100,7 +100,7 @@ class AdmissionReviewSnapshot
             'user' => $this->fields($profile?->user, ['id', 'name', 'email']),
             'round' => $this->fields($application->admissionRound, ['id']),
             'documents' => $application->documents->map(fn ($d) => $this->fields($d, ['id', 'application_id', 'document_type', 'original_name', 'file_path', 'mime_type', 'file_size', 'status', 'verified_by', 'verified_at', 'rejection_reason']))->all(),
-            'scores' => $profile?->scores->map(fn ($s) => $this->fields($s, ['id', 'candidate_profile_id', 'score_type', 'subject_code', 'subject_name', 'score', 'exam_year', 'verified', 'verified_by']))->all(),
+            'scores' => $profile?->scores->map(fn ($s) => $this->fields($s, ['id', 'candidate_profile_id', 'score_type', 'subject_code', 'subject_name', 'score', 'exam_year', 'evidence_path', 'verified', 'verified_by']))->all(),
             'wishes' => $application->wishes->map(fn ($w) => [
                 $this->fields($w, ['id', 'application_id', 'admission_program_id', 'priority']),
                 $this->fields($w->admissionProgram, ['id', 'admission_round_id', 'major_id', 'admission_method_id']),
@@ -124,9 +124,10 @@ class AdmissionReviewSnapshot
         throw ValidationException::withMessages(['review' => __('The review data changed. Reload the application and review the current information before trying again.')]);
     }
 
-    public function fileAvailable(?string $path, bool $photo = false): bool
+    public function fileAvailable(?string $path, bool $photo = false, bool $scoreEvidence = false): bool
     {
-        if (! CandidateFiles::safePath($path) || ! str_starts_with((string) $path, $photo ? 'candidate-photos/' : 'candidate-documents/')) {
+        $prefix = $scoreEvidence ? 'candidate-scores/' : ($photo ? 'candidate-photos/' : 'candidate-documents/');
+        if (! CandidateFiles::safePath($path) || ! str_starts_with((string) $path, $prefix)) {
             return false;
         }
         try {
@@ -134,7 +135,7 @@ class AdmissionReviewSnapshot
             if (! $disk->exists($path)) {
                 return false;
             }
-            if ($photo && ! in_array($disk->mimeType($path), ['image/png', 'image/jpeg'], true)) {
+            if (($photo || $scoreEvidence) && ! in_array($disk->mimeType($path), ['image/png', 'image/jpeg'], true)) {
                 return false;
             }
             $stream = $disk->readStream($path);

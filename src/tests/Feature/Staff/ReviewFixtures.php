@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\ProfileStatus;
 use App\Models\AdmissionWish;
 use App\Models\Application;
+use App\Models\CandidateScore;
 use Illuminate\Support\Facades\Storage;
 
 function reviewApplication(ApplicationStatus $status = ApplicationStatus::UnderReview): Application
@@ -41,4 +42,11 @@ function reviewToken(Application $application): string
     $snapshots = new AdmissionReviewSnapshot;
 
     return $snapshots->fingerprint($snapshots->load($application->id));
+}
+
+function reviewScoreEvidence(CandidateScore $score): void
+{
+    $path = 'candidate-scores/'.$score->candidate_profile_id.'/'.$score->id.'.png';
+    Storage::disk(CandidateFiles::DISK)->put($path, file_get_contents(base_path('tests/Fixtures/small.png')));
+    $score->update(['evidence_path' => $path]);
 }

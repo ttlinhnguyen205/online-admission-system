@@ -55,7 +55,7 @@ class CandidateProfile extends Model
             'profile_status' => ProfileStatus::class,
             'verified_at' => 'datetime',
         ];
-        
+
     }
 
     /** @return BelongsTo<User, $this> */
@@ -63,6 +63,7 @@ class CandidateProfile extends Model
     {
         return $this->belongsTo(User::class);
     }
+
     /** @return BelongsTo<User, $this> */
     public function verifier(): BelongsTo
     {
@@ -79,5 +80,29 @@ class CandidateProfile extends Model
     public function scores(): HasMany
     {
         return $this->hasMany(CandidateScore::class);
+    }
+
+    /** @return HasMany<CandidateExamResult, $this> */
+    public function examResults(): HasMany
+    {
+        return $this->hasMany(CandidateExamResult::class);
+    }
+
+    /** @return HasMany<CandidateTranscript, $this> */
+    public function transcripts(): HasMany
+    {
+        return $this->hasMany(CandidateTranscript::class);
+    }
+
+    /** @return HasMany<CandidateCertificate, $this> */
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(CandidateCertificate::class);
+    }
+
+    /** @return HasMany<CandidateAdmissionClaim, $this> */
+    public function admissionClaims(): HasMany
+    {
+        return $this->hasMany(CandidateAdmissionClaim::class);
     }
 }

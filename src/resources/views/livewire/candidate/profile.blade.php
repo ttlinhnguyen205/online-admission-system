@@ -1,23 +1,23 @@
 <section class="mx-auto flex w-full max-w-5xl flex-col gap-6">
     <div>
         <flux:heading size="xl" level="1">
-            {{ __('Hồ sơ thí sinh') }}
+            {{ __('Hồ sơ cá nhân') }}
         </flux:heading>
 
         <flux:text class="mt-2">
-            {{ __('Complete your admission profile. You can save your progress at any time.') }}
+            {{ __('Hoàn thiện hồ sơ cá nhân để đăng ký xét tuyển. Bạn có thể lưu thông tin bất cứ lúc nào.') }}
         </flux:text>
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
         <flux:badge>
-            {{ $profile?->candidate_code ?? __('Not created yet') }}
+            {{ $profile?->candidate_code ?? __('Chưa tạo hồ sơ') }}
         </flux:badge>
 
         <flux:badge
             :color="$profile?->profile_status === App\Enums\ProfileStatus::Verified ? 'green' : 'zinc'"
         >
-            {{ $profile ? __(ucfirst($profile->profile_status->value)) : __('Incomplete') }}
+            {{ $profile ? App\Support\CandidateStatusLabels::profile($profile->profile_status) : __('Chưa hoàn thiện') }}
         </flux:badge>
 
         <flux:text>
@@ -29,7 +29,7 @@
             :href="route('profile.edit')"
             wire:navigate
         >
-            {{ __('Account settings') }}
+            {{ __('Cài đặt tài khoản') }}
         </flux:button>
     </div>
 
@@ -55,13 +55,13 @@
                 <flux:input
                     wire:model="form.date_of_birth"
                     type="date"
-                    :label="__('Ngày sinh / Date of birth')"
+                    :label="__('Ngày sinh')"
                 />
 
                 {{-- Giới tính --}}
                 <flux:select
                     wire:model="form.gender"
-                    :label="__('Giới tính / Gender')"
+                    :label="__('Giới tính')"
                 >
                     <flux:select.option value="">
                         {{ __('Chọn giới tính') }}
@@ -79,7 +79,7 @@
                 {{-- Dân tộc --}}
                 <flux:input
                     wire:model="form.ethnicity"
-                    :label="__('Dân tộc / Ethnicity')"
+                    :label="__('Dân tộc')"
                     maxlength="100"
                     placeholder="Ví dụ: Kinh"
                 />
@@ -87,7 +87,7 @@
                 {{-- Tôn giáo --}}
                 <flux:input
                     wire:model="form.religion"
-                    :label="__('Tôn giáo / Religion (optional)')"
+                    :label="__('Tôn giáo (không bắt buộc)')"
                     maxlength="100"
                     placeholder="Ví dụ: Không"
                 />
@@ -95,7 +95,7 @@
                 {{-- CCCD --}}
                 <flux:input
                     wire:model="form.citizen_id"
-                    :label="__('CCCD / Citizen ID')"
+                    :label="__('Số CCCD')"
                     maxlength="20"
                 />
 
@@ -103,14 +103,14 @@
                 <flux:input
                     wire:model="form.citizen_id_issued_date"
                     type="date"
-                    :label="__('Ngày cấp CCCD / Issue date')"
+                    :label="__('Ngày cấp CCCD')"
                 />
 
                 {{-- Nơi cấp CCCD --}}
                 <div class="sm:col-span-2">
                     <flux:input
                         wire:model="form.citizen_id_issued_place"
-                        :label="__('Nơi cấp CCCD / Place of issue')"
+                        :label="__('Nơi cấp CCCD')"
                         maxlength="255"
                     />
                 </div>
@@ -119,7 +119,7 @@
                 <flux:input
                     wire:model="form.phone"
                     type="tel"
-                    :label="__('Điện thoại / Phone')"
+                    :label="__('Số điện thoại')"
                     maxlength="20"
                 />
 
@@ -127,7 +127,7 @@
                 <div class="sm:col-span-2">
                     <flux:textarea
                         wire:model="form.address"
-                        :label="__('Địa chỉ / Address')"
+                        :label="__('Địa chỉ')"
                         maxlength="500"
                         rows="3"
                     />
@@ -180,13 +180,13 @@
                     type="number"
                     min="1900"
                     :max="now()->year + 1"
-                    :label="__('Năm tốt nghiệp / Graduation year')"
+                    :label="__('Năm tốt nghiệp')"
                 />
 
                 {{-- Khu vực ưu tiên --}}
                 <flux:select
                     wire:model="form.priority_area"
-                    :label="__('Khu vực ưu tiên (optional)')"
+                    :label="__('Khu vực ưu tiên (không bắt buộc)')"
                 >
                     <flux:select.option value="">
                         {{ __('Không thuộc diện ưu tiên khu vực') }}
@@ -252,7 +252,7 @@
                 wire:loading.attr="disabled"
                 wire:target="save,photo"
             >
-                {{ __('Lưu hồ sơ / Save profile') }}
+                {{ __('Lưu hồ sơ') }}
             </flux:button>
 
             <span
@@ -260,7 +260,7 @@
                 wire:loading
                 wire:target="save"
             >
-                {{ __('Saving profile...') }}
+                {{ __('Đang lưu hồ sơ...') }}
             </span>
         </div>
 
@@ -270,7 +270,7 @@
             <div class="flex flex-col gap-3 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
 
                 <flux:heading>
-                    {{ __('Ảnh 3×4 / Profile photo') }}
+                    {{ __('Ảnh hồ sơ 3×4') }}
                 </flux:heading>
 
                 @if ($profile?->photo_path)
@@ -279,7 +279,7 @@
                             'profile' => $profile->id,
                             'v' => hash('sha256', $profile->photo_path)
                         ]) }}"
-                        alt="{{ __('Profile photo') }}"
+                        alt="{{ __('Ảnh hồ sơ') }}"
                         class="aspect-[3/4] w-36 rounded-lg object-cover"
                     />
                 @endif
@@ -288,11 +288,11 @@
                     wire:model="photo"
                     type="file"
                     accept="image/jpeg,image/png"
-                    :label="__('Choose photo')"
+                    :label="__('Chọn ảnh')"
                 />
 
                 <flux:text>
-                    {{ __('JPEG/PNG, up to 2 MiB. Ratio 3:4; 300×400 to 3000×4000 pixels. The photo is saved with your profile.') }}
+                    {{ __('Ảnh JPEG hoặc PNG, tối đa 2 MiB, tỷ lệ 3:4 và kích thước từ 300×400 đến 3000×4000 điểm ảnh. Ảnh được lưu cùng hồ sơ của bạn.') }}
                 </flux:text>
 
                 <div
@@ -301,7 +301,7 @@
                     role="status"
                 >
                     <span>
-                        {{ __('Uploading:') }}
+                        {{ __('Đang tải lên:') }}
                     </span>
 
                     <span x-text="progress + '%'"></span>
@@ -317,7 +317,7 @@
             <div class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
 
                 <flux:heading>
-                    {{ __('CCCD / Citizen ID images') }}
+                    {{ __('Ảnh CCCD') }}
                 </flux:heading>
 
                 <flux:text>
@@ -329,7 +329,7 @@
                         wire:model="citizenIdFront"
                         type="file"
                         accept="image/jpeg,image/png"
-                        :label="__('CCCD mặt trước / Front side')"
+                        :label="__('CCCD mặt trước')"
                     />
 
                     @if ($profile?->citizen_id_front_path)
@@ -344,7 +344,7 @@
                         wire:model="citizenIdBack"
                         type="file"
                         accept="image/jpeg,image/png"
-                        :label="__('CCCD mặt sau / Back side')"
+                        :label="__('CCCD mặt sau')"
                     />
 
                     @if ($profile?->citizen_id_back_path)
@@ -364,28 +364,28 @@
             <div class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
 
                 <flux:heading>
-                    {{ __('Saved profile checklist') }}
+                    {{ __('Thông tin hồ sơ đã lưu') }}
                 </flux:heading>
 
                 <flux:text class="my-3">
-                    {{ __('Verification status is separate from this completion checklist.') }}
+                    {{ __('Trạng thái xác minh được theo dõi riêng với mức độ hoàn thiện hồ sơ.') }}
                 </flux:text>
 
                 @php($labels = [
-                    'date_of_birth' => 'Date of birth',
-                    'gender' => 'Gender',
-                    'ethnicity' => 'Ethnicity',
-                    'citizen_id' => 'Citizen ID',
-                    'citizen_id_issued_date' => 'Citizen ID issue date',
-                    'citizen_id_issued_place' => 'Citizen ID issue place',
-                    'phone' => 'Phone',
-                    'address' => 'Address',
-                    'province_code' => 'Province code',
-                    'high_school_name' => 'School name',
-                    'graduation_year' => 'Graduation year',
-                    'citizen_id_front_path' => 'Citizen ID - Front',
-                    'citizen_id_back_path' => 'Citizen ID - Back',
-                    'photo_path' => 'Photo',
+                    'date_of_birth' => 'Ngày sinh',
+                    'gender' => 'Giới tính',
+                    'ethnicity' => 'Dân tộc',
+                    'citizen_id' => 'Số CCCD',
+                    'citizen_id_issued_date' => 'Ngày cấp CCCD',
+                    'citizen_id_issued_place' => 'Nơi cấp CCCD',
+                    'phone' => 'Số điện thoại',
+                    'address' => 'Địa chỉ',
+                    'province_code' => 'Mã tỉnh/thành phố',
+                    'high_school_name' => 'Trường THPT',
+                    'graduation_year' => 'Năm tốt nghiệp',
+                    'citizen_id_front_path' => 'CCCD mặt trước',
+                    'citizen_id_back_path' => 'CCCD mặt sau',
+                    'photo_path' => 'Ảnh hồ sơ',
                 ])
 
                 <ul class="space-y-2 text-sm">

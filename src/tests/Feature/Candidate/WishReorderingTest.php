@@ -115,7 +115,7 @@ test('stale wish sets or same set ordering cannot overwrite newer changes', func
         Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('reorderWishes', [$wishes[1]->id, $wishes[0]->id, $wishes[2]->id])->assertHasNoErrors();
     }
     $current = $application->wishes()->orderBy('priority')->pluck('id')->all();
-    $page->call('reorderWishes', array_reverse($current))->assertHasErrors('order')->assertSee('The wish list changed');
+    $page->call('reorderWishes', array_reverse($current))->assertHasErrors('order')->assertSee('Danh sách nguyện vọng đã thay đổi');
     expect($application->wishes()->orderBy('priority')->pluck('id')->all())->toBe($current);
     $page->call('reloadWishes')->call('reorderWishes', array_reverse($current))->assertHasNoErrors();
     expect($application->wishes()->orderBy('priority')->pluck('id')->all())->toBe(array_reverse($current));

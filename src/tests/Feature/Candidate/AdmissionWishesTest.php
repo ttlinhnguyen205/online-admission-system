@@ -68,7 +68,7 @@ test('programs becoming unavailable after rendering are rejected without removin
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id]);
     $wish->admissionProgram->update(['status' => 'inactive']);
-    $page->call('$refresh')->assertSee('Program inactive')->assertSee($wish->admissionProgram->major->name);
+    $page->call('$refresh')->assertSee('Chương trình không hoạt động')->assertSee($wish->admissionProgram->major->name);
     $page->set('form.admission_program_id', $wish->admission_program_id)->call('addWish')->assertHasErrors('form.admission_program_id');
     $this->assertModelExists($wish);
 });
@@ -112,7 +112,7 @@ test('all noneditable lifecycles deny wish actions while retaining readable data
         'confirmDeletion' => [$wish->id], 'reorderWishes' => [[$wish->id]], default => [],
     };
     $page->set('form.admission_program_id', $wish->admission_program_id)->call($action, ...$arguments)->assertForbidden();
-    $this->get(route('candidate.applications.show', $application->id))->assertOk()->assertSee('Read-only');
+    $this->get(route('candidate.applications.show', $application->id))->assertOk()->assertSee('Chỉ có thể sửa nguyện vọng');
     $this->assertModelExists($wish);
 })->with([ApplicationStatus::Submitted, ApplicationStatus::UnderReview, ApplicationStatus::Verified, ApplicationStatus::Processing, ApplicationStatus::Completed])
     ->with(['addWish', 'confirmDeletion', 'deleteWish', 'reorderWishes']);

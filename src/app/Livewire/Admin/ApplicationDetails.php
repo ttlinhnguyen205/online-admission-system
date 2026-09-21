@@ -130,11 +130,12 @@ class ApplicationDetails extends ReviewPage
         $windowOpen = $application->admissionRound !== null && CandidateApplications::roundIsOpen($application->admissionRound);
         $photoAvailable = $snapshots->fileAvailable($profile?->getAttribute('photo_path'), true);
         $documentAvailability = $application->documents->mapWithKeys(fn ($document) => [$document->getKey() => $snapshots->fileAvailable($document->getAttribute('file_path'))]);
+        $scoreEvidenceAvailability = $profile?->scores->mapWithKeys(fn ($score) => [$score->getKey() => $snapshots->fileAvailable($score->getAttribute('evidence_path'), scoreEvidence: true)]) ?? collect();
         $history = ActivityLog::query()->with('user')->where('subject_type', $application->getMorphClass())
             ->where('subject_id', $application->getKey())
             ->whereIn('action', ['application.review_started', 'application.revision_requested', 'application.verified'])
             ->orderByDesc('id')->limit(20)->get();
 
-        return view('livewire.admin.application-details', compact('application', 'profile', 'checklist', 'stale', 'reviewable', 'canStart', 'hasResults', 'windowOpen', 'photoAvailable', 'documentAvailability', 'history'));
+        return view('livewire.admin.application-details', compact('application', 'profile', 'checklist', 'stale', 'reviewable', 'canStart', 'hasResults', 'windowOpen', 'photoAvailable', 'documentAvailability', 'scoreEvidenceAvailability', 'history'));
     }
 }

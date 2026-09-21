@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['candidate_profile_id', 'score_type', 'subject_code', 'subject_name', 'score', 'exam_year', 'verified', 'verified_by'])]
+#[Fillable(['candidate_profile_id', 'score_type', 'subject_code', 'subject_name', 'score', 'exam_year', 'evidence_path', 'verified', 'verified_by'])]
 class CandidateScore extends Model
 {
     /** @use HasFactory<CandidateScoreFactory> */

@@ -99,17 +99,18 @@
     </div>
 
     <div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
-        <flux:heading size="lg">{{ __('Candidate scores') }}</flux:heading>
-        <flux:text>{{ __('Scores are profile-level records shared across applications. Verification locks that shared score against candidate edits; it does not calculate an admission score.') }}</flux:text>
+        <flux:heading size="lg">{{ __('Điểm xét tuyển') }}</flux:heading>
+        <flux:text>{{ __('Điểm thuộc hồ sơ thí sinh và được dùng chung cho các hồ sơ đăng ký. Sau khi xác minh, thí sinh không thể sửa hoặc xóa điểm.') }}</flux:text>
         <div class="overflow-x-auto">
-            <flux:table><flux:table.columns><flux:table.column>{{ __('Type / Subject') }}</flux:table.column><flux:table.column>{{ __('Score / Year') }}</flux:table.column><flux:table.column>{{ __('Review') }}</flux:table.column></flux:table.columns><flux:table.rows>
+            <flux:table><flux:table.columns><flux:table.column>{{ __('Loại điểm / Môn học') }}</flux:table.column><flux:table.column>{{ __('Điểm / Năm thi') }}</flux:table.column><flux:table.column>{{ __('Ảnh minh chứng') }}</flux:table.column><flux:table.column>{{ __('Xác minh') }}</flux:table.column></flux:table.columns><flux:table.rows>
                 @forelse ($profile?->scores ?? [] as $score)
                     <flux:table.row :key="$score->id">
-                        <flux:table.cell><div>{{ $score->score_type }}</div><div>{{ $score->subject_code }} {{ $score->subject_name }}</div></flux:table.cell>
+                        <flux:table.cell><div>{{ App\Livewire\Candidate\Scores::SCORE_TYPES[$score->score_type] ?? $score->score_type }}</div><div>{{ $score->subject_code }} {{ $score->subject_name }}</div></flux:table.cell>
                         <flux:table.cell>{{ $score->score }} · {{ $score->exam_year }}</flux:table.cell>
-                        <flux:table.cell><div class="flex flex-wrap gap-2"><flux:badge :color="$score->verified ? 'green' : 'zinc'">{{ $score->verified ? __('Verified') : __('Unverified') }}</flux:badge>@if ($reviewable && ! $score->verified)<flux:button size="sm" wire:click="confirm('verifyScore', {{ $score->id }})" :disabled="$stale" wire:loading.attr="disabled">{{ __('Verify score') }}</flux:button>@endif</div></flux:table.cell>
+                        <flux:table.cell>@if ($scoreEvidenceAvailability->get($score->id))<flux:button size="sm" :href="route('admission.scores.evidence', $score->id)" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@else<flux:badge color="amber">{{ __('Chưa có minh chứng hợp lệ') }}</flux:badge>@endif</flux:table.cell>
+                        <flux:table.cell><div class="flex flex-wrap gap-2"><flux:badge :color="$score->verified ? 'green' : 'zinc'">{{ $score->verified ? __('Đã xác minh') : __('Chưa xác minh') }}</flux:badge>@if ($reviewable && ! $score->verified)<flux:button size="sm" wire:click="confirm('verifyScore', {{ $score->id }})" :disabled="$stale" wire:loading.attr="disabled">{{ __('Xác minh điểm') }}</flux:button>@endif</div></flux:table.cell>
                     </flux:table.row>
-                @empty<flux:table.row><flux:table.cell colspan="3">{{ __('No scores recorded. No score count or type is required in this phase.') }}</flux:table.cell></flux:table.row>@endforelse
+                @empty<flux:table.row><flux:table.cell colspan="4">{{ __('Chưa có điểm nào được ghi nhận.') }}</flux:table.cell></flux:table.row>@endforelse
             </flux:table.rows></flux:table>
         </div>
     </div>
@@ -174,9 +175,9 @@
 
     <flux:modal wire:model="showConfirmation" class="w-full md:max-w-xl">
         <form wire:submit="perform" class="flex flex-col gap-5">
-            <flux:heading>{{ match ($operation) { 'start' => __('Start review?'), 'revision' => __('Request revision?'), 'verify' => __('Mark application review complete?'), 'verifyDocument' => __('Verify this document?'), 'rejectDocument' => __('Reject this document?'), 'verifyScore' => __('Verify this shared score?'), default => __('Confirm review decision') } }}</flux:heading>
+            <flux:heading>{{ match ($operation) { 'start' => __('Start review?'), 'revision' => __('Request revision?'), 'verify' => __('Mark application review complete?'), 'verifyDocument' => __('Verify this document?'), 'rejectDocument' => __('Reject this document?'), 'verifyScore' => __('Xác minh điểm này?'), default => __('Confirm review decision') } }}</flux:heading>
             <flux:text>{{ __('The current saved records and your permissions will be checked again before this decision is recorded.') }}</flux:text>
-            @if ($operation === 'verifyScore')<flux:callout>{{ __('This verifies a profile-level score shared across applications. The candidate will no longer be able to edit or delete it.') }}</flux:callout>@endif
+            @if ($operation === 'verifyScore')<flux:callout>{{ __('Điểm này dùng chung cho các hồ sơ đăng ký. Sau khi xác minh, thí sinh không thể sửa, xóa hoặc thay ảnh minh chứng.') }}</flux:callout>@endif
             @if ($operation === 'revision')
                 <flux:textarea wire:model="form.revision_reason" :label="__('Revision reason')" maxlength="5000" required />
                 <flux:callout>{{ __('Candidate wish changes and resubmission still require an open round within its date window. Requesting revision does not extend the deadline.') }}</flux:callout>

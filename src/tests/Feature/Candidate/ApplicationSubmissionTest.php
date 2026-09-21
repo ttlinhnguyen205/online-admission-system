@@ -57,7 +57,7 @@ test('draft and needs revision submit with zero documents and preserve review me
     $originalWish = $wish->getAttributes();
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmSubmission')->assertSet('showSubmission', true)
-        ->call('submit')->assertHasNoErrors()->assertSet('showSubmission', false)->assertSee('Read-only');
+        ->call('submit')->assertHasNoErrors()->assertSet('showSubmission', false)->assertSee('Chỉ có thể sửa nguyện vọng');
     $application->refresh();
     expect($application->status)->toBe(ApplicationStatus::Submitted);
     expect($application->submitted_at->format('Y-m-d H:i:s'))->toBe('2026-09-14 12:00:00');
@@ -101,7 +101,7 @@ test('submission rejects an application without wishes', function () {
     $application = readyApplication();
     $application->wishes()->delete();
     $this->actingAs($application->candidateProfile->user);
-    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('submit')->assertHasErrors('wishes')->assertSee('Add at least one admission wish');
+    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('submit')->assertHasErrors('wishes')->assertSee('Cần có ít nhất một nguyện vọng');
     expect($application->fresh()->status)->toBe(ApplicationStatus::Draft);
 });
 

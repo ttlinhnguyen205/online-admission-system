@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 
-#[Title('Application details')]
+#[Title('Đăng ký xét tuyển')]
 class ApplicationDetails extends CandidatePage
 {
     #[Locked]
@@ -62,7 +62,7 @@ class ApplicationDetails extends CandidatePage
         $wishes->add($this->applicationId, $this->form);
         $this->form = ['admission_program_id' => ''];
         $this->reloadWishes();
-        Flux::toast(variant: 'success', text: __('Wish added.'));
+        Flux::toast(variant: 'success', text: __('Đã thêm nguyện vọng.'));
     }
 
     public function confirmDeletion(int $id): void
@@ -82,7 +82,7 @@ class ApplicationDetails extends CandidatePage
         abort_if($this->deleteId === null, 404);
         $wishes->delete($this->applicationId, $this->deleteId, $this->expectedOrder);
         $this->reloadWishes();
-        Flux::toast(variant: 'success', text: __('Wish removed and priorities updated.'));
+        Flux::toast(variant: 'success', text: __('Đã xóa nguyện vọng và cập nhật thứ tự ưu tiên.'));
     }
 
     /** @param array<mixed> $order */
@@ -91,7 +91,7 @@ class ApplicationDetails extends CandidatePage
         $this->candidate();
         $wishes->reorder($this->applicationId, $order, $this->expectedOrder);
         $this->reloadWishes();
-        Flux::toast(variant: 'success', text: __('Wish priorities saved.'));
+        Flux::toast(variant: 'success', text: __('Đã lưu thứ tự ưu tiên nguyện vọng.'));
     }
 
     public function moveWish(int $id, string $direction, CandidateWishes $wishes): void
@@ -100,12 +100,12 @@ class ApplicationDetails extends CandidatePage
         $wish = $application->wishes()->findOrFail($id);
         Gate::authorize('update', $wish);
         if (! in_array($direction, ['up', 'down'], true)) {
-            throw ValidationException::withMessages(['order' => __('Choose move up or move down.')]);
+            throw ValidationException::withMessages(['order' => __('Vui lòng chọn chuyển lên hoặc chuyển xuống.')]);
         }
         $order = $this->expectedOrder;
         $position = array_search($id, $order, true);
         if ($position === false) {
-            throw ValidationException::withMessages(['order' => __('Reload the wishes before changing their order.')]);
+            throw ValidationException::withMessages(['order' => __('Hãy tải lại nguyện vọng trước khi thay đổi thứ tự.')]);
         }
         $target = $position + ($direction === 'up' ? -1 : 1);
         if (array_key_exists($target, $order)) {
@@ -129,7 +129,7 @@ class ApplicationDetails extends CandidatePage
         $this->validate(['form' => ['array:admission_program_id']]);
         $applications->submit($this->applicationId);
         $this->reloadWishes();
-        Flux::toast(variant: 'success', text: __('Application submitted.'));
+        Flux::toast(variant: 'success', text: __('Đã nộp hồ sơ xét tuyển.'));
     }
 
     public function render(): View
@@ -145,13 +145,13 @@ class ApplicationDetails extends CandidatePage
         $editable = Gate::allows('update', $application) && CandidateApplications::roundIsOpen($round);
         $checklist = CandidateApplications::submissionErrors($profile, $application, $round);
         if ($wishes->isEmpty()) {
-            $checklist['wishes'] = __('Add at least one admission wish before submitting.');
+            $checklist['wishes'] = __('Cần có ít nhất một nguyện vọng trước khi nộp hồ sơ.');
         } elseif ($wishes->pluck('priority')->all() !== range(1, $wishes->count()) || $wishes->pluck('admission_program_id')->unique()->count() !== $wishes->count()) {
-            $checklist['wishes'] = __('Reload and reorder your wishes to restore contiguous priorities.');
+            $checklist['wishes'] = __('Hãy tải lại và sắp xếp nguyện vọng để thứ tự ưu tiên liên tục.');
         }
         foreach ($wishes as $wish) {
             if (CandidateWishes::unavailableReason($wish->admissionProgram, $round) !== null) {
-                $checklist['programs'] = __('One or more wishes are unavailable. Review the wish list.');
+                $checklist['programs'] = __('Một hoặc nhiều nguyện vọng không còn khả dụng. Hãy kiểm tra danh sách nguyện vọng.');
             }
         }
 

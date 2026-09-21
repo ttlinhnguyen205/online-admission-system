@@ -39,13 +39,13 @@ class CandidateWishes
                 CandidateApplications::requireOpenRound($round);
                 $program = $programs->first();
                 if ($program === null || self::unavailableReason($program, $round) !== null) {
-                    throw ValidationException::withMessages(['form.admission_program_id' => __('The selected program is unavailable for this round.')]);
+                    throw ValidationException::withMessages(['form.admission_program_id' => __('Chương trình đã chọn không khả dụng trong đợt tuyển sinh này.')]);
                 }
                 if ($wishes->contains('admission_program_id', $program->getKey())) {
-                    throw ValidationException::withMessages(['form.admission_program_id' => __('This program is already in your wish list.')]);
+                    throw ValidationException::withMessages(['form.admission_program_id' => __('Chương trình này đã có trong danh sách nguyện vọng.')]);
                 }
                 if ($wishes->count() >= 65535) {
-                    throw ValidationException::withMessages(['wishes' => __('The wish priority storage limit has been reached.')]);
+                    throw ValidationException::withMessages(['wishes' => __('Đã đạt giới hạn thứ tự ưu tiên nguyện vọng.')]);
                 }
                 $this->applyOrder($wishes, self::orderedIds($wishes));
                 $wish = $application->wishes()->make([
@@ -54,7 +54,7 @@ class CandidateWishes
                 ]);
                 CandidateApplications::requireOpenRound($round);
                 if (! $wish->save()) {
-                    throw ValidationException::withMessages(['wishes' => __('The wish could not be saved.')]);
+                    throw ValidationException::withMessages(['wishes' => __('Không thể lưu nguyện vọng.')]);
                 }
             }, 3);
         } catch (UniqueConstraintViolationException $exception) {
@@ -62,7 +62,7 @@ class CandidateWishes
             if (! str_contains($message, 'admission_wishes_application_id_') && ! str_contains($message, 'admission_wishes.application_id,')) {
                 throw $exception;
             }
-            throw ValidationException::withMessages(['wishes' => __('The wish list changed or this program was already selected. Reload and try again.')]);
+            throw ValidationException::withMessages(['wishes' => __('Danh sách nguyện vọng đã thay đổi hoặc chương trình đã được chọn. Hãy tải lại và thử lại.')]);
         }
     }
 
@@ -85,7 +85,7 @@ class CandidateWishes
                 $order = self::orderedIds($remaining);
                 $this->authorizeOrder($remaining, $order);
                 if (! $wish->delete()) {
-                    throw ValidationException::withMessages(['deletion' => __('The wish could not be deleted.')]);
+                    throw ValidationException::withMessages(['deletion' => __('Không thể xóa nguyện vọng.')]);
                 }
                 $this->applyOrder($remaining, $order);
                 CandidateApplications::requireOpenRound($round);
@@ -102,7 +102,7 @@ class CandidateWishes
             if (! $foreignKeyFailure || ! str_starts_with($exception->getSql(), $prefix)) {
                 throw $exception;
             }
-            throw ValidationException::withMessages(['deletion' => __('A wish with an admission result cannot be deleted.')]);
+            throw ValidationException::withMessages(['deletion' => __('Không thể xóa nguyện vọng đã có kết quả xét tuyển.')]);
         }
     }
 
@@ -117,7 +117,7 @@ class CandidateWishes
         ])->validate();
         $order = array_values(array_map(fn ($id): int => (int) $id, $validated['order']));
         if (count(array_unique($order)) !== count($order)) {
-            throw ValidationException::withMessages(['order' => __('Each wish must appear exactly once.')]);
+            throw ValidationException::withMessages(['order' => __('Mỗi nguyện vọng chỉ được xuất hiện một lần.')]);
         }
         DB::transaction(function () use ($applicationId, $order, $expectedOrder): void {
             $application = CandidateApplications::lockApplication(CandidateApplications::lockProfile(), $applicationId);
@@ -131,7 +131,7 @@ class CandidateWishes
             sort($ids);
             sort($requested);
             if ($ids !== $requested) {
-                throw ValidationException::withMessages(['order' => __('Include every wish from this application exactly once. Reload and try again.')]);
+                throw ValidationException::withMessages(['order' => __('Hãy đưa mỗi nguyện vọng của hồ sơ vào danh sách đúng một lần. Tải lại và thử lại.')]);
             }
             $this->applyOrder($wishes, $order);
             CandidateApplications::requireOpenRound($round);
@@ -152,7 +152,7 @@ class CandidateWishes
     private function assertCurrentOrder(Collection $wishes, array $expectedOrder): void
     {
         if (self::orderedIds($wishes) !== $expectedOrder) {
-            throw ValidationException::withMessages(['order' => __('The wish list changed since this page was loaded. Reload the wishes and try again.')]);
+            throw ValidationException::withMessages(['order' => __('Danh sách nguyện vọng đã thay đổi. Hãy tải lại và thử lại.')]);
         }
     }
 
@@ -166,7 +166,7 @@ class CandidateWishes
             if ($wish->getAttribute('priority') !== $positions[$wish->getKey()] + 1) {
                 Gate::authorize('update', $wish);
                 if ($wish->result()->lockForUpdate()->first() !== null) {
-                    throw ValidationException::withMessages(['order' => __('Wishes with admission results cannot change priority.')]);
+                    throw ValidationException::withMessages(['order' => __('Không thể đổi thứ tự ưu tiên của nguyện vọng đã có kết quả.')]);
                 }
             }
         }
@@ -182,7 +182,7 @@ class CandidateWishes
     private function applyOrder(Collection $wishes, array $order): void
     {
         if (count($order) > 65535) {
-            throw ValidationException::withMessages(['order' => __('The wish priority storage limit has been reached.')]);
+            throw ValidationException::withMessages(['order' => __('Đã đạt giới hạn thứ tự ưu tiên nguyện vọng.')]);
         }
         $this->authorizeOrder($wishes, $order);
         $byId = $wishes->keyBy('id');
@@ -203,7 +203,7 @@ class CandidateWishes
                     $free++;
                 }
                 if ($free > 65535) {
-                    throw ValidationException::withMessages(['order' => __('No safe temporary priority is available.')]);
+                    throw ValidationException::withMessages(['order' => __('Không còn thứ tự ưu tiên tạm thời phù hợp.')]);
                 }
                 $occupant = $byId->get($occupied[$target]);
                 abort_if($occupant === null, 404);
@@ -221,7 +221,7 @@ class CandidateWishes
         $old = $wish->getAttribute('priority');
         $wish->setAttribute('priority', $priority);
         if (! $wish->save()) {
-            throw ValidationException::withMessages(['order' => __('The wish order could not be saved.')]);
+            throw ValidationException::withMessages(['order' => __('Không thể lưu thứ tự nguyện vọng.')]);
         }
         unset($occupied[$old]);
         $occupied[$priority] = (int) $wish->getKey();
@@ -250,20 +250,19 @@ class CandidateWishes
     public static function unavailableReason(AdmissionProgram $program, AdmissionRound $round): ?string
     {
         $reason = match (true) {
-            (int) $program->getAttribute('admission_round_id') !== (int) $round->getKey() => 'Different admission round',
-            $program->getAttribute('status') !== 'active' => 'Program inactive',
-            ! $program->major?->getAttribute('is_active') => 'Major inactive',
-            ! $program->admissionMethod?->getAttribute('is_active') => 'Admission method inactive',
-            $program->getAttribute('quota') <= 0 => 'No configured capacity',
-            ! CandidateApplications::roundIsOpen($round) => 'Round outside its open application window',
+            (int) $program->getAttribute('admission_round_id') !== (int) $round->getKey() => 'Khác đợt tuyển sinh',
+            $program->getAttribute('status') !== 'active' => 'Chương trình không hoạt động',
+            ! $program->major?->getAttribute('is_active') => 'Ngành không hoạt động',
+            ! $program->admissionMethod?->getAttribute('is_active') => 'Phương thức xét tuyển không hoạt động',
+            $program->getAttribute('quota') <= 0 => 'Chưa có chỉ tiêu',
+            ! CandidateApplications::roundIsOpen($round) => 'Ngoài thời gian nhận hồ sơ',
             default => null,
         };
 
         if ($reason === null) {
             return null;
         }
-        $translated = __($reason);
 
-        return is_string($translated) ? $translated : $reason;
+        return $reason;
     }
 }

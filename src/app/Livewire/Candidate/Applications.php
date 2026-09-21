@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Title;
 use Livewire\WithPagination;
 
-#[Title('Admission applications')]
+#[Title('Đăng ký xét tuyển')]
 class Applications extends CandidatePage
 {
     use WithPagination;

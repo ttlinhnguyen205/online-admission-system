@@ -148,9 +148,12 @@ test('candidate sees only own published result with score rank program and decis
     $this->actingAs($admin);
     app(PublishAdmissionResults::class)->publish($program->admission_round_id);
     $this->actingAs($candidate);
-    Livewire::test(Results::class)->assertSee('8.125')->assertSee('Admitted /')->assertSee($program->major->name)
+    Livewire::test(Results::class)->assertSee('8.125')->assertSee('Trúng tuyển')->assertSee($program->major->name)
         ->assertSee($program->admissionMethod->name)->assertDontSee('7.500')
         ->assertViewHas('results', fn ($results) => $results->count() === 1 && $results->first()->rank === 1);
+    $this->actingAs($other->candidateProfile->user);
+    Livewire::test(Results::class)->assertSee('Không trúng tuyển')->assertSee('Điểm xét tuyển')
+        ->assertSee('Thứ hạng')->assertSee('Thời gian công bố')->assertDontSee('8.125');
 });
 
 test('candidate confirms once and publication retries remain read only after confirmation', function () {
@@ -204,8 +207,9 @@ test('candidate notifications are private and read state is idempotent', functio
     $own = $candidate->notifications()->sole();
     $foreign = $other->candidateProfile->user->notifications()->sole();
     $this->actingAs($candidate);
-    Livewire::test(Notifications::class)->assertSee('Unread')->assertViewHas('notifications', fn ($items) => $items->count() === 1)
-        ->call('markRead', $own->id)->assertSee('Read')->assertDontSee('Mark as read');
+    Livewire::test(Notifications::class)->assertSee('Chưa đọc')->assertSee(route('candidate.results.index'))
+        ->assertViewHas('notifications', fn ($items) => $items->count() === 1)
+        ->call('markRead', $own->id)->assertSee('Đã đọc')->assertDontSee('Đánh dấu đã đọc');
     $time = $own->fresh()->read_at->format('Y-m-d H:i:s');
     $this->travel(10)->minutes();
     Livewire::test(Notifications::class)->call('markRead', $own->id);

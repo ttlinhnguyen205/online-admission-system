@@ -20,7 +20,7 @@ use Livewire\Attributes\Title;
 use Livewire\WithFileUploads;
 use Throwable;
 
-#[Title('Hồ sơ thí sinh')]
+#[Title('Hồ sơ cá nhân')]
 class Profile extends CandidatePage
 {
     use WithFileUploads;
@@ -64,7 +64,9 @@ class Profile extends CandidatePage
     public array $form = [];
 
     public mixed $photo = null;
+
     public mixed $citizenIdFront = null;
+
     public mixed $citizenIdBack = null;
 
     #[Locked]
