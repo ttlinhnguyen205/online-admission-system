@@ -22,4 +22,7 @@
     @endforelse
     {{ $results->links() }}
     <div role="status" wire:loading.delay>{{ __('Đang tải...') }}</div>
+    <div class="flex justify-end">
+        <flux:button :href="route('candidate.notifications.index')" wire:navigate>{{ __('Tiếp theo: Thông báo') }}</flux:button>
+    </div>
 </section>

@@ -41,7 +41,7 @@ test('candidate navigation respects role and account status while account settin
     $this->actingAs(User::factory()->create(['role' => $role, 'status' => $status]));
     $response = $this->get(route('profile.edit'))->assertOk();
     if ($role === UserRole::Candidate && $status === UserStatus::Active) {
-        $response->assertSeeInOrder(['Hồ sơ cá nhân', 'Thông tin tuyển sinh', 'Đăng ký xét tuyển', 'Kết quả xét tuyển', 'Thông báo'])
+        $response->assertSeeInOrder(['Hồ sơ cá nhân', 'Thông tin tuyển sinh', 'Đăng ký nguyện vọng', 'Kết quả xét tuyển', 'Thông báo'])
             ->assertSee(route('candidate.profile.edit'))->assertSee(route('candidate.admission-information.index'))
             ->assertDontSee('Điểm & minh chứng')
             ->assertSee(route('candidate.applications.index'))->assertSee(route('candidate.results.index'))

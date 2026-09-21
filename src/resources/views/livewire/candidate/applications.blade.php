@@ -1,7 +1,7 @@
 <section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
     <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-            <flux:heading size="xl" level="1">{{ __('Đăng ký xét tuyển') }}</flux:heading>
+            <flux:heading size="xl" level="1">{{ __('Đăng ký nguyện vọng') }}</flux:heading>
             <flux:text class="mt-2">{{ __('Tạo một hồ sơ cho mỗi đợt tuyển sinh, sắp xếp nguyện vọng rồi nộp khi đã sẵn sàng.') }}</flux:text>
         </div>
         @if ($profile && $rounds->isNotEmpty())
@@ -58,4 +58,7 @@
             </div>
         </form>
     </flux:modal>
+    <div class="flex justify-end">
+        <flux:button :href="route('candidate.results.index')" wire:navigate>{{ __('Tiếp theo: Kết quả xét tuyển') }}</flux:button>
+    </div>
 </section>

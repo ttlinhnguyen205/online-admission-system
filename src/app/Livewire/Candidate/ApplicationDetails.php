@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 
-#[Title('Đăng ký xét tuyển')]
+#[Title('Đăng ký nguyện vọng')]
 class ApplicationDetails extends CandidatePage
 {
     #[Locked]

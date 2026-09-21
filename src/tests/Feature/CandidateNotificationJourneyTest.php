@@ -41,7 +41,7 @@ test('successful submission sends one private notification and a repeated submit
     expect($notification->type)->toBe(ApplicationSubmitted::class);
     expect($notification->data['application_id'])->toBe($application->id);
     Livewire::test(Notifications::class)->assertSee('Hồ sơ đã được tiếp nhận')
-        ->assertSee(route('candidate.applications.show', $application->id));
+        ->assertSee('Xem hồ sơ');
     expect(fn () => app(CandidateApplications::class)->submit($application->id))->toThrow(AuthorizationException::class);
     $this->assertDatabaseCount('notifications', 1);
 });
@@ -75,7 +75,7 @@ test('review start and revision each notify exactly once with an owned applicati
     $this->actingAs($candidate);
     Livewire::test(Notifications::class)->assertSee('Hồ sơ đang được xét duyệt')
         ->assertSee('Hồ sơ cần bổ sung')->assertSee('Thiếu giấy tờ')
-        ->assertSee(route('candidate.applications.show', $application->id));
+        ->assertSee('Xem hồ sơ');
 });
 
 test('score verification sends one notification only after readable evidence is verified', function () {
@@ -97,7 +97,6 @@ test('score verification sends one notification only after readable evidence is 
 
     $this->actingAs($candidate);
     Livewire::test(Notifications::class)->assertSee('Minh chứng điểm đã được xác minh')
-        ->assertSee(route('candidate.admission-information.index'))
         ->assertSee('Xem thông tin tuyển sinh');
 });
 

@@ -18,6 +18,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Throwable;
 
@@ -49,7 +50,22 @@ class AdmissionInformation extends CandidatePage
 
     public mixed $competencyEvidence = null;
 
-    public mixed $transcriptEvidence = null;
+    /** @var list<TemporaryUploadedFile> */
+    public array $transcriptEvidence = [];
+
+    /** @var list<int> */
+    public array $removedTranscriptEvidence = [];
+
+    public bool $removeLegacyTranscriptEvidence = false;
+
+    /** @var array<string, bool> */
+    public array $claimSelections = ['direct_admission' => false, 'priority_admission' => false];
+
+    /** @var array<string, array<string, mixed>> */
+    public array $declarations = [];
+
+    /** @var array<string, mixed> */
+    public array $declarationEvidence = [];
 
     #[Locked]
     public ?int $certificateId = null;
@@ -76,8 +92,65 @@ class AdmissionInformation extends CandidatePage
 
     public bool $showTranscriptEditor = false;
 
+    public function mount(): void
+    {
+        $profile = $this->candidate()->candidateProfile()->first();
+        if ($profile === null) {
+            return;
+        }
+        $certificate = $profile->certificates()->first();
+        if ($certificate === null) {
+            $this->createCertificate();
+        } elseif ($certificate->status !== VerificationStatus::Verified) {
+            $this->editCertificate($certificate->id);
+        }
+        $exam = $profile->examResults()->whereIn('exam_type', $this->competencyTypes())->first();
+        if ($exam === null) {
+            $this->createCompetency();
+        } elseif ($exam->status !== VerificationStatus::Verified) {
+            $this->editCompetency($exam->id);
+        }
+        foreach (array_keys($this->claimSelections) as $type) {
+            $claim = $profile->admissionClaims()->where('claim_type', $type)->first();
+            $this->claimSelections[$type] = $claim !== null;
+            $this->declarations[$type] = $claim?->only(['claim_code', 'description'])
+                ?? ['claim_code' => null, 'description' => null];
+        }
+    }
+
+    public function saveDeclaration(string $type, CandidateFiles $files): void
+    {
+        abort_unless(in_array($type, ['direct_admission', 'priority_admission'], true), 404);
+        abort_unless($this->claimSelections[$type] ?? false, 403);
+        $this->validate([
+            'declarations.'.$type => ['required', 'array:claim_code,description'],
+            'declarations.'.$type.'.claim_code' => ['nullable', 'string', 'max:100'],
+            'declarations.'.$type.'.description' => ['nullable', 'string', 'max:5000'],
+        ]);
+        $record = $this->profile()->admissionClaims()->where('claim_type', $type)->first();
+        $this->claimId = $record?->id;
+        $this->claimForm = ['claim_type' => $type, ...$this->declarations[$type]];
+        $this->claimEvidence = $this->declarationEvidence[$type] ?? null;
+        try {
+            $this->saveClaim($files);
+        } catch (ValidationException $exception) {
+            throw ValidationException::withMessages(collect($exception->errors())->mapWithKeys(
+                fn (array $messages, string $key): array => [
+                    str_replace(['claimEvidence', 'claimForm.'], ['declarationEvidence.'.$type, 'declarations.'.$type.'.'], $key) => $messages,
+                ]
+            )->all());
+        }
+        unset($this->declarationEvidence[$type]);
+    }
+
     public function createCertificate(): void
     {
+        $existing = $this->profile()->certificates()->first();
+        if ($existing !== null) {
+            $this->editCertificate($existing->id);
+
+            return;
+        }
         Gate::authorize('create', [CandidateCertificate::class, $this->profile()]);
         $this->resetValidation();
         $this->certificateId = null;
@@ -259,6 +332,12 @@ class AdmissionInformation extends CandidatePage
 
     public function createCompetency(): void
     {
+        $existing = $this->profile()->examResults()->whereIn('exam_type', $this->competencyTypes())->first();
+        if ($existing !== null) {
+            $this->editCompetency($existing->id);
+
+            return;
+        }
         Gate::authorize('create', [CandidateExamResult::class, $this->profile()]);
         $this->resetValidation();
         $this->competencyId = null;
@@ -316,11 +395,13 @@ class AdmissionInformation extends CandidatePage
         Gate::authorize('create', [CandidateTranscript::class, $this->profile()]);
         $this->resetValidation();
         $this->transcriptId = null;
-        $this->transcriptEvidence = null;
+        $this->transcriptEvidence = [];
+        $this->removedTranscriptEvidence = [];
+        $this->removeLegacyTranscriptEvidence = false;
         $this->transcriptForm = [
             'school_name' => $this->profile()->high_school_name,
             'graduation_year' => $this->profile()->graduation_year ?? now()->year,
-            'subjects' => [['subject_code' => '', 'grade_10' => null, 'grade_11' => null, 'grade_12' => null]],
+            'subjects' => $this->blankTranscriptSubjects(),
         ];
         $this->showTranscriptEditor = true;
     }
@@ -330,15 +411,16 @@ class AdmissionInformation extends CandidatePage
         $record = $this->profile()->transcripts()->with('scores')->findOrFail($id);
         Gate::authorize('update', $record);
         $this->transcriptId = $record->getKey();
-        $this->transcriptEvidence = null;
-        $rows = $record->scores->groupBy('subject_code')->map(function ($scores, string $subject): array {
-            $row = ['subject_code' => $subject, 'grade_10' => null, 'grade_11' => null, 'grade_12' => null];
-            foreach ($scores as $score) {
+        $this->transcriptEvidence = [];
+        $this->removedTranscriptEvidence = [];
+        $this->removeLegacyTranscriptEvidence = false;
+        $rows = $this->blankTranscriptSubjects();
+        foreach ($rows as &$row) {
+            foreach ($record->scores->where('subject_code', $row['subject_code']) as $score) {
                 $row['grade_'.$score->grade_level] = $score->score;
             }
-
-            return $row;
-        })->values()->all();
+        }
+        unset($row);
         $this->transcriptForm = [
             'school_name' => $record->school_name,
             'graduation_year' => $record->graduation_year,
@@ -347,17 +429,23 @@ class AdmissionInformation extends CandidatePage
         $this->showTranscriptEditor = true;
     }
 
-    public function addTranscriptSubject(): void
+    /** @return list<array{subject_code: string, grade_10: null, grade_11: null, grade_12: null}> */
+    private function blankTranscriptSubjects(): array
     {
-        $this->transcriptForm['subjects'][] = [
-            'subject_code' => '', 'grade_10' => null, 'grade_11' => null, 'grade_12' => null,
-        ];
+        $subjects = [];
+        foreach (config('admission_data.subjects') as $code => $label) {
+            if (! is_string($code)) {
+                throw new \UnexpectedValueException('Transcript subject codes must be canonical strings.');
+            }
+            $subjects[] = ['subject_code' => $code, 'grade_10' => null, 'grade_11' => null, 'grade_12' => null];
+        }
+
+        return $subjects;
     }
 
-    public function removeTranscriptSubject(int $index): void
+    public function updatedTranscriptEvidence(): void
     {
-        unset($this->transcriptForm['subjects'][$index]);
-        $this->transcriptForm['subjects'] = array_values($this->transcriptForm['subjects']);
+        $this->validate(['transcriptEvidence.*' => CandidateFiles::scoreEvidenceRules(true)], $this->evidenceMessages('transcriptEvidence.*'));
     }
 
     public function saveTranscript(CandidateFiles $files): void
@@ -372,8 +460,12 @@ class AdmissionInformation extends CandidatePage
             'transcriptForm.subjects.*.grade_10' => $this->optionalScoreRules(),
             'transcriptForm.subjects.*.grade_11' => $this->optionalScoreRules(),
             'transcriptForm.subjects.*.grade_12' => $this->optionalScoreRules(),
-            'transcriptEvidence' => CandidateFiles::scoreEvidenceRules($this->transcriptId === null),
-        ], $this->evidenceMessages('transcriptEvidence'));
+            'transcriptEvidence' => ['array'],
+            'transcriptEvidence.*' => CandidateFiles::scoreEvidenceRules(true),
+            'removedTranscriptEvidence' => ['array'],
+            'removedTranscriptEvidence.*' => ['integer', 'distinct'],
+            'removeLegacyTranscriptEvidence' => ['boolean'],
+        ], $this->evidenceMessages('transcriptEvidence.*'));
         $rows = $this->transcriptRows($validated['transcriptForm']['subjects']);
         if ($rows === []) {
             throw ValidationException::withMessages([
@@ -382,7 +474,9 @@ class AdmissionInformation extends CandidatePage
         }
         unset($validated['transcriptForm']['subjects']);
         $this->saveTranscriptRecord($this->transcriptId, $validated['transcriptForm'], $rows, $this->transcriptEvidence, $files);
-        $this->transcriptEvidence = null;
+        $this->transcriptEvidence = [];
+        $this->removedTranscriptEvidence = [];
+        $this->removeLegacyTranscriptEvidence = false;
         $this->showTranscriptEditor = false;
         Flux::toast(variant: 'success', text: __('Đã lưu điểm học bạ.'));
     }
@@ -404,9 +498,8 @@ class AdmissionInformation extends CandidatePage
             'profile' => $profile,
             'certificates' => $profile?->certificates()->latest('id')->get() ?? collect(),
             'claims' => $profile?->admissionClaims()->latest('id')->get() ?? collect(),
-            'thptResults' => $profile?->examResults()->where('exam_type', 'thpt')->with('subjectScores')->latest('id')->get() ?? collect(),
             'competencyResults' => $profile?->examResults()->whereIn('exam_type', $this->competencyTypes())->latest('id')->get() ?? collect(),
-            'transcripts' => $profile?->transcripts()->with('scores')->latest('id')->get() ?? collect(),
+            'transcripts' => $profile?->transcripts()->with(['scores', 'evidenceImages'])->latest('id')->get() ?? collect(),
             'certificateTypes' => config('admission_data.certificate_types'),
             'examTypes' => config('admission_data.exam_types'),
             'subjects' => config('admission_data.subjects'),
@@ -429,6 +522,14 @@ class AdmissionInformation extends CandidatePage
                 $modelClass, $relationship, $id, $attributes, $evidence, $directory, $files, &$newPath, &$oldPath
             ): void {
                 $profile = CandidateApplications::lockProfile();
+                if ($relationship === 'certificates' && $id === null && $profile->certificates()->exists()) {
+                    throw ValidationException::withMessages(['certificateForm' => __('Bạn đã có chứng chỉ. Vui lòng chỉnh sửa thông tin hiện có.')]);
+                }
+                if ($relationship === 'admissionClaims' && $id === null
+                    && in_array($attributes['claim_type'], ['direct_admission', 'priority_admission'], true)
+                    && $profile->admissionClaims()->where('claim_type', $attributes['claim_type'])->exists()) {
+                    throw ValidationException::withMessages(['claimForm' => __('Thông tin này đã được lưu. Vui lòng tải lại trang để chỉnh sửa.')]);
+                }
                 $record = $id === null ? null : $profile->{$relationship}()->lockForUpdate()->findOrFail($id);
                 Gate::authorize($record === null ? 'create' : 'update', $record === null ? [$modelClass, $profile] : $record);
                 $record ??= $profile->{$relationship}()->make();
@@ -460,7 +561,15 @@ class AdmissionInformation extends CandidatePage
                 $id, $attributes, $subjects, $evidence, $files, &$newPath, &$oldPath
             ): void {
                 $profile = CandidateApplications::lockProfile();
-                $record = $id === null ? null : $profile->examResults()->lockForUpdate()->findOrFail($id);
+                if ($attributes['exam_type'] !== 'thpt' && $id === null
+                    && $profile->examResults()->whereIn('exam_type', $this->competencyTypes())->exists()) {
+                    throw ValidationException::withMessages(['competencyForm' => __('Bạn đã có kết quả kỳ thi. Vui lòng chỉnh sửa thông tin hiện có.')]);
+                }
+                $query = $profile->examResults()->lockForUpdate();
+                $attributes['exam_type'] === 'thpt'
+                    ? $query->where('exam_type', 'thpt')
+                    : $query->whereIn('exam_type', $this->competencyTypes());
+                $record = $id === null ? null : $query->findOrFail($id);
                 Gate::authorize($record === null ? 'create' : 'update', $record === null
                     ? [CandidateExamResult::class, $profile] : $record);
                 $record ??= $profile->examResults()->make();
@@ -492,10 +601,10 @@ class AdmissionInformation extends CandidatePage
      */
     private function saveTranscriptRecord(?int $id, array $attributes, array $rows, mixed $evidence, CandidateFiles $files): void
     {
-        $newPath = $oldPath = null;
+        $newPaths = $oldPaths = [];
         try {
             $this->profile()->getConnection()->transaction(function () use (
-                $id, $attributes, $rows, $evidence, $files, &$newPath, &$oldPath
+                $id, $attributes, $rows, $evidence, $files, &$newPaths, &$oldPaths
             ): void {
                 $profile = CandidateApplications::lockProfile();
                 $record = $id === null ? null : $profile->transcripts()->lockForUpdate()->findOrFail($id);
@@ -503,26 +612,52 @@ class AdmissionInformation extends CandidatePage
                     ? [CandidateTranscript::class, $profile] : $record);
                 $record ??= $profile->transcripts()->make();
                 $record->fill([...$attributes, ...$this->resubmissionAttributes($record)]);
-                if ($evidence instanceof UploadedFile) {
-                    $oldPath = $record->getAttribute('evidence_path');
-                    $newPath = $files->store($evidence, 'candidate-transcripts/'.$profile->getKey(), 'evidence');
-                    $record->setAttribute('evidence_path', $newPath);
+                if ($this->removeLegacyTranscriptEvidence && $record->evidence_path !== null) {
+                    $oldPaths[] = $record->evidence_path;
+                    $record->evidence_path = null;
                 }
                 $record->saveOrFail();
+                foreach ($this->removedTranscriptEvidence as $imageId) {
+                    $image = $record->evidenceImages()->findOrFail($imageId);
+                    $oldPaths[] = $image->path;
+                    $image->deleteOrFail();
+                }
+                $sortOrder = (int) $record->evidenceImages()->max('sort_order');
+                foreach ($evidence as $upload) {
+                    $path = $files->store($upload, 'candidate-transcripts/'.$profile->id, 'evidence');
+                    $newPaths[] = $path;
+                    $image = $record->evidenceImages()->make([
+                        'path' => $path,
+                        'original_name' => CandidateFiles::displayName($upload->getClientOriginalName()),
+                        'mime_type' => $upload->getMimeType(),
+                        'size' => $upload->getSize(),
+                        'sort_order' => ++$sortOrder,
+                    ]);
+                    $image->saveOrFail();
+                }
+                if (($id === null || $this->removedTranscriptEvidence !== [] || $this->removeLegacyTranscriptEvidence)
+                    && $record->evidence_path === null && ! $record->evidenceImages()->exists()) {
+                    throw ValidationException::withMessages(['transcriptEvidence' => __('Vui lòng giữ hoặc tải lên ít nhất một ảnh học bạ.')]);
+                }
                 $record->scores()->delete();
                 $record->scores()->createMany($rows);
+                $this->transcriptId = $record->id;
             });
         } catch (Throwable $exception) {
-            $files->remove($newPath);
+            foreach ($newPaths as $path) {
+                $files->remove($path);
+            }
             throw $exception;
         }
-        $this->removeReplacedEvidence($files, $oldPath);
+        foreach ($oldPaths as $path) {
+            $this->removeReplacedEvidence($files, $path);
+        }
     }
 
     /** @param string|list<string>|null $expectedType */
     private function deleteParent(string $relationship, int $id, CandidateFiles $files, string|array|null $expectedType = null): void
     {
-        $path = $this->profile()->getConnection()->transaction(function () use ($relationship, $id, $expectedType): ?string {
+        $paths = $this->profile()->getConnection()->transaction(function () use ($relationship, $id, $expectedType): array {
             $profile = CandidateApplications::lockProfile();
             $query = $profile->{$relationship}()->lockForUpdate();
             if (is_string($expectedType)) {
@@ -532,13 +667,16 @@ class AdmissionInformation extends CandidatePage
             }
             $record = $query->findOrFail($id);
             Gate::authorize('delete', $record);
-            $path = $record->getAttribute('evidence_path');
+            $paths = [$record->getAttribute('evidence_path')];
+            if ($record instanceof CandidateTranscript) {
+                $paths = [...$paths, ...$record->evidenceImages()->pluck('path')->all()];
+            }
             $record->deleteOrFail();
 
-            return is_string($path) ? $path : null;
+            return $paths;
         });
-        if (! $files->remove($path)) {
-            $this->addError('cleanup', __('Đã xóa dữ liệu nhưng không thể dọn tệp minh chứng. Vui lòng liên hệ bộ phận hỗ trợ.'));
+        foreach ($paths as $path) {
+            $this->removeReplacedEvidence($files, $path);
         }
     }
 

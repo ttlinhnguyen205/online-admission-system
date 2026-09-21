@@ -131,6 +131,11 @@ class Profile extends CandidatePage
         $this->form['high_school_name'] = null;
     }
 
+    public function updatedPhoto(): void
+    {
+        $this->validateOnly('photo', ['photo' => CandidateFiles::photoRules()]);
+    }
+
     /** @return array<string, mixed> */
     protected function profileRules(?CandidateProfile $profile): array
     {

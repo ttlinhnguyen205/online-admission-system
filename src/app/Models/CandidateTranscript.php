@@ -34,6 +34,12 @@ class CandidateTranscript extends Model
         return $this->hasMany(CandidateTranscriptScore::class);
     }
 
+    /** @return HasMany<CandidateTranscriptEvidence, $this> */
+    public function evidenceImages(): HasMany
+    {
+        return $this->hasMany(CandidateTranscriptEvidence::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     /** @return BelongsTo<User, $this> */
     public function verifier(): BelongsTo
     {

@@ -23,6 +23,17 @@ class Notifications extends CandidatePage
         $this->candidate()->notifications()->whereKey($notification->id)->whereNull('read_at')->update(['read_at' => now()]);
     }
 
+    public function openNotification(string $notificationId): void
+    {
+        $notification = $this->candidate()->notifications()->findOrFail($notificationId);
+        $url = $this->details($notification)['url'];
+        $this->markRead($notificationId);
+
+        if ($url !== null) {
+            $this->redirect($url, navigate: true);
+        }
+    }
+
     public function render(): View
     {
         $candidate = $this->candidate();

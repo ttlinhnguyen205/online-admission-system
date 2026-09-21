@@ -2,7 +2,7 @@
     <div><flux:heading size="xl" level="1">{{ __('Tài liệu hồ sơ') }}</flux:heading><flux:text class="mt-2">{{ __('Mỗi tài liệu thuộc về một hồ sơ xét tuyển. Hãy chọn hồ sơ để quản lý tài liệu của hồ sơ đó.') }}</flux:text></div>
     <flux:error name="cleanup" />
     <div class="flex flex-wrap gap-3">
-        <flux:button :href="route('candidate.applications.index')" wire:navigate>{{ __('Đăng ký xét tuyển') }}</flux:button>
+        <flux:button :href="route('candidate.applications.index')" wire:navigate>{{ __('Đăng ký nguyện vọng') }}</flux:button>
         @if ($application)
             <flux:button :href="route('candidate.applications.show', $application->id)" wire:navigate>{{ __('Quay lại hồ sơ và nguyện vọng') }}</flux:button>
         @endif

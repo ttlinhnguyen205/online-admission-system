@@ -33,7 +33,7 @@ Route::middleware(['auth', 'active', 'verified'])->group(function (): void {
         ->whereNumber('score')->name('admission.scores.evidence');
 
     Route::get('admission/information/{type}/{record}/evidence', CandidateAdmissionEvidenceController::class)
-        ->whereIn('type', ['exam-results', 'transcripts', 'certificates', 'admission-claims'])
+        ->whereIn('type', ['exam-results', 'transcripts', 'transcript-images', 'certificates', 'admission-claims'])
         ->whereNumber('record')
         ->name('candidate.admission-information.evidence');
 

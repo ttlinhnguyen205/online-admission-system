@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CandidateFiles;
+use App\Models\CandidateTranscriptEvidence;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -17,6 +18,14 @@ class CandidateAdmissionEvidenceController extends Controller
         $user = $request->user();
         abort_unless($user instanceof User && $user->isCandidate(), 403);
         $profile = $user->candidateProfile()->firstOrFail();
+        if ($type === 'transcript-images') {
+            $image = CandidateTranscriptEvidence::query()
+                ->whereHas('transcript', fn ($query) => $query->where('candidate_profile_id', $profile->id))
+                ->findOrFail($record);
+            Gate::authorize('view', $image->transcript);
+
+            return $this->response($image, 'candidate-transcripts/'.$profile->id.'/', 'path');
+        }
         [$model, $prefix] = match ($type) {
             'exam-results' => [$profile->examResults()->findOrFail($record), 'candidate-exam-results/'],
             'transcripts' => [$profile->transcripts()->findOrFail($record), 'candidate-transcripts/'],
@@ -29,9 +38,9 @@ class CandidateAdmissionEvidenceController extends Controller
         return $this->response($model, $prefix);
     }
 
-    private function response(Model $model, string $prefix): StreamedResponse
+    private function response(Model $model, string $prefix, string $attribute = 'evidence_path'): StreamedResponse
     {
-        $path = $model->getAttribute('evidence_path');
+        $path = $model->getAttribute($attribute);
         abort_unless(CandidateFiles::safePath($path) && str_starts_with((string) $path, $prefix), 404);
         $disk = Storage::disk(CandidateFiles::DISK);
         abort_unless($disk->exists($path), 404);

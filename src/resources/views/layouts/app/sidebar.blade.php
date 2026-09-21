@@ -54,7 +54,7 @@
                     <flux:sidebar.group :heading="__('Tuyển sinh thí sinh')">
                         <flux:sidebar.item :href="route('candidate.profile.edit')" :current="request()->routeIs('candidate.profile.*')" wire:navigate>{{ __('Hồ sơ cá nhân') }}</flux:sidebar.item>
                         <flux:sidebar.item :href="route('candidate.admission-information.index')" :current="request()->routeIs('candidate.admission-information.*')" wire:navigate>{{ __('Thông tin tuyển sinh') }}</flux:sidebar.item>
-                        <flux:sidebar.item :href="route('candidate.applications.index')" :current="request()->routeIs('candidate.applications.*')" wire:navigate>{{ __('Đăng ký xét tuyển') }}</flux:sidebar.item>
+                        <flux:sidebar.item :href="route('candidate.applications.index')" :current="request()->routeIs('candidate.applications.*')" wire:navigate>{{ __('Đăng ký nguyện vọng') }}</flux:sidebar.item>
                         <flux:sidebar.item :href="route('candidate.results.index')" :current="request()->routeIs('candidate.results.*')" wire:navigate>{{ __('Kết quả xét tuyển') }}</flux:sidebar.item>
                         <flux:sidebar.item :href="route('candidate.notifications.index')" :current="request()->routeIs('candidate.notifications.*')" wire:navigate>{{ __('Thông báo') }}</flux:sidebar.item>
                     </flux:sidebar.group>

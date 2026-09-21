@@ -37,7 +37,7 @@
 
     <form
         wire:submit="save"
-        class="grid gap-6 lg:grid-cols-3"
+        class="grid items-start gap-6 lg:grid-cols-3"
         x-data="{ uploading: false, progress: 0 }"
         x-on:livewire-upload-start="uploading = true; progress = 0"
         x-on:livewire-upload-finish="uploading = false"
@@ -212,34 +212,34 @@
                 {{-- Đối tượng ưu tiên --}}
                 <flux:select
                     wire:model="form.priority_object"
-                    :label="__('Đối tượng ưu tiên (optional)')"
+                    :label="__('Đối tượng ưu tiên (không bắt buộc)')"
                 >
                     <flux:select.option value="">
                         {{ __('Không thuộc đối tượng ưu tiên') }}
                     </flux:select.option>
 
                     <flux:select.option value="01">
-                        01 - Nhóm ưu tiên UT1
+                        Đối tượng 01
                     </flux:select.option>
 
                     <flux:select.option value="02">
-                        02 - Nhóm ưu tiên UT1
+                        Đối tượng 02
                     </flux:select.option>
 
                     <flux:select.option value="03">
-                        03 - Nhóm ưu tiên UT1
+                        Đối tượng 03
                     </flux:select.option>
 
                     <flux:select.option value="04">
-                        04 - Nhóm ưu tiên UT2
+                        Đối tượng 04
                     </flux:select.option>
 
                     <flux:select.option value="05">
-                        05 - Nhóm ưu tiên UT2
+                        Đối tượng 05
                     </flux:select.option>
 
                     <flux:select.option value="06">
-                        06 - Nhóm ưu tiên UT2
+                        Đối tượng 06
                     </flux:select.option>
                 </flux:select>
 
@@ -273,7 +273,9 @@
                     {{ __('Ảnh hồ sơ 3×4') }}
                 </flux:heading>
 
-                @if ($profile?->photo_path)
+                @if ($photo && ! $errors->has('photo'))
+                    <img src="{{ $photo->temporaryUrl() }}" alt="{{ __('Ảnh hồ sơ mới chưa lưu') }}" class="aspect-[3/4] w-36 rounded-lg object-cover" />
+                @elseif ($profile?->photo_path)
                     <img
                         src="{{ route('admission.profiles.photo', [
                             'profile' => $profile->id,
@@ -400,4 +402,7 @@
             </div>
         </div>
     </form>
+    <div class="flex justify-end">
+        <flux:button :href="route('candidate.admission-information.index')" wire:navigate>{{ __('Tiếp theo: Thông tin tuyển sinh') }}</flux:button>
+    </div>
 </section>

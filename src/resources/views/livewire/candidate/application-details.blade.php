@@ -122,4 +122,7 @@
             <div class="flex justify-end gap-3"><flux:modal.close><flux:button>{{ __('Hủy') }}</flux:button></flux:modal.close><flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="submit">{{ __('Xác nhận nộp hồ sơ') }}</flux:button></div>
         </form>
     </flux:modal>
+    <div class="flex justify-end">
+        <flux:button :href="route('candidate.results.index')" wire:navigate>{{ __('Tiếp theo: Kết quả xét tuyển') }}</flux:button>
+    </div>
 </section>

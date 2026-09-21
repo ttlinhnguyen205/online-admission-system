@@ -25,19 +25,19 @@ function admissionInformationImage(string $name = 'evidence.png'): UploadedFile
     return UploadedFile::fake()->createWithContent($name, file_get_contents(base_path('tests/Fixtures/small.png')));
 }
 
-test('candidate admission information page contains five Vietnamese sections', function () {
+test('candidate admission information page contains four Vietnamese sections', function () {
     $profile = CandidateProfile::factory()->create();
 
-    $this->actingAs($profile->user)->get(route('candidate.admission-information.index'))
+    $response = $this->actingAs($profile->user)->get(route('candidate.admission-information.index'))
         ->assertSee('Thông tin tuyển sinh')
         ->assertSeeInOrder([
             'Chứng chỉ',
             'Xét tuyển thẳng & ưu tiên xét tuyển',
-            'Điểm thi tốt nghiệp THPT',
             'Điểm ĐGNL/ĐGTD/V-SAT/SPT',
             'Điểm tổng kết học bạ THPT',
         ])
-        ->assertDontSee('Điểm & minh chứng');
+        ->assertDontSee('Điểm & minh chứng')->assertDontSee('Điểm thi tốt nghiệp THPT');
+    expect(substr_count($response->getContent(), 'data-admission-section='))->toBe(4);
 });
 
 test('candidate creates edits replaces evidence and deletes a certificate', function () {
@@ -229,7 +229,7 @@ test('transcript stores only nonempty normalized grade cells', function () {
                 ['subject_code' => 'MATH', 'grade_10' => '8.000', 'grade_11' => null, 'grade_12' => '9.000'],
                 ['subject_code' => 'ENG', 'grade_10' => '', 'grade_11' => '7.500', 'grade_12' => null],
             ],
-        ])->set('transcriptEvidence', admissionInformationImage())->call('saveTranscript')->assertHasNoErrors();
+        ])->set('transcriptEvidence', [admissionInformationImage()])->call('saveTranscript')->assertHasNoErrors();
     $transcript = $profile->transcripts()->with('scores')->sole();
 
     expect($transcript->school_name)->toBe('Trường THPT Kiểm thử');
@@ -258,7 +258,7 @@ test('transcript rejects duplicate subjects and requires one actual score', func
     $this->actingAs($profile->user);
     $page = Livewire::test(AdmissionInformation::class)->call('createTranscript')
         ->set('transcriptForm', ['school_name' => null, 'graduation_year' => 2026, 'subjects' => $subjects])
-        ->set('transcriptEvidence', admissionInformationImage())->call('saveTranscript');
+        ->set('transcriptEvidence', [admissionInformationImage()])->call('saveTranscript');
 
     $page->assertHasErrors();
     $this->assertDatabaseCount('candidate_transcripts', 0);
@@ -286,7 +286,7 @@ test('transcript parent child and evidence creation roll back together', functio
             ->set('transcriptForm', [
                 'school_name' => null, 'graduation_year' => 2026,
                 'subjects' => [['subject_code' => 'MATH', 'grade_10' => '8', 'grade_11' => null, 'grade_12' => null]],
-            ])->set('transcriptEvidence', admissionInformationImage())->call('saveTranscript'))
+            ])->set('transcriptEvidence', [admissionInformationImage()])->call('saveTranscript'))
             ->toThrow(RuntimeException::class);
         $this->assertDatabaseCount('candidate_transcripts', 0);
         $this->assertDatabaseCount('candidate_transcript_scores', 0);

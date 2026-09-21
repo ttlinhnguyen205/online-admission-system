@@ -229,6 +229,8 @@ test('profile completion follows saved checklist and normalizes optional blanks'
             file_get_contents(base_path('tests/Fixtures/portrait.png'))
         )
     )
+        ->set('citizenIdFront', UploadedFile::fake()->createWithContent('front.png', file_get_contents(base_path('tests/Fixtures/small.png'))))
+        ->set('citizenIdBack', UploadedFile::fake()->createWithContent('back.png', file_get_contents(base_path('tests/Fixtures/small.png'))))
         ->call('save')
         ->assertHasNoErrors();
 

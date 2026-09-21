@@ -19,9 +19,10 @@ test('candidate journey pages use Vietnamese headings and keep application docum
 
     Livewire::test(Profile::class)->assertSee('Hồ sơ cá nhân')->assertDontSee('Save profile');
     Livewire::test(Scores::class)->assertSee('Điểm &amp; minh chứng', false)->assertDontSee('Score type');
-    Livewire::test(Applications::class)->assertSee('Đăng ký xét tuyển')->assertSee('Bản nháp')->assertSee('Mở hồ sơ');
+    Livewire::test(Applications::class)->assertSee('Đăng ký nguyện vọng')->assertSee('Bản nháp')->assertSee('Mở hồ sơ');
     Livewire::test(ApplicationDetails::class, ['application' => $application->id])
         ->assertSee('Tài liệu hồ sơ')->assertSee(route('candidate.applications.documents.index', $application->id))
+        ->assertSee('Tiếp theo: Kết quả xét tuyển')->assertSee(route('candidate.results.index'))
         ->assertDontSee('All applications');
     Livewire::test(Documents::class, ['application' => $application->id])
         ->assertSee('Tài liệu hồ sơ')->assertSee('Bản nháp')->assertDontSee('Upload document');
