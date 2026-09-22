@@ -57,14 +57,14 @@
             x-on:livewire-upload-cancel="uploading = false" x-on:livewire-upload-error="uploading = false" x-on:livewire-upload-progress="progress = $event.detail.progress">
             <flux:heading>{{ $recordId ? __('Thay thế / Xóa tệp') : __('Tải tệp') }}</flux:heading>
             <flux:error name="form" />
-            <flux:input wire:model="form.document_type" :label="__('Loại tệp *')" maxlength="50" :description="__('Ví dụ: bảng điểm hoặc chứng chỉ. Cho phép tải lên nhiều tệp cùng loại.')" required />
+            <flux:input wire:model="form.document_type" :label="__('Loại tài liệu / Document type *')" maxlength="50" :description="__('Ví dụ: bảng điểm hoặc chứng chỉ. Có thể tải lên nhiều tệp cùng loại.')" required />
             <div>
                 <div class="mb-2 text-sm font-medium text-zinc-800 dark:text-white">{{ $recordId ? __('Tệp thay thế (không bắt buộc)') : __('Tệp *') }}</div>
                 <input id="candidate-document" wire:model="file" type="file" accept="application/pdf,image/jpeg,image/png" class="sr-only" x-on:change="fileName = $event.target.files[0]?.name ?? ''" />
                 <label for="candidate-document" class="inline-flex h-10 cursor-pointer items-center rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-xs hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600/75">{{ __('Chọn tệp') }}</label>
                 <span class="ms-3 text-sm text-zinc-500 dark:text-zinc-300" x-text="fileName || 'Chưa chọn tệp nào'"></span>
             </div>
-            <flux:text>{{ __('PDF/JPEG/PNG, tối đa 10 MB. Việc thay thế tệp hoặc thay đổi loại tệp sẽ đặt lại trạng thái về mức đang xử lý.') }}</flux:text>
+            <flux:text>{{ __('PDF/JPEG/PNG, tối đa 10 MiB. Việc thay thế tệp hoặc thay đổi loại tệp sẽ đặt lại trạng thái về đang chờ đánh giá.') }}</flux:text>
             <div x-show="uploading" x-cloak role="status">{{ __('Đang tải lên:') }} <span x-text="progress + '%' "></span><progress x-bind:value="progress" max="100" class="w-full"></progress></div>
             <div class="flex justify-end gap-3"><flux:modal.close><flux:button>{{ __('Hủy bỏ') }}</flux:button></flux:modal.close><flux:button type="submit" variant="primary" x-bind:disabled="uploading" wire:loading.attr="disabled" wire:target="save,file">{{ __('Lưu tệp') }}</flux:button></div>
         </form>

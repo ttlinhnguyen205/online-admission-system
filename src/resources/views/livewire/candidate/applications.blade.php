@@ -21,7 +21,7 @@
                     <flux:table.column>{{ __('Mã hồ sơ') }}</flux:table.column>
                     <flux:table.column>{{ __('Đợt tuyển sinh') }}</flux:table.column>
                     <flux:table.column>{{ __('Trạng thái') }}</flux:table.column>
-                    <flux:table.column>{{ __('Thời điểm nộp') }}</flux:table.column>
+                    <flux:table.column>{{ __('Thời điểm nộp') }} ({{ config('app.timezone') }})</flux:table.column>
                     <flux:table.column>{{ __('Thao tác') }}</flux:table.column>
                 </flux:table.columns>
                 <flux:table.rows>

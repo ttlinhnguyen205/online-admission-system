@@ -40,9 +40,9 @@
         <form wire:submit="save" class="flex flex-col gap-5">
             <flux:heading size="lg">{{ $recordId ? __('Sửa điểm') : __('Thêm điểm') }}</flux:heading>
             <flux:error name="form" />
-            <flux:input wire:model="form.score_type" :label="__('Loại điểm *')" maxlength="30" :description="__('Ví dụ: THPT, Học bạ, ĐGNL, IELTS, SAT,...')" required />
+            <flux:input wire:model="form.score_type" :label="__('Loại điểm *')" maxlength="30" :description="__('Ví dụ: THPT, học bạ, ĐGNL, IELTS, SAT. Hãy dùng nhãn nhất quán.')" required />
             <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="form.subject_code" :label="__('Mã môn (không bắt buộc)')" maxlength="30" /><flux:input wire:model="form.subject_name" :label="__('Tên môn (không bắt buộc)')" maxlength="100" /></div>
-            <flux:input wire:model="form.score" :label="__('Điểm *')" inputmode="decimal" :description="__('Từ 0 đến 99999.999; tối đa 3 chữ số thập phân (dùng dấu chấm.)')" required />
+            <flux:input wire:model="form.score" :label="__('Điểm *')" inputmode="decimal" :description="__('Từ 0 đến 99999.999; tối đa 3 chữ số thập phân. Dùng dấu chấm.')" required />
             <flux:input wire:model="form.exam_year" :label="__('Năm thi *')" type="number" min="1900" :max="now()->year" required />
             <flux:text>{{ __('Có thể khai báo nhiều lần thi. Điểm đã xác minh không thể sửa hoặc xóa.') }}</flux:text>
             <div class="flex justify-end gap-3"><flux:modal.close><flux:button>{{ __('Hủy') }}</flux:button></flux:modal.close><flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">{{ __('Lưu điểm') }}</flux:button></div>

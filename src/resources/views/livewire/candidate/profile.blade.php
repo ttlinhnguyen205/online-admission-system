@@ -45,7 +45,7 @@
                     <label for="profile-photo" class="inline-flex h-10 cursor-pointer items-center rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-xs hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600/75">{{ __('Chọn ảnh') }}</label>
                     <span class="ms-3 text-sm text-zinc-500 dark:text-zinc-300" x-text="photoName || 'Chưa chọn tệp nào'"></span>
                 </div>
-                <flux:text>{{ __('Chấp nhận JPEG/PNG, tối đa 2 MB. Tỷ lệ 3:4, kích thước từ 300×400 đến 3000×4000 pixel. Ảnh được lưu cùng hồ sơ.') }}</flux:text>
+                <flux:text>{{ __('Chấp nhận JPEG/PNG, tối đa 2 MiB. Tỷ lệ 3:4; kích thước từ 300×400 đến 3000×4000 pixel. Ảnh được lưu cùng hồ sơ.') }}</flux:text>
                 <div x-show="uploading" x-cloak role="status"><span>{{ __('Đang tải lên:') }}</span> <span x-text="progress + '%' "></span><progress x-bind:value="progress" max="100" class="w-full"></progress></div>
             </div>
             <div class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
