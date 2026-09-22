@@ -23,7 +23,7 @@ class CandidateTranscriptScoreFactory extends Factory
             'subject_code' => 'MATH',
             'subject_name' => 'Toán',
             'grade_level' => '10',
-            'score' => '8.250',
+            'score' => '8.25',
         ];
     }
 }

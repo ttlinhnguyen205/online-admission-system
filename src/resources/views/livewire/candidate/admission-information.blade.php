@@ -41,10 +41,10 @@
         <form wire:submit="saveCertificate" class="space-y-4">
             <flux:heading>{{ $certificateId ? __('Chỉnh sửa chứng chỉ') : __('Thêm chứng chỉ') }}</flux:heading>
             <flux:select wire:model="certificateForm.certificate_type" :label="__('Loại chứng chỉ')" required><option value="">{{ __('Chọn loại chứng chỉ') }}</option>@foreach ($certificateTypes as $value => $definition)<option value="{{ $value }}">{{ $definition['label'] }}</option>@endforeach</flux:select>
-            <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="certificateForm.score" type="number" step="0.001" min="0" :label="__('Điểm')" required /><flux:input wire:model="certificateForm.certificate_number" :label="__('Số chứng chỉ (không bắt buộc)')" /></div>
+            <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="certificateForm.score" type="number" step="0.01" min="0" :label="__('Điểm')" required /><flux:input wire:model="certificateForm.certificate_number" :label="__('Số chứng chỉ (không bắt buộc)')" /></div>
             <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="certificateForm.issued_at" type="date" :label="__('Ngày cấp')" /><flux:input wire:model="certificateForm.expires_at" type="date" :label="__('Ngày hết hạn')" /></div>
             <flux:input wire:model="certificateEvidence" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" :label="$certificateId ? __('Thay ảnh minh chứng (không bắt buộc)') : __('Ảnh minh chứng')" />
-            <flux:error name="certificateEvidence" /><flux:error name="certificateForm.certificate_type" /><flux:error name="certificateForm.score" />
+            <flux:error name="certificateForm.certificate_type" /><flux:error name="certificateForm.score" />
             <div class="flex justify-end gap-3"><flux:button type="submit" variant="primary" wire:loading.attr="disabled">{{ __('Lưu') }}</flux:button></div>
         </form>
         @endif
@@ -56,36 +56,86 @@
 
         </div>
         <flux:callout>{{ __('Đây là thông tin bạn khai báo, không có nghĩa là tự động đủ điều kiện hoặc trúng tuyển. Nhà trường sẽ kiểm tra minh chứng và xác minh theo quy định áp dụng.') }}</flux:callout>
-        @foreach (['direct_admission' => 'Tôi đăng ký xét tuyển thẳng', 'priority_admission' => 'Tôi đăng ký ưu tiên xét tuyển'] as $type => $label)
+        @php($claimLabels = [
+            'direct_admission' => 'Anh hùng lao động, Anh hùng lực lượng vũ trang nhân dân, Chiến sĩ thi đua toàn quốc được tuyển thẳng vào các ngành, chương trình do cơ sở đào tạo quy định',
+            'priority_admission' => 'Thí sinh đạt thành tích cao trong các kỳ thi, cuộc thi, giải đấu cấp quốc gia hoặc quốc tế, do các Bộ cử tham gia',
+            'abc' => 'Thí sinh là người nước ngoài hoặc thí sinh là người Việt Nam học tập ở nước ngoài phải đạt chuẩn năng lực ngôn ngữ theo yêu cầu của chương trình, ngành đào tạo phù hợp với quy định của Bộ GD&ĐT',
+            'xyz' => 'Thí sinh thuộc đối tượng khác đáp ứng theo quy định tại Quy chế tuyển sinh theo thông tư số 06/2026/TT-BGDĐT ngày 15/02/2026',
+        ])
+        @foreach ($claimLabels as $type => $label)
             @php($declared = $claims->firstWhere('claim_type', $type))
             @php($immutable = $declared?->status === App\Enums\VerificationStatus::Verified)
             <div wire:key="declaration-{{ $type }}" class="space-y-3">
                 <flux:checkbox wire:model.live="claimSelections.{{ $type }}" :label="$label" :disabled="$immutable" />
                 @if ($claimSelections[$type])
                     @if ($immutable)
-                        <flux:badge>{{ __('Đã xác minh') }}</flux:badge>
                         <flux:text>{{ $declared->description }}</flux:text>
                     @else
-                        <form wire:submit="saveDeclaration('{{ $type }}')" class="space-y-3">
+                        @if ($declared?->rejection_reason)<flux:callout variant="warning">{{ __('Lý do từ chối: :reason', ['reason' => $declared->rejection_reason]) }}</flux:callout>@endif
+                        <form id="declaration-form-{{ $type }}" wire:submit="saveDeclaration('{{ $type }}')" class="flex flex-col gap-3">
                             <flux:textarea wire:model="declarations.{{ $type }}.description" :label="__('Thông tin đề nghị và căn cứ minh chứng')" maxlength="5000" />
                             <flux:input wire:model="declarations.{{ $type }}.claim_code" :label="__('Mã trên giấy tờ (nếu có)')" :description="__('Chỉ ghi mã có trên giấy tờ của bạn; đây không phải mã diện do hệ thống xác định.')" />
                             <flux:input wire:model="declarationEvidence.{{ $type }}" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" :label="$declared ? __('Thay ảnh minh chứng (không bắt buộc)') : __('Ảnh minh chứng')" />
-                            <flux:error name="declarationEvidence.{{ $type }}" />
-                            <flux:button type="submit" variant="primary" wire:loading.attr="disabled">{{ __('Lưu khai báo') }}</flux:button>
                         </form>
-                    @endif
-                    @if ($declared)
-                        <flux:badge>{{ App\Support\CandidateStatusLabels::verification($declared->status) }}</flux:badge>
-                        @if ($declared->rejection_reason)<flux:callout variant="warning">{{ $declared->rejection_reason }}</flux:callout>@endif
-                        @if ($declared->evidence_path)<flux:button size="sm" :href="route('candidate.admission-information.evidence', ['type' => 'admission-claims', 'record' => $declared->id])" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@endif
-                        @unless ($immutable)<flux:button size="sm" variant="danger" wire:click="deleteClaim({{ $declared->id }})" wire:confirm="{{ __('Xóa khai báo đã lưu?') }}">{{ __('Xóa khai báo đã lưu') }}</flux:button>@endunless
                     @endif
                 @endif
             </div>
         @endforeach
         <flux:text>{{ __('Bỏ chọn chỉ ẩn biểu mẫu, không xóa khai báo đã lưu. Dùng nút xóa nếu bạn muốn rút khai báo chưa xác minh.') }}</flux:text>
+        @php($selectedClaims = $claims->filter(fn ($claim) => $claimSelections[$claim->claim_type] ?? false))
+        @php($selectedPendingClaim = $selectedClaims->first(fn ($claim) => $claim->status === App\Enums\VerificationStatus::Pending))
+        @php($selectedEvidenceClaims = $selectedClaims->filter(fn ($claim) => $claim->evidence_path !== null))
+        @php($deletableClaims = $selectedClaims->filter(fn ($claim) => $claim->status !== App\Enums\VerificationStatus::Verified))
+        @php($canSaveDeclaration = false)
+        @foreach (['direct_admission', 'priority_admission', 'abc', 'xyz'] as $type)
+            @if ($claimSelections[$type])
+                @php($declared = $claims->firstWhere('claim_type', $type))
+                @if (! $declared || $declared->status !== App\Enums\VerificationStatus::Verified) @php($canSaveDeclaration = true) @endif
+            @endif
+        @endforeach
+        @if ($canSaveDeclaration || $selectedClaims->isNotEmpty())
+            <div class="flex flex-wrap items-center justify-end gap-2">
+                @if ($selectedPendingClaim)
+                    <flux:badge>{{ App\Support\CandidateStatusLabels::verification($selectedPendingClaim->status) }}</flux:badge>
+                @elseif ($selectedClaims->isNotEmpty())
+                    <flux:badge>{{ App\Support\CandidateStatusLabels::verification($selectedClaims->first()->status) }}</flux:badge>
+                @endif
+                @if ($selectedEvidenceClaims->isNotEmpty())
+                    <flux:dropdown position="bottom" align="end">
+                        <flux:button size="sm" icon-trailing="chevron-down">{{ __('Xem minh chứng') }}</flux:button>
+                        <flux:menu>
+                            @foreach ($selectedEvidenceClaims as $claim)
+                                <flux:menu.item :href="route('candidate.admission-information.evidence', ['type' => 'admission-claims', 'record' => $claim->id])" target="_blank">
+                                    {{ __('Xem minh chứng: :type', ['type' => $claimLabels[$claim->claim_type] ?? $claim->claim_type]) }}
+                                </flux:menu.item>
+                            @endforeach
+                        </flux:menu>
+                    </flux:dropdown>
+                @endif
+                @if ($deletableClaims->isNotEmpty())
+                    <flux:dropdown position="bottom" align="end">
+                        <flux:button size="sm" variant="danger" icon-trailing="chevron-down">{{ __('Xóa khai báo đã lưu') }}</flux:button>
+                        <flux:menu>
+                            @foreach ($deletableClaims as $claim)
+                                <flux:menu.item
+                                    as="button"
+                                    type="button"
+                                    wire:click="deleteClaim({{ $claim->id }})"
+                                    wire:confirm="{{ __('Xóa khai báo này?') }}"
+                                >
+                                    {{ __('Xóa khai báo: :type', ['type' => $claimLabels[$claim->claim_type] ?? $claim->claim_type]) }}
+                                </flux:menu.item>
+                            @endforeach
+                        </flux:menu>
+                    </flux:dropdown>
+                @endif
+                @if ($canSaveDeclaration)
+                <flux:button type="button" variant="primary" wire:click="saveSelectedDeclarations" wire:loading.attr="disabled">{{ __('Lưu khai báo') }}</flux:button>
+                @endif
+            </div>
+        @endif
         <div class="space-y-3">
-            @forelse ($claims->reject(fn ($claim) => in_array($claim->claim_type, ['direct_admission', 'priority_admission'], true)) as $claim)
+            @forelse ($claims->reject(fn ($claim) => in_array($claim->claim_type, ['direct_admission', 'priority_admission', 'abc', 'xyz'], true)) as $claim)
                 <article wire:key="claim-{{ $claim->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
                     <div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $claim->claim_type }}</strong><flux:badge>{{ App\Support\CandidateStatusLabels::verification($claim->status) }}</flux:badge></div>
                     @if ($claim->claim_code)<flux:text>{{ __('Mã diện: :code', ['code' => $claim->claim_code]) }}</flux:text>@endif
@@ -133,11 +183,11 @@
         <form wire:submit="saveCompetency" class="space-y-4">
             <flux:heading>{{ $competencyId ? __('Chỉnh sửa kết quả kỳ thi') : __('Thêm kết quả kỳ thi') }}</flux:heading>
             <flux:select wire:model="competencyForm.exam_type" :label="__('Loại kỳ thi')" required><option value="">{{ __('Chọn loại kỳ thi') }}</option>@foreach (['dgnl', 'dgtd', 'vsat', 'spt'] as $value)<option value="{{ $value }}">{{ $examTypes[$value]['label'] }}</option>@endforeach</flux:select>
-            <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="competencyForm.overall_score" type="number" step="0.001" min="0" :label="__('Điểm')" required /><flux:input wire:model="competencyForm.exam_year" type="number" :label="__('Năm thi')" required /></div>
+            <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="competencyForm.overall_score" type="number" step="1" min="0" max="150" oninvalid="this.setCustomValidity('Điểm phải từ 0 đến 150.')" oninput="this.setCustomValidity('')" :label="__('Điểm')" required /><flux:input wire:model="competencyForm.exam_year" type="number" :label="__('Năm thi')" required /></div>
             <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="competencyForm.exam_date" type="date" :label="__('Ngày thi (không bắt buộc)')" /><flux:input wire:model="competencyForm.exam_session" :label="__('Đợt thi (không bắt buộc)')" /></div>
             <flux:input wire:model="competencyForm.registration_number" :label="__('Số báo danh / mã dự thi (không bắt buộc)')" />
             <flux:input wire:model="competencyEvidence" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" :label="$competencyId ? __('Thay ảnh minh chứng (không bắt buộc)') : __('Ảnh minh chứng')" />
-            <flux:error name="competencyEvidence" /><flux:error name="competencyForm.exam_type" /><flux:error name="competencyForm.overall_score" />
+            <flux:error name="competencyForm.exam_type" /><flux:error name="competencyForm.overall_score" />
             <div class="flex justify-end gap-3"><flux:button type="submit" variant="primary" wire:loading.attr="disabled">{{ __('Lưu') }}</flux:button></div>
         </form>
         @endif
@@ -164,11 +214,13 @@
                         </a>
                     @endforeach
                     @if ($transcript->evidence_path)<flux:button size="sm" :href="route('candidate.admission-information.evidence', ['type' => 'transcripts', 'record' => $transcript->id])" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@endif
-                    @if ($transcript->status !== App\Enums\VerificationStatus::Verified)
+                </div>
+                @if ($transcript->status !== App\Enums\VerificationStatus::Verified)
+                    <div class="flex flex-wrap justify-end gap-2">
                         <flux:button size="sm" wire:click="editTranscript({{ $transcript->id }})">{{ __('Chỉnh sửa') }}</flux:button>
                         <flux:button size="sm" variant="danger" wire:click="deleteTranscript({{ $transcript->id }})" wire:confirm="{{ __('Bạn có chắc muốn xóa học bạ này?') }}">{{ __('Xóa') }}</flux:button>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </article>
         @empty
             <flux:text>{{ __('Chưa có điểm học bạ THPT.') }}</flux:text>
@@ -196,7 +248,6 @@
     <flux:modal wire:model="showTranscriptEditor" class="w-full md:max-w-5xl">
         <form wire:submit="saveTranscript" class="space-y-4">
             <flux:heading>{{ $transcriptId ? __('Chỉnh sửa học bạ') : __('Thêm học bạ') }}</flux:heading>
-            <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="transcriptForm.school_name" :label="__('Tên trường')" /><flux:input wire:model="transcriptForm.graduation_year" type="number" :label="__('Năm tốt nghiệp')" required /></div>
             <div class="space-y-3">
                 @foreach ([10, 11, 12] as $grade)
                     <div wire:key="transcript-grade-{{ $grade }}" x-data="{ expanded: {{ $grade === 10 ? 'true' : 'false' }} }" class="border-b border-zinc-200 pb-4 dark:border-zinc-700">
@@ -207,7 +258,7 @@
                         <div id="transcript-grade-{{ $grade }}-scores" x-show="expanded" @if ($grade !== 10) x-cloak @endif class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             @foreach ($transcriptForm['subjects'] ?? [] as $index => $row)
                                 <div wire:key="transcript-cell-{{ $grade }}-{{ $row['subject_code'] }}">
-                                    <flux:input wire:model.live.debounce.300ms="transcriptForm.subjects.{{ $index }}.grade_{{ $grade }}" type="number" step="0.001" min="0" :label="$subjects[$row['subject_code']] ?? $row['subject_code']" />
+                                    <flux:input wire:model.live.debounce.300ms="transcriptForm.subjects.{{ $index }}.grade_{{ $grade }}" type="number" step="0.01" min="0" :label="$subjects[$row['subject_code']] ?? $row['subject_code']" />
                                 </div>
                             @endforeach
                         </div>
@@ -259,7 +310,7 @@
                 @foreach ($editingTranscript?->evidenceImages ?? [] as $image)
                     <div wire:key="edit-transcript-image-{{ $image->id }}" class="space-y-2">
                         <img src="{{ route('candidate.admission-information.evidence', ['type' => 'transcript-images', 'record' => $image->id]) }}" alt="{{ __('Trang học bạ đã lưu :page', ['page' => $loop->iteration]) }}" class="h-32 w-24 rounded object-contain" />
-                        <flux:checkbox wire:model="removedTranscriptEvidence" :value="$image->id" :label="__('Xóa ảnh này khi lưu')" />
+                        <flux:checkbox wire:model="removedTranscriptEvidence" :value="$image->id" :label="__('Xóa ảnh')" />
                     </div>
                 @endforeach
             </div>

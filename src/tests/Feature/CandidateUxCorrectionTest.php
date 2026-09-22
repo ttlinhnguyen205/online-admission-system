@@ -166,6 +166,48 @@ test('both declaration checkboxes disclose separate forms and save pending reque
     expect($profile->admissionClaims()->count())->toBe(2);
 });
 
+test('sample declaration checkboxes abc and xyz can be selected and saved', function () {
+    Storage::fake(CandidateFiles::DISK);
+    $profile = CandidateProfile::factory()->create();
+    $this->actingAs($profile->user);
+
+    $page = Livewire::test(AdmissionInformation::class)
+        ->assertSee('Thí sinh là người nước ngoài hoặc thí sinh là người Việt Nam học tập ở nước ngoài phải đạt chuẩn năng lực ngôn ngữ theo yêu cầu của chương trình, ngành đào tạo phù hợp với quy định của Bộ GD&ĐT')
+        ->assertSee('Thí sinh thuộc đối tượng khác đáp ứng theo quy định tại Quy chế tuyển sinh theo thông tư số 06/2026/TT-BGDĐT ngày 15/02/2026');
+
+    $page->set('claimSelections.abc', true)
+        ->set('claimSelections.xyz', true)
+        ->set('declarations.abc.description', 'Sample declaration')
+        ->set('declarations.xyz.description', 'Sample declaration')
+        ->set('declarationEvidence.abc', correctionImage('abc.png'))
+        ->set('declarationEvidence.xyz', correctionImage('xyz.png'));
+
+    expect(substr_count($page->html(), __('Lưu khai báo')))->toBe(1);
+
+    $page->call('saveSelectedDeclarations')->assertHasNoErrors();
+
+    expect(substr_count($page->html(), __('Chờ xét duyệt')))->toBe(1)
+        ->and(substr_count($page->html(), __('Xem minh chứng:')))->toBe(2)
+        ->and(substr_count($page->html(), __('Xóa khai báo:')))->toBe(2)
+        ->and(substr_count($page->html(), __('Lưu khai báo')))->toBe(1);
+
+    expect($profile->admissionClaims()->orderBy('claim_type')->pluck('claim_type')->all())->toBe(['abc', 'xyz']);
+});
+
+test('declaration evidence required message is rendered once', function () {
+    Storage::fake(CandidateFiles::DISK);
+    $profile = CandidateProfile::factory()->create();
+    $this->actingAs($profile->user);
+
+    $page = Livewire::test(AdmissionInformation::class)
+        ->set('claimSelections.abc', true)
+        ->set('declarations.abc.description', 'Sample declaration')
+        ->call('saveDeclaration', 'abc')
+        ->assertHasErrors('declarationEvidence.abc');
+
+    expect(substr_count($page->html(), __('Vui lòng tải ảnh minh chứng.')))->toBe(1);
+});
+
 test('transcript grid contains all canonical subjects in three independent collapsible classes', function () {
     $subjects = [
         'MATH' => 'Toán', 'LITERATURE' => 'Ngữ văn', 'ENG' => 'Tiếng Anh', 'PHYSICS' => 'Vật lý',

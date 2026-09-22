@@ -7,7 +7,7 @@
             <button type="button" class="text-start font-semibold" wire:click="openNotification('{{ $notification->id }}')">{{ $detail['title'] }}</button>
             @if ($detail['message'])<flux:text>{{ $detail['message'] }}</flux:text>@endif
             <div class="flex flex-wrap gap-3">
-                @if ($detail['url'])<flux:button :href="$detail['url']" wire:click="openNotification('{{ $notification->id }}')" wire:loading.attr="disabled">{{ $detail['action'] }}</flux:button>@endif
+                @if ($detail['url'])<flux:button :href="$detail['url']" wire:click.prevent="openNotification('{{ $notification->id }}')" wire:loading.attr="disabled" wire:target="openNotification('{{ $notification->id }}')">{{ $detail['action'] }}</flux:button>@endif
             </div>
         </article>
     @empty
