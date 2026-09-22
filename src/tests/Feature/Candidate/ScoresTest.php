@@ -86,7 +86,7 @@ test('multiple score attempts are allowed without overwriting or application res
     $this->actingAs($score->candidateProfile->user);
     $form = $score->only(['score_type', 'subject_code', 'subject_name', 'score', 'exam_year']);
     Livewire::test(Scores::class)->call('create')->set('form', $form)
-        ->set('evidence', UploadedFile::fake()->createWithContent('thpt.png', file_get_contents(base_path('tests/Fixtures/small.png'))))
+        ->set('evidence', UploadedFile::fake()->createWithContent('score.png', file_get_contents(base_path('tests/Fixtures/small.png'))))
         ->call('save')->assertHasNoErrors();
     expect($score->candidateProfile->scores()->count())->toBe(2);
     expect($score->fresh()->score)->toBe('8.250');
@@ -153,15 +153,15 @@ test('year filter handles a candidate without scores', function () {
 test('score type and year filters combine and reset to all scores', function () {
     $profile = CandidateProfile::factory()->create();
     $this->actingAs($profile->user);
-    CandidateScore::factory()->for($profile)->create(['score_type' => 'thpt', 'exam_year' => 2026]);
-    CandidateScore::factory()->for($profile)->create(['score_type' => 'thpt', 'exam_year' => 2025]);
+    CandidateScore::factory()->for($profile)->create(['score_type' => 'hoc_ba', 'exam_year' => 2026]);
+    CandidateScore::factory()->for($profile)->create(['score_type' => 'hoc_ba', 'exam_year' => 2025]);
     CandidateScore::factory()->for($profile)->create(['score_type' => 'sat', 'exam_year' => 2026]);
 
     Livewire::test(Scores::class)
-        ->set('typeFilter', 'thpt')->assertViewHas('records', fn ($records) => $records->total() === 2)
-        ->set('yearFilter', '2026')->assertViewHas('records', fn ($records) => $records->total() === 1 && $records->first()->score_type === 'thpt')
+        ->set('typeFilter', 'hoc_ba')->assertViewHas('records', fn ($records) => $records->total() === 2)
+        ->set('yearFilter', '2026')->assertViewHas('records', fn ($records) => $records->total() === 1 && $records->first()->score_type === 'hoc_ba')
         ->set('typeFilter', '')->assertViewHas('records', fn ($records) => $records->total() === 2)
-        ->set('typeFilter', 'thpt')->set('yearFilter', '')->assertViewHas('records', fn ($records) => $records->total() === 2)
+        ->set('typeFilter', 'hoc_ba')->set('yearFilter', '')->assertViewHas('records', fn ($records) => $records->total() === 2)
         ->call('resetFilters')->assertSet('typeFilter', '')->assertSet('yearFilter', '')
         ->assertViewHas('records', fn ($records) => $records->total() === 3);
 });
@@ -183,22 +183,22 @@ test('invalid filter values never break rendering or expose other candidates sco
     ['yearFilter', '999999999999999999999'],
 ]);
 
-test('score type selector shows the five supported Vietnamese labels', function () {
+test('score type selector shows the supported Vietnamese labels without THPT', function () {
     $profile = CandidateProfile::factory()->create();
     $this->actingAs($profile->user);
 
     Livewire::test(Scores::class)->call('create')
         ->assertSee('wire:model.live="form.score_type"', false)
-        ->assertSee('value="thpt"', false)->assertSee('value="hoc_ba"', false)
+        ->assertDontSee('value="thpt"', false)->assertSee('value="hoc_ba"', false)
         ->assertSee('value="dgnl"', false)->assertSee('value="ielts"', false)->assertSee('value="sat"', false)
-        ->assertSee('THPT')->assertSee('Học bạ')->assertSee('ĐGNL')->assertSee('IELTS')->assertSee('SAT');
+        ->assertDontSee('THPT')->assertSee('Học bạ')->assertSee('ĐGNL')->assertSee('IELTS')->assertSee('SAT');
 });
 
 test('new scores require an image and reject unsupported types or missing weighted subjects', function (array $changes, string $error) {
     Storage::fake(CandidateFiles::DISK);
     $profile = CandidateProfile::factory()->create();
     $this->actingAs($profile->user);
-    $form = ['score_type' => 'thpt', 'subject_code' => 'MATH', 'subject_name' => null, 'score' => '8.250', 'exam_year' => now()->year];
+    $form = ['score_type' => 'hoc_ba', 'subject_code' => 'MATH', 'subject_name' => null, 'score' => '8.250', 'exam_year' => now()->year];
 
     $page = Livewire::test(Scores::class)->call('create')->set('form', array_replace($form, $changes));
     if ($error !== 'evidence') {
@@ -209,8 +209,7 @@ test('new scores require an image and reject unsupported types or missing weight
 })->with([
     'missing evidence' => [[], 'evidence'],
     'unsupported type' => [['score_type' => 'arbitrary'], 'form.score_type'],
-    'THPT subject' => [['subject_code' => null], 'form.subject_code'],
-    'Học bạ subject' => [['score_type' => 'hoc_ba', 'subject_code' => null], 'form.subject_code'],
+    'Học bạ subject' => [['subject_code' => null], 'form.subject_code'],
 ]);
 
 test('new score evidence accepts JPEG and PNG and persists only a generated private path', function (string $fixture, string $extension, string $type) {

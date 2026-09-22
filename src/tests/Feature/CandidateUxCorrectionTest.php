@@ -224,6 +224,28 @@ test('multiple transcript images preview save privately replace and delete with 
     Storage::disk(CandidateFiles::DISK)->assertMissing($paths);
 });
 
+test('candidate can remove a selected transcript image before saving', function () {
+    Storage::fake(CandidateFiles::DISK);
+    $profile = CandidateProfile::factory()->create();
+    $this->actingAs($profile->user);
+
+    Livewire::test(AdmissionInformation::class)->call('createTranscript')
+        ->set('transcriptForm.subjects.0.grade_10', '8')
+        ->set('transcriptEvidence', [correctionImage('one.png'), correctionImage('two.png')])
+        ->assertSee('2 tệp')
+        ->call('removeTranscriptUpload', 0)
+        ->assertDontSee('2 tệp')
+        ->assertSee('two.png')
+        ->call('removeTranscriptUpload', 0)
+        ->assertSee('Chưa chọn tệp')
+        ->set('transcriptEvidence', [correctionImage('two.png')])
+        ->call('saveTranscript')
+        ->assertHasNoErrors();
+
+    $transcript = $profile->transcripts()->sole();
+    expect($transcript->evidenceImages()->pluck('original_name')->all())->toBe(['two.png']);
+});
+
 test('foreign transcript evidence cannot be viewed or removed', function () {
     Storage::fake(CandidateFiles::DISK);
     $own = CandidateTranscript::factory()->create();

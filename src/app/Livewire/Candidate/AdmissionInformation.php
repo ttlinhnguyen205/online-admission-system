@@ -34,9 +34,6 @@ class AdmissionInformation extends CandidatePage
     public array $claimForm = [];
 
     /** @var array<string, mixed> */
-    public array $thptForm = [];
-
-    /** @var array<string, mixed> */
     public array $competencyForm = [];
 
     /** @var array<string, mixed> */
@@ -45,8 +42,6 @@ class AdmissionInformation extends CandidatePage
     public mixed $certificateEvidence = null;
 
     public mixed $claimEvidence = null;
-
-    public mixed $thptEvidence = null;
 
     public mixed $competencyEvidence = null;
 
@@ -74,9 +69,6 @@ class AdmissionInformation extends CandidatePage
     public ?int $claimId = null;
 
     #[Locked]
-    public ?int $thptId = null;
-
-    #[Locked]
     public ?int $competencyId = null;
 
     #[Locked]
@@ -85,8 +77,6 @@ class AdmissionInformation extends CandidatePage
     public bool $showCertificateEditor = false;
 
     public bool $showClaimEditor = false;
-
-    public bool $showThptEditor = false;
 
     public bool $showCompetencyEditor = false;
 
@@ -260,76 +250,6 @@ class AdmissionInformation extends CandidatePage
         Flux::toast(variant: 'success', text: __('Đã xóa thông tin xét tuyển thẳng hoặc ưu tiên xét tuyển.'));
     }
 
-    public function createThpt(): void
-    {
-        Gate::authorize('create', [CandidateExamResult::class, $this->profile()]);
-        $this->resetValidation();
-        $this->thptId = null;
-        $this->thptEvidence = null;
-        $this->thptForm = [
-            'exam_year' => now()->year, 'exam_date' => null, 'registration_number' => null,
-            'subjects' => [['subject_code' => '', 'score' => '']],
-        ];
-        $this->showThptEditor = true;
-    }
-
-    public function editThpt(int $id): void
-    {
-        $record = $this->profile()->examResults()->where('exam_type', 'thpt')->with('subjectScores')->findOrFail($id);
-        Gate::authorize('update', $record);
-        $this->thptId = $record->getKey();
-        $this->thptEvidence = null;
-        $this->thptForm = [
-            'exam_year' => $record->exam_year,
-            'exam_date' => $record->getRawOriginal('exam_date'),
-            'registration_number' => $record->registration_number,
-            'subjects' => $record->subjectScores->map(fn ($score): array => [
-                'subject_code' => $score->subject_code, 'score' => $score->score,
-            ])->all(),
-        ];
-        $this->showThptEditor = true;
-    }
-
-    public function addThptSubject(): void
-    {
-        $this->thptForm['subjects'][] = ['subject_code' => '', 'score' => ''];
-    }
-
-    public function removeThptSubject(int $index): void
-    {
-        unset($this->thptForm['subjects'][$index]);
-        $this->thptForm['subjects'] = array_values($this->thptForm['subjects']);
-    }
-
-    public function saveThpt(CandidateFiles $files): void
-    {
-        $validated = $this->validate([
-            'thptForm' => ['required', 'array:exam_year,exam_date,registration_number,subjects'],
-            'thptForm.exam_year' => ['required', 'integer', 'between:1900,'.now()->year],
-            'thptForm.exam_date' => ['nullable', 'date'],
-            'thptForm.registration_number' => ['nullable', 'string', 'max:100'],
-            'thptForm.subjects' => ['required', 'array', 'min:1'],
-            'thptForm.subjects.*' => ['required', 'array:subject_code,score'],
-            'thptForm.subjects.*.subject_code' => ['required', Rule::in(array_keys(config('admission_data.subjects'))), 'distinct'],
-            'thptForm.subjects.*.score' => $this->scoreRules(),
-            'thptEvidence' => CandidateFiles::scoreEvidenceRules($this->thptId === null),
-        ], $this->evidenceMessages('thptEvidence'));
-
-        $subjects = $validated['thptForm']['subjects'];
-        unset($validated['thptForm']['subjects']);
-        $validated['thptForm']['exam_type'] = 'thpt';
-        $this->saveExam($this->thptId, $validated['thptForm'], $subjects, $this->thptEvidence, $files);
-        $this->thptEvidence = null;
-        $this->showThptEditor = false;
-        Flux::toast(variant: 'success', text: __('Đã lưu điểm thi tốt nghiệp THPT.'));
-    }
-
-    public function deleteThpt(int $id, CandidateFiles $files): void
-    {
-        $this->deleteParent('examResults', $id, $files, 'thpt');
-        Flux::toast(variant: 'success', text: __('Đã xóa kết quả thi THPT.'));
-    }
-
     public function createCompetency(): void
     {
         $existing = $this->profile()->examResults()->whereIn('exam_type', $this->competencyTypes())->first();
@@ -448,6 +368,21 @@ class AdmissionInformation extends CandidatePage
         $this->validate(['transcriptEvidence.*' => CandidateFiles::scoreEvidenceRules(true)], $this->evidenceMessages('transcriptEvidence.*'));
     }
 
+    public function removeTranscriptUpload(int $index): void
+    {
+        if (! array_key_exists($index, $this->transcriptEvidence)) {
+            return;
+        }
+
+        unset($this->transcriptEvidence[$index]);
+        $this->transcriptEvidence = array_values($this->transcriptEvidence);
+        $this->resetValidation();
+
+        if ($this->transcriptEvidence !== []) {
+            $this->validate(['transcriptEvidence.*' => CandidateFiles::scoreEvidenceRules(true)], $this->evidenceMessages('transcriptEvidence.*'));
+        }
+    }
+
     public function saveTranscript(CandidateFiles $files): void
     {
         $validated = $this->validate([
@@ -561,14 +496,10 @@ class AdmissionInformation extends CandidatePage
                 $id, $attributes, $subjects, $evidence, $files, &$newPath, &$oldPath
             ): void {
                 $profile = CandidateApplications::lockProfile();
-                if ($attributes['exam_type'] !== 'thpt' && $id === null
-                    && $profile->examResults()->whereIn('exam_type', $this->competencyTypes())->exists()) {
+                if ($id === null && $profile->examResults()->whereIn('exam_type', $this->competencyTypes())->exists()) {
                     throw ValidationException::withMessages(['competencyForm' => __('Bạn đã có kết quả kỳ thi. Vui lòng chỉnh sửa thông tin hiện có.')]);
                 }
-                $query = $profile->examResults()->lockForUpdate();
-                $attributes['exam_type'] === 'thpt'
-                    ? $query->where('exam_type', 'thpt')
-                    : $query->whereIn('exam_type', $this->competencyTypes());
+                $query = $profile->examResults()->whereIn('exam_type', $this->competencyTypes())->lockForUpdate();
                 $record = $id === null ? null : $query->findOrFail($id);
                 Gate::authorize($record === null ? 'create' : 'update', $record === null
                     ? [CandidateExamResult::class, $profile] : $record);
@@ -597,7 +528,7 @@ class AdmissionInformation extends CandidatePage
     }
 
     /** @param array<string, mixed> $attributes
-     * @param  list<array{subject_code: string, subject_name: string, grade_level: int, score: mixed}>  $rows
+     * @param  list<array{subject_code: string, subject_name: string, grade_level: string, score: mixed}>  $rows
      */
     private function saveTranscriptRecord(?int $id, array $attributes, array $rows, mixed $evidence, CandidateFiles $files): void
     {
@@ -726,7 +657,7 @@ class AdmissionInformation extends CandidatePage
     }
 
     /** @param list<array<string, mixed>> $subjects
-     * @return list<array{subject_code: string, subject_name: string, grade_level: int, score: mixed}>
+     * @return list<array{subject_code: string, subject_name: string, grade_level: string, score: mixed}>
      */
     private function transcriptRows(array $subjects): array
     {
@@ -740,7 +671,7 @@ class AdmissionInformation extends CandidatePage
                 $rows[] = [
                     'subject_code' => $subject['subject_code'],
                     'subject_name' => config('admission_data.subjects.'.$subject['subject_code']),
-                    'grade_level' => $grade,
+                    'grade_level' => (string) $grade,
                     'score' => $score,
                 ];
             }
