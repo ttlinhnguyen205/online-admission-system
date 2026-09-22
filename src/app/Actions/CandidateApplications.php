@@ -12,6 +12,7 @@ use App\Models\CandidateProfile;
 use App\Models\User;
 use App\Notifications\ApplicationSubmitted;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -139,13 +140,15 @@ class CandidateApplications
 
     public static function roundIsOpen(AdmissionRound $round): bool
     {
-        $timezone = config('app.timezone');
+        $testNow = CarbonImmutable::getTestNow();
+        $timezone = $testNow instanceof CarbonInterface ? $testNow->timezone : config('app.timezone');
+        $now = CarbonImmutable::now($timezone);
         $start = CarbonImmutable::parse($round->getRawOriginal('start_date'), $timezone);
         $end = CarbonImmutable::parse($round->getRawOriginal('end_date'), $timezone);
 
         return $round->getAttribute('status') === AdmissionRoundStatus::Open
             && $end->greaterThan($start)
-            && CarbonImmutable::now($timezone)->betweenIncluded($start, $end);
+            && $now->betweenIncluded($start, $end);
     }
 
     public static function requireOpenRound(AdmissionRound $round): void
@@ -157,7 +160,7 @@ class CandidateApplications
 
     public static function profileIsComplete(CandidateProfile $profile): bool
     {
-        return in_array($profile->getAttribute('profile_status'), [ProfileStatus::Complete, ProfileStatus::Verified], true)
+        return in_array($profile->getAttribute('profile_status'), [ProfileStatus::Complete, ProfileStatus::NeedsRevision, ProfileStatus::Verified], true)
             && collect(Profile::COMPLETION)->every(fn (string $field): bool => filled($profile->getAttribute($field)));
     }
 

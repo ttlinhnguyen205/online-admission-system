@@ -165,7 +165,25 @@ test('canonical exam certificate and subject definitions preserve phase seven co
     expect(array_column(VerificationStatus::cases(), 'value'))->toBe(['pending', 'verified', 'rejected']);
     expect(array_keys(config('admission_data.exam_types')))->toBe(['thpt', 'dgnl', 'dgtd', 'vsat', 'spt']);
     expect(array_keys(config('admission_data.certificate_types')))->toBe(['ielts', 'sat']);
-    expect(array_keys(config('admission_data.subjects')))->toBe(['MATH', 'LITERATURE', 'ENG', 'PHYSICS', 'CHEMISTRY']);
+    expect(array_keys(config('admission_data.subjects')))->toBe([
+        'MATH',
+        'LITERATURE',
+        'ENG',
+        'PHYSICS',
+        'CHEMISTRY',
+        'BIOLOGY',
+        'HISTORY',
+        'GEOGRAPHY',
+        'CIVICS',
+        'ECONOMIC_LAW',
+        'INDUSTRIAL_TECH',
+        'INFORMATICS',
+        'JAPANESE',
+        'KOREAN',
+        'CHINESE',
+        'FRENCH',
+        'RUSSIAN',
+    ]);
     expect(config('admission_data.certificate_types.ielts.score.max'))->toBeNull();
     expect(config('admission_data.certificate_types.sat.score.max'))->toBeNull();
 });

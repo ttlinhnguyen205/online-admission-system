@@ -25,7 +25,6 @@ class Scores extends CandidatePage
     use WithFileUploads, WithPagination;
 
     public const SCORE_TYPES = [
-        'thpt' => 'THPT',
         'hoc_ba' => 'Học bạ',
         'dgnl' => 'ĐGNL',
         'ielts' => 'IELTS',
@@ -92,7 +91,7 @@ class Scores extends CandidatePage
                 $validated = $this->validate([
                     'form' => ['required', 'array:'.implode(',', self::FIELDS)],
                     'form.score_type' => ['required', 'string', Rule::in(array_keys(self::SCORE_TYPES))],
-                    'form.subject_code' => [Rule::requiredIf(in_array($this->form['score_type'] ?? null, ['thpt', 'hoc_ba'], true)), 'nullable', 'string', 'max:30'],
+                    'form.subject_code' => [Rule::requiredIf(($this->form['score_type'] ?? null) === 'hoc_ba'), 'nullable', 'string', 'max:30'],
                     'form.subject_name' => ['nullable', 'string', 'max:100'],
                     'form.score' => ['required', 'numeric', 'regex:/\A[0-9]+(?:\.[0-9]{1,3})?\z/D', 'decimal:0,3', 'between:0,99999.999'],
                     'form.exam_year' => ['required', 'integer', 'between:1900,'.now()->year],
@@ -100,7 +99,7 @@ class Scores extends CandidatePage
                 ], [
                     'form.score_type.required' => __('Vui lòng chọn loại điểm.'),
                     'form.score_type.in' => __('Loại điểm không được hỗ trợ.'),
-                    'form.subject_code.required' => __('Vui lòng nhập mã môn cho điểm THPT hoặc Học bạ.'),
+                    'form.subject_code.required' => __('Vui lòng nhập mã môn cho điểm Học bạ.'),
                     'evidence.required' => __('Vui lòng tải ảnh minh chứng khi thêm điểm.'),
                     'evidence.file' => __('Ảnh minh chứng phải là tệp hợp lệ.'),
                     'evidence.image' => __('Ảnh minh chứng phải là ảnh JPG, JPEG hoặc PNG.'),

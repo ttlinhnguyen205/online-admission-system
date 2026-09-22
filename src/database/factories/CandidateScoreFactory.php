@@ -18,7 +18,7 @@ class CandidateScoreFactory extends Factory
     {
         return [
             'candidate_profile_id' => CandidateProfile::factory(),
-            'score_type' => 'thpt',
+            'score_type' => 'hoc_ba',
             'subject_code' => 'MATH',
             'subject_name' => 'Mathematics',
             'score' => '8.250',

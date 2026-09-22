@@ -7,7 +7,6 @@ use App\Livewire\Candidate\AdmissionInformation;
 use App\Models\CandidateAdmissionClaim;
 use App\Models\CandidateCertificate;
 use App\Models\CandidateExamResult;
-use App\Models\CandidateExamSubjectScore;
 use App\Models\CandidateProfile;
 use App\Models\CandidateTranscript;
 use App\Models\CandidateTranscriptScore;
@@ -16,7 +15,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
@@ -111,76 +109,6 @@ test('candidate creates edits and deletes a descriptive admission claim', functi
     $this->assertModelMissing($claim);
 });
 
-test('THPT result saves configured subject rows atomically without per-subject evidence', function () {
-    Storage::fake(CandidateFiles::DISK);
-    $profile = CandidateProfile::factory()->create();
-    $this->actingAs($profile->user);
-
-    $page = Livewire::test(AdmissionInformation::class)->call('createThpt')
-        ->set('thptForm', [
-            'exam_year' => 2026, 'exam_date' => '2026-06-27', 'registration_number' => 'SBD001',
-            'subjects' => [
-                ['subject_code' => 'MATH', 'score' => '8.125'],
-                ['subject_code' => 'LITERATURE', 'score' => '7.500'],
-            ],
-        ])->set('thptEvidence', admissionInformationImage())->call('saveThpt')->assertHasNoErrors();
-    $result = $profile->examResults()->with('subjectScores')->sole();
-
-    expect($result->exam_type)->toBe(ExamType::Thpt);
-    expect($result->overall_score)->toBeNull();
-    expect($result->subjectScores->sortBy('subject_code')->pluck('subject_code')->values()->all())->toBe(['LITERATURE', 'MATH']);
-    expect($result->subjectScores->sortBy('subject_code')->pluck('subject_name')->values()->all())->toBe(['Ngữ văn', 'Toán']);
-    expect($result->evidence_path)->toStartWith('candidate-exam-results/'.$profile->id.'/');
-    expect(Schema::hasColumn('candidate_exam_subject_scores', 'evidence_path'))->toBeFalse();
-
-    $page->call('editThpt', $result->id)->set('thptForm.subjects', [
-        ['subject_code' => 'MATH', 'score' => '9.000'],
-    ])->call('saveThpt')->assertHasNoErrors();
-    expect($result->subjectScores()->sole()->score)->toBe('9.000');
-    $page->call('deleteThpt', $result->id)->assertHasNoErrors();
-    $this->assertModelMissing($result);
-});
-
-test('THPT result rejects unknown and duplicate subjects without partial persistence', function (array $subjects) {
-    Storage::fake(CandidateFiles::DISK);
-    $profile = CandidateProfile::factory()->create();
-    $this->actingAs($profile->user);
-
-    Livewire::test(AdmissionInformation::class)->call('createThpt')
-        ->set('thptForm', [
-            'exam_year' => 2026, 'exam_date' => null, 'registration_number' => null, 'subjects' => $subjects,
-        ])->set('thptEvidence', admissionInformationImage())->call('saveThpt')
-        ->assertHasErrors('thptForm.subjects.1.subject_code');
-    $this->assertDatabaseCount('candidate_exam_results', 0);
-    $this->assertDatabaseCount('candidate_exam_subject_scores', 0);
-})->with([
-    'unknown subject' => [[['subject_code' => 'MATH', 'score' => '8'], ['subject_code' => 'UNKNOWN', 'score' => '9']]],
-    'duplicate subject' => [[['subject_code' => 'MATH', 'score' => '8'], ['subject_code' => 'MATH', 'score' => '9']]],
-]);
-
-test('THPT parent child and evidence creation roll back together', function () {
-    Storage::fake(CandidateFiles::DISK);
-    $profile = CandidateProfile::factory()->create();
-    $this->actingAs($profile->user);
-    Event::listen('eloquent.creating: '.CandidateExamSubjectScore::class, function (): void {
-        throw new RuntimeException('Simulated subject persistence failure');
-    });
-
-    try {
-        expect(fn () => Livewire::test(AdmissionInformation::class)->call('createThpt')
-            ->set('thptForm', [
-                'exam_year' => 2026, 'exam_date' => null, 'registration_number' => null,
-                'subjects' => [['subject_code' => 'MATH', 'score' => '8.000']],
-            ])->set('thptEvidence', admissionInformationImage())->call('saveThpt'))
-            ->toThrow(RuntimeException::class);
-        $this->assertDatabaseCount('candidate_exam_results', 0);
-        $this->assertDatabaseCount('candidate_exam_subject_scores', 0);
-        expect(Storage::disk(CandidateFiles::DISK)->allFiles())->toBe([]);
-    } finally {
-        Event::forget('eloquent.creating: '.CandidateExamSubjectScore::class);
-    }
-});
-
 test('candidate records every supported competency exam type', function (string $type) {
     Storage::fake(CandidateFiles::DISK);
     $profile = CandidateProfile::factory()->create();
@@ -252,6 +180,27 @@ test('transcript stores only nonempty normalized grade cells', function () {
     $this->assertModelMissing($transcript);
 });
 
+test('transcript saves when candidate fills a single grid score cell', function () {
+    Storage::fake(CandidateFiles::DISK);
+    $profile = CandidateProfile::factory()->create();
+    $this->actingAs($profile->user);
+
+    Livewire::test(AdmissionInformation::class)->call('createTranscript')
+        ->set('transcriptForm.subjects.0.grade_10', '8')
+        ->set('transcriptEvidence', [admissionInformationImage()])
+        ->call('saveTranscript')
+        ->assertHasNoErrors();
+
+    $transcript = $profile->transcripts()->with(['scores', 'evidenceImages'])->sole();
+    expect($transcript->scores)->toHaveCount(1);
+    expect($transcript->scores->first()->only(['subject_code', 'grade_level', 'score']))->toBe([
+        'subject_code' => 'MATH',
+        'grade_level' => 10,
+        'score' => '8.000',
+    ]);
+    expect($transcript->evidenceImages)->toHaveCount(1);
+});
+
 test('transcript rejects duplicate subjects and requires one actual score', function (array $subjects) {
     Storage::fake(CandidateFiles::DISK);
     $profile = CandidateProfile::factory()->create();
@@ -306,7 +255,6 @@ test('candidate forms reject verification metadata injection', function (string 
 })->with([
     ['certificateForm', 'createCertificate', 'saveCertificate'],
     ['claimForm', 'createClaim', 'saveClaim'],
-    ['thptForm', 'createThpt', 'saveThpt'],
     ['competencyForm', 'createCompetency', 'saveCompetency'],
     ['transcriptForm', 'createTranscript', 'saveTranscript'],
 ]);

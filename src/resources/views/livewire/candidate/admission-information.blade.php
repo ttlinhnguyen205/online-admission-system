@@ -207,7 +207,7 @@
                         <div id="transcript-grade-{{ $grade }}-scores" x-show="expanded" @if ($grade !== 10) x-cloak @endif class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             @foreach ($transcriptForm['subjects'] ?? [] as $index => $row)
                                 <div wire:key="transcript-cell-{{ $grade }}-{{ $row['subject_code'] }}">
-                                    <flux:input wire:model="transcriptForm.subjects.{{ $index }}.grade_{{ $grade }}" type="number" step="0.001" min="0" :label="$subjects[$row['subject_code']] ?? $row['subject_code']" />
+                                    <flux:input wire:model.live.debounce.300ms="transcriptForm.subjects.{{ $index }}.grade_{{ $grade }}" type="number" step="0.001" min="0" :label="$subjects[$row['subject_code']] ?? $row['subject_code']" />
                                 </div>
                             @endforeach
                         </div>
@@ -218,16 +218,41 @@
             @foreach ($errors->get('transcriptForm.subjects.*') as $messages)
                 @foreach ($messages as $message)<p role="alert" class="text-sm text-red-600">{{ $message }}</p>@endforeach
             @endforeach
-            <flux:input wire:model="transcriptEvidence" type="file" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" :label="__('Ảnh minh chứng học bạ (có thể chọn nhiều trang)')" />
+            <div x-data>
+                <label for="transcript-evidence" class="mb-2 block text-sm font-medium text-zinc-800 dark:text-white">{{ __('Ảnh minh chứng học bạ (có thể chọn nhiều trang)') }}</label>
+                <div class="flex w-full items-center gap-4">
+                    <input id="transcript-evidence" x-ref="input" x-on:click="$refs.input.value = null" wire:model="transcriptEvidence" type="file" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="sr-only" />
+                    <flux:button type="button" x-on:click="$refs.input.click()">{{ __('Chọn tệp') }}</flux:button>
+                    <span class="truncate text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                        @if (count($transcriptEvidence) === 0)
+                            {{ __('Chưa chọn tệp') }}
+                        @elseif (count($transcriptEvidence) === 1)
+                            {{ App\Actions\CandidateFiles::displayName($transcriptEvidence[0]->getClientOriginalName()) }}
+                        @else
+                            {{ __(':count tệp', ['count' => count($transcriptEvidence)]) }}
+                        @endif
+                    </span>
+                </div>
+            </div>
             <flux:text>{{ __('JPEG/JPG/PNG, tối đa 2 MiB mỗi ảnh. Ảnh mới được thêm khi lưu; đánh dấu ảnh cũ cần xóa để thay thế.') }}</flux:text>
+            <div role="status" wire:loading.delay wire:target="transcriptEvidence">{{ __('Đang tải ảnh học bạ...') }}</div>
             <flux:error name="transcriptEvidence" />
             <div class="flex flex-wrap gap-4">
                 @foreach ($transcriptEvidence as $index => $upload)
-                    <div wire:key="transcript-upload-{{ $index }}">
-                        @if (! $errors->has('transcriptEvidence.'.$index) && $upload->isPreviewable())
-                            <img src="{{ $upload->temporaryUrl() }}" alt="{{ __('Trang học bạ mới :page', ['page' => $index + 1]) }}" class="h-32 w-24 rounded object-contain" />
-                        @endif
+                    <div wire:key="transcript-upload-{{ $index }}" class="space-y-2">
+                        <div class="relative h-32 w-24">
+                            @if (! $errors->has('transcriptEvidence.'.$index) && $upload->isPreviewable())
+                                <img src="{{ $upload->temporaryUrl() }}" alt="{{ __('Trang học bạ mới :page', ['page' => $index + 1]) }}" class="h-full w-full rounded object-contain" />
+                            @else
+                                <div class="flex h-full w-full items-center justify-center rounded border border-zinc-200 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">{{ __('Không xem trước') }}</div>
+                            @endif
+                        </div>
+                        <div class="max-w-32 truncate text-xs text-zinc-500 dark:text-zinc-400">{{ App\Actions\CandidateFiles::displayName($upload->getClientOriginalName()) }}</div>
                         <flux:error name="transcriptEvidence.{{ $index }}" />
+                        <button type="button" wire:click="removeTranscriptUpload({{ $index }})" wire:loading.attr="disabled" wire:target="removeTranscriptUpload({{ $index }})" class="inline-flex items-center justify-center rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-100 hover:shadow focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-60 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-red-900/50 dark:focus:ring-offset-zinc-900">
+                            <span wire:loading.remove wire:target="removeTranscriptUpload({{ $index }})">{{ __('Xóa ảnh') }}</span>
+                            <span wire:loading wire:target="removeTranscriptUpload({{ $index }})">{{ __('Đang xóa...') }}</span>
+                        </button>
                     </div>
                 @endforeach
                 @php($editingTranscript = $transcripts->firstWhere('id', $transcriptId))
@@ -242,7 +267,7 @@
                 <flux:button size="sm" :href="route('candidate.admission-information.evidence', ['type' => 'transcripts', 'record' => $editingTranscript->id])" target="_blank">{{ __('Xem ảnh học bạ cũ') }}</flux:button>
                 <flux:checkbox wire:model="removeLegacyTranscriptEvidence" :label="__('Xóa ảnh học bạ cũ khi lưu')" />
             @endif
-            <div class="flex justify-end gap-3"><flux:modal.close><flux:button>{{ __('Hủy') }}</flux:button></flux:modal.close><flux:button type="submit" variant="primary" wire:loading.attr="disabled">{{ __('Lưu') }}</flux:button></div>
+            <div class="flex justify-end gap-3"><flux:modal.close><flux:button>{{ __('Hủy') }}</flux:button></flux:modal.close><flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="saveTranscript,transcriptEvidence">{{ __('Lưu') }}</flux:button></div>
         </form>
     </flux:modal>
     @endif

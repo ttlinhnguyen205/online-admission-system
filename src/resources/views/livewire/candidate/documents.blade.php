@@ -63,6 +63,7 @@
                 <input id="candidate-document" wire:model="file" type="file" accept="application/pdf,image/jpeg,image/png" class="sr-only" x-on:change="fileName = $event.target.files[0]?.name ?? ''" />
                 <label for="candidate-document" class="inline-flex h-10 cursor-pointer items-center rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-xs hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600/75">{{ __('Chọn tệp') }}</label>
                 <span class="ms-3 text-sm text-zinc-500 dark:text-zinc-300" x-text="fileName || 'Chưa chọn tệp nào'"></span>
+                <flux:error name="file" />
             </div>
             <flux:text>{{ __('Tệp PDF, JPEG hoặc PNG, tối đa 10 MiB. Thay tệp hoặc đổi loại tài liệu sẽ đưa trạng thái duyệt về chờ xét duyệt.') }}</flux:text>
             <div x-show="uploading" x-cloak role="status">{{ __('Đang tải lên:') }} <span x-text="progress + '%' "></span><progress x-bind:value="progress" max="100" class="w-full"></progress></div>

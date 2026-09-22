@@ -30,6 +30,8 @@ function reviewApplication(ApplicationStatus $status = ApplicationStatus::UnderR
         'high_school_name' => 'Review school',
         'graduation_year' => 2026,
         'photo_path' => 'candidate-photos/'.$profile->id.'/portrait.png',
+        'citizen_id_front_path' => 'candidate-citizen-ids/'.$profile->id.'/front.png',
+        'citizen_id_back_path' => 'candidate-citizen-ids/'.$profile->id.'/back.png',
     ]);
     Storage::disk(CandidateFiles::DISK)->put($profile->photo_path, file_get_contents(base_path('tests/Fixtures/portrait.png')));
     AdmissionWish::factory()->for($application)->create();

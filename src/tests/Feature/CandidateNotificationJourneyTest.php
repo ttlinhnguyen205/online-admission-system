@@ -4,6 +4,7 @@ use App\Actions\CandidateApplications;
 use App\Actions\StaffApplicationReview;
 use App\Enums\AdmissionRoundStatus;
 use App\Enums\ApplicationStatus;
+use App\Enums\ProfileStatus;
 use App\Enums\UserRole;
 use App\Livewire\Candidate\Notifications;
 use App\Models\Application;
@@ -49,6 +50,7 @@ test('successful submission sends one private notification and a repeated submit
 test('rejected submission does not create a notification', function () {
     $application = reviewApplication(ApplicationStatus::NeedsRevision);
     $application->admissionRound->update(['status' => AdmissionRoundStatus::Open]);
+    $application->candidateProfile->update(['profile_status' => ProfileStatus::Rejected]);
     $this->actingAs($application->candidateProfile->user);
 
     expect(fn () => app(CandidateApplications::class)->submit($application->id))

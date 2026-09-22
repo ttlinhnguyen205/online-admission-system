@@ -9,7 +9,7 @@
     @if (! $profile)
         <flux:callout>{{ __('Hãy tạo hồ sơ cá nhân trước khi thêm điểm.') }} <a class="underline" href="{{ route('candidate.profile.edit') }}" wire:navigate>{{ __('Mở hồ sơ') }}</a></flux:callout>
     @else
-        <div class="grid items-end gap-4 sm:grid-cols-[1fr_1fr_auto]">
+        <div class="grid grid-cols-2 items-end gap-4 lg:grid-cols-[1fr_1fr_auto]">
             <flux:select wire:model.live="typeFilter" :label="__('Loại điểm')">
                 <flux:select.option value="">{{ __('Tất cả loại điểm') }}</flux:select.option>
                 @foreach (App\Livewire\Candidate\Scores::SCORE_TYPES as $value => $label)
@@ -22,7 +22,9 @@
                     <flux:select.option :value="(string) $year">{{ $year }}</flux:select.option>
                 @endforeach
             </flux:select>
-            <flux:button wire:click="resetFilters">{{ __('Đặt lại bộ lọc') }}</flux:button>
+            <div class="col-span-2 lg:col-span-1">
+                <flux:button class="w-full lg:w-auto" wire:click="resetFilters">{{ __('Đặt lại bộ lọc') }}</flux:button>
+            </div>
         </div>
         <div role="status" wire:loading.delay>{{ __('Đang cập nhật điểm...') }}</div>
         <div class="overflow-x-auto rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
@@ -60,7 +62,7 @@
                 @endforeach
             </flux:select>
             <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="form.subject_code" :label="__('Mã môn')" maxlength="30" /><flux:input wire:model="form.subject_name" :label="__('Tên môn (không bắt buộc)')" maxlength="100" /></div>
-            <flux:text>{{ __('Mã môn bắt buộc cho điểm THPT và Học bạ; chọn đúng mã môn theo phương thức xét tuyển. ĐGNL, IELTS và SAT có thể bỏ trống thông tin môn học.') }}</flux:text>
+            <flux:text>{{ __('Mã môn bắt buộc cho điểm Học bạ; chọn đúng mã môn theo phương thức xét tuyển. ĐGNL, IELTS và SAT có thể bỏ trống thông tin môn học.') }}</flux:text>
             <flux:input wire:model="form.score" :label="__('Điểm *')" inputmode="decimal" :description="__('Từ 0 đến 99999.999; tối đa 3 chữ số thập phân. Dùng dấu chấm.')" required />
             <flux:input wire:model="form.exam_year" :label="__('Năm thi *')" type="number" min="1900" :max="now()->year" required />
             <div>

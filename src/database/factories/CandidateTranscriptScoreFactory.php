@@ -22,7 +22,7 @@ class CandidateTranscriptScoreFactory extends Factory
             'candidate_transcript_id' => CandidateTranscript::factory(),
             'subject_code' => 'MATH',
             'subject_name' => 'Toán',
-            'grade_level' => 10,
+            'grade_level' => '10',
             'score' => '8.250',
         ];
     }

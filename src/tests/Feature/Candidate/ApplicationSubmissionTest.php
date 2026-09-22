@@ -40,6 +40,8 @@ function readyApplication(): Application
         'high_school_name' => 'Demo school',
         'graduation_year' => 2026,
         'photo_path' => 'candidate-photos/example.png',
+        'citizen_id_front_path' => 'candidate-citizen-ids/example/front.png',
+        'citizen_id_back_path' => 'candidate-citizen-ids/example/back.png',
     ]);
     AdmissionWish::factory()->for($application)->create();
 
@@ -76,7 +78,7 @@ test('submission requires saved completion status without requiring staff verifi
     $application->candidateProfile->update(['profile_status' => $status]);
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('submit');
-    if ($status === ProfileStatus::Incomplete) {
+    if (in_array($status, [ProfileStatus::Incomplete, ProfileStatus::Rejected], true)) {
         $page->assertHasErrors('profile');
         expect($application->fresh()->status)->toBe(ApplicationStatus::Draft);
         expect($application->fresh()->submitted_at)->toBeNull();
