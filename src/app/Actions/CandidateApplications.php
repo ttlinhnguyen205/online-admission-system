@@ -10,7 +10,9 @@ use App\Models\AdmissionRound;
 use App\Models\Application;
 use App\Models\CandidateProfile;
 use App\Models\User;
+use App\Notifications\ApplicationSubmitted;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -37,10 +39,10 @@ class CandidateApplications
                     Gate::authorize('browseForCandidate', [AdmissionRound::class, $profile]);
                     $round = AdmissionRound::query()->lockForUpdate()->find((int) $validated['form']['admission_round_id']);
                     if ($round === null || ! self::roundIsOpen($round)) {
-                        throw ValidationException::withMessages(['form.admission_round_id' => __('This round is not accepting applications.')]);
+                        throw ValidationException::withMessages(['form.admission_round_id' => __('Đợt tuyển sinh này hiện không nhận hồ sơ.')]);
                     }
                     if ($profile->applications()->whereBelongsTo($round)->exists()) {
-                        throw ValidationException::withMessages(['form.admission_round_id' => __('You already have an application for this round. Open it from your application list.')]);
+                        throw ValidationException::withMessages(['form.admission_round_id' => __('Bạn đã có hồ sơ cho đợt tuyển sinh này. Hãy mở trong danh sách hồ sơ.')]);
                     }
                     $application = $profile->applications()->make([
                         'application_code' => 'APP-'.Str::ulid(),
@@ -48,7 +50,7 @@ class CandidateApplications
                         'status' => ApplicationStatus::Draft,
                     ]);
                     if (! $application->save()) {
-                        throw ValidationException::withMessages(['form' => __('The application could not be saved.')]);
+                        throw ValidationException::withMessages(['form' => __('Không thể lưu hồ sơ xét tuyển.')]);
                     }
 
                     return $application;
@@ -57,7 +59,7 @@ class CandidateApplications
                 $message = (string) ($exception->errorInfo[2] ?? '');
                 if (str_contains($message, 'applications_candidate_profile_id_admission_round_id_unique')
                     || str_contains($message, 'applications.candidate_profile_id, applications.admission_round_id')) {
-                    throw ValidationException::withMessages(['form.admission_round_id' => __('You already have an application for this round. Open it from your application list.')]);
+                    throw ValidationException::withMessages(['form.admission_round_id' => __('Bạn đã có hồ sơ cho đợt tuyển sinh này. Hãy mở trong danh sách hồ sơ.')]);
                 }
                 if (! str_contains($message, 'applications_application_code_unique')
                     && ! str_contains($message, 'UNIQUE constraint failed: applications.application_code')) {
@@ -66,7 +68,7 @@ class CandidateApplications
             }
         }
 
-        throw ValidationException::withMessages(['form' => __('An application code could not be generated. Please try again.')]);
+        throw ValidationException::withMessages(['form' => __('Không thể tạo mã hồ sơ. Vui lòng thử lại.')]);
     }
 
     public function submit(int $applicationId): void
@@ -83,15 +85,15 @@ class CandidateApplications
 
             $errors = self::submissionErrors($profile, $application, $round);
             if ($wishes->isEmpty()) {
-                $errors['wishes'] = __('Add at least one admission wish before submitting.');
+                $errors['wishes'] = __('Cần có ít nhất một nguyện vọng trước khi nộp hồ sơ.');
             } elseif ($wishes->sortBy('priority')->pluck('priority')->values()->all() !== range(1, $wishes->count())
                 || $wishes->pluck('admission_program_id')->unique()->count() !== $wishes->count()) {
-                $errors['wishes'] = __('The wish priorities or programs are inconsistent. Reload and reorder your wishes.');
+                $errors['wishes'] = __('Thứ tự ưu tiên hoặc chương trình không nhất quán. Hãy tải lại và sắp xếp nguyện vọng.');
             }
             foreach ($wishes as $wish) {
                 $program = $programs->get($wish->getAttribute('admission_program_id'));
                 if ($program === null || CandidateWishes::unavailableReason($program, $round) !== null) {
-                    $errors['wishes'] = __('One or more wishes are unavailable or belong to another round. Review your wishes before submitting.');
+                    $errors['wishes'] = __('Một hoặc nhiều nguyện vọng không khả dụng hoặc thuộc đợt khác. Hãy kiểm tra trước khi nộp.');
                 }
             }
             if ($errors !== []) {
@@ -101,8 +103,9 @@ class CandidateApplications
             self::requireOpenRound($round);
             $application->fill(['status' => ApplicationStatus::Submitted, 'submitted_at' => now(config('app.timezone'))]);
             if (! $application->save()) {
-                throw ValidationException::withMessages(['submission' => __('The application could not be submitted.')]);
+                throw ValidationException::withMessages(['submission' => __('Không thể nộp hồ sơ xét tuyển.')]);
             }
+            $profile->user()->firstOrFail()->notify(new ApplicationSubmitted($application->getKey()));
         }, 3);
     }
 
@@ -137,25 +140,27 @@ class CandidateApplications
 
     public static function roundIsOpen(AdmissionRound $round): bool
     {
-        $timezone = config('app.timezone');
+        $testNow = CarbonImmutable::getTestNow();
+        $timezone = $testNow instanceof CarbonInterface ? $testNow->timezone : config('app.timezone');
+        $now = CarbonImmutable::now($timezone);
         $start = CarbonImmutable::parse($round->getRawOriginal('start_date'), $timezone);
         $end = CarbonImmutable::parse($round->getRawOriginal('end_date'), $timezone);
 
         return $round->getAttribute('status') === AdmissionRoundStatus::Open
             && $end->greaterThan($start)
-            && CarbonImmutable::now($timezone)->betweenIncluded($start, $end);
+            && $now->betweenIncluded($start, $end);
     }
 
     public static function requireOpenRound(AdmissionRound $round): void
     {
         if (! self::roundIsOpen($round)) {
-            throw ValidationException::withMessages(['round' => __('This round is outside its open application window. Applications and wishes are read-only.')]);
+            throw ValidationException::withMessages(['round' => __('Đợt tuyển sinh đã ngoài thời gian nhận hồ sơ. Hồ sơ và nguyện vọng chỉ có thể xem.')]);
         }
     }
 
     public static function profileIsComplete(CandidateProfile $profile): bool
     {
-        return in_array($profile->getAttribute('profile_status'), [ProfileStatus::Complete, ProfileStatus::Verified], true)
+        return in_array($profile->getAttribute('profile_status'), [ProfileStatus::Complete, ProfileStatus::NeedsRevision, ProfileStatus::Verified], true)
             && collect(Profile::COMPLETION)->every(fn (string $field): bool => filled($profile->getAttribute($field)));
     }
 
@@ -164,13 +169,13 @@ class CandidateApplications
     {
         $errors = [];
         if (! self::profileIsComplete($profile)) {
-            $errors['profile'] = __('Complete and save all required profile fields before submitting. Staff verification is not required.');
+            $errors['profile'] = __('Hãy hoàn thiện và lưu các thông tin hồ sơ cá nhân bắt buộc trước khi nộp. Không cần chờ nhân viên xác minh.');
         }
         if (! self::roundIsOpen($round)) {
-            $errors['round'] = __('This round is outside its open application window. Applications and wishes are read-only.');
+            $errors['round'] = __('Đợt tuyển sinh đã ngoài thời gian nhận hồ sơ. Hồ sơ và nguyện vọng chỉ có thể xem.');
         }
         if (Gate::denies('submit', $application)) {
-            $errors['submission'] = __('This application is read-only in its current status.');
+            $errors['submission'] = __('Trạng thái hiện tại của hồ sơ không cho phép chỉnh sửa.');
         }
 
         return $errors;

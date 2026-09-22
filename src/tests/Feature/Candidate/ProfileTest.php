@@ -6,6 +6,8 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Livewire\Candidate\Profile;
 use App\Models\CandidateProfile;
+use App\Models\HighSchool;
+use App\Models\Province;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
@@ -15,19 +17,137 @@ use Livewire\Livewire;
 
 function phaseFourProfileData(): array
 {
-    return ['date_of_birth' => '2008-01-02', 'gender' => 'Nữ', 'citizen_id' => '001234567890',
-        'phone' => '+84 901 234 567', 'address' => 'Hà Nội', 'province_code' => '01',
-        'high_school_code' => null, 'high_school_name' => 'THPT Demo', 'graduation_year' => 2026,
-        'priority_area' => null, 'priority_object' => null];
+    return [
+        'date_of_birth' => '2008-01-02',
+        'gender' => 'female',
+        'ethnicity' => 'Kinh',
+        'religion' => null,
+        'citizen_id' => '001234567890',
+        'citizen_id_issued_date' => '2022-01-02',
+        'citizen_id_issued_place' => 'Cục Cảnh sát QLHC về TTXH',
+        'phone' => '+84 901 234 567',
+        'address' => 'Hà Nội',
+        'province_code' => null,
+        'high_school_code' => null,
+        'high_school_name' => null,
+        'graduation_year' => 2026,
+        'priority_area' => null,
+        'priority_object' => null,
+    ];
 }
+function createProfileLocationFixtures(): array
+{
+    $haNoi = Province::create([
+        'code' => '01',
+        'name' => 'Thành phố Hà Nội',
+    ]);
 
+    $phanDinhPhung = HighSchool::create([
+        'province_id' => $haNoi->id,
+        'code' => '0103',
+        'name' => 'THPT Phan Đình Phùng',
+    ]);
+
+    $caoBang = Province::create([
+        'code' => '04',
+        'name' => 'Tỉnh Cao Bằng',
+    ]);
+
+    $caoBangSchool = HighSchool::create([
+        'province_id' => $caoBang->id,
+        'code' => '0401',
+        'name' => 'THPT Cao Bằng Test',
+    ]);
+
+    return [
+        'haNoi' => $haNoi,
+        'phanDinhPhung' => $phanDinhPhung,
+        'caoBang' => $caoBang,
+        'caoBangSchool' => $caoBangSchool,
+    ];
+}
+test('candidate profile saves province and high school from selected lookup ids', function () {
+    $locations = createProfileLocationFixtures();
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->set('selectedProvinceId', $locations['haNoi']->id)
+        ->set('selectedHighSchoolId', $locations['phanDinhPhung']->id)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $profile = $user->candidateProfile()->sole();
+
+    expect($profile->province_code)->toBe('01');
+    expect($profile->high_school_code)->toBe('0103');
+    expect($profile->high_school_name)->toBe('THPT Phan Đình Phùng');
+});
 test('only active candidates without profiles may create profiles', function (UserRole $role, UserStatus $status) {
     $user = User::factory()->create(['role' => $role, 'status' => $status]);
     expect(Gate::forUser($user)->allows('create', CandidateProfile::class))->toBe($role === UserRole::Candidate && $status === UserStatus::Active);
     CandidateProfile::factory()->for($user)->create();
     expect(Gate::forUser($user)->allows('create', CandidateProfile::class))->toBeFalse();
 })->with(UserRole::cases())->with(UserStatus::cases());
+test('changing province clears the selected high school', function () {
+    $locations = createProfileLocationFixtures();
 
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->set('selectedProvinceId', $locations['haNoi']->id)
+        ->set('selectedHighSchoolId', $locations['phanDinhPhung']->id)
+        ->assertSet(
+            'selectedHighSchoolId',
+            $locations['phanDinhPhung']->id
+        )
+        ->set('selectedProvinceId', $locations['caoBang']->id)
+        ->assertSet('selectedHighSchoolId', null)
+        ->assertSet('form.province_code', null)
+        ->assertSet('form.high_school_code', null)
+        ->assertSet('form.high_school_name', null);
+});
+test('candidate profile rejects a high school from another province', function () {
+    $locations = createProfileLocationFixtures();
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->set('selectedProvinceId', $locations['haNoi']->id)
+        ->set('selectedHighSchoolId', $locations['caoBangSchool']->id)
+        ->call('save')
+        ->assertHasErrors('selectedHighSchoolId');
+
+    $this->assertDatabaseCount('candidate_profiles', 0);
+});
+test('existing profile restores selected province and high school', function () {
+    $locations = createProfileLocationFixtures();
+
+    $user = User::factory()->create();
+
+    CandidateProfile::factory()
+        ->for($user)
+        ->create([
+            'province_code' => '01',
+            'high_school_code' => '0103',
+            'high_school_name' => 'THPT Phan Đình Phùng',
+        ]);
+
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->assertSet(
+            'selectedProvinceId',
+            $locations['haNoi']->id
+        )
+        ->assertSet(
+            'selectedHighSchoolId',
+            $locations['phanDinhPhung']->id
+        );
+});
 test('visiting the profile does not create it and explicit saves create only one owned profile', function () {
     $user = User::factory()->create();
     $this->actingAs($user)->get(route('candidate.profile.edit'))->assertOk();
@@ -63,10 +183,17 @@ test('profile fields accept schema length boundaries without inventing vocabular
     $profile = CandidateProfile::factory()->create();
     $this->actingAs($profile->user);
     Livewire::test(Profile::class)->set('form', [
-        'date_of_birth' => '1900-01-01', 'gender' => str_repeat('g', 20), 'citizen_id' => str_repeat('0', 20),
-        'phone' => '+123456789012345', 'address' => str_repeat('a', 500), 'province_code' => str_repeat('0', 20),
-        'high_school_code' => str_repeat('s', 30), 'high_school_name' => str_repeat('n', 255), 'graduation_year' => 2027,
-        'priority_area' => str_repeat('a', 20), 'priority_object' => str_repeat('o', 30),
+        'date_of_birth' => '1900-01-01',
+        'gender' => 'male',
+        'citizen_id' => str_repeat('0', 20),
+        'phone' => '+123456789012345',
+        'address' => str_repeat('a', 500),
+        'province_code' => str_repeat('0', 20),
+        'high_school_code' => str_repeat('s', 30),
+        'high_school_name' => str_repeat('n', 255),
+        'graduation_year' => 2027,
+        'priority_area' => 'KV1',
+        'priority_object' => '01',
     ])->call('save')->assertHasNoErrors();
     expect($profile->fresh()->citizen_id)->toBe(str_repeat('0', 20));
     expect($profile->fresh()->graduation_year)->toBe(2027);
@@ -74,22 +201,58 @@ test('profile fields accept schema length boundaries without inventing vocabular
 
 test('profile completion follows saved checklist and normalizes optional blanks', function () {
     Storage::fake(CandidateFiles::DISK);
+
     $this->freezeTime();
     $this->travelTo(now()->setDate(2026, 9, 14));
+
     $user = User::factory()->create();
+    $locations = createProfileLocationFixtures();
+
     $this->actingAs($user);
-    $page = Livewire::test(Profile::class)->set('form', phaseFourProfileData())
-        ->set('form.high_school_code', '   ')->call('save')->assertHasNoErrors();
+
+    $page = Livewire::test(Profile::class)
+        ->set('form', phaseFourProfileData())
+        ->set('selectedProvinceId', $locations['haNoi']->id)
+        ->set('selectedHighSchoolId', $locations['phanDinhPhung']->id)
+        ->call('save')
+        ->assertHasNoErrors();
+
     $profile = $user->candidateProfile()->sole();
-    expect($profile->profile_status)->toBe(ProfileStatus::Incomplete);
-    $page->set('photo', UploadedFile::fake()->createWithContent('portrait.png', file_get_contents(base_path('tests/Fixtures/portrait.png'))))->call('save')->assertHasNoErrors();
+
+    expect($profile->profile_status)
+        ->toBe(ProfileStatus::Incomplete);
+
+    $page->set(
+        'photo',
+        UploadedFile::fake()->createWithContent(
+            'portrait.png',
+            file_get_contents(base_path('tests/Fixtures/portrait.png'))
+        )
+    )
+        ->set('citizenIdFront', UploadedFile::fake()->createWithContent('front.png', file_get_contents(base_path('tests/Fixtures/small.png'))))
+        ->set('citizenIdBack', UploadedFile::fake()->createWithContent('back.png', file_get_contents(base_path('tests/Fixtures/small.png'))))
+        ->call('save')
+        ->assertHasNoErrors();
+
     $profile->refresh();
-    expect($profile->profile_status)->toBe(ProfileStatus::Complete);
-    expect($profile->high_school_code)->toBeNull();
+
+    expect($profile->profile_status)
+        ->toBe(ProfileStatus::Complete);
+
+    expect($profile->province_code)->toBe('01');
+    expect($profile->high_school_code)->toBe('0103');
+    expect($profile->high_school_name)->toBe('THPT Phan Đình Phùng');
     expect($profile->citizen_id)->toBe('001234567890');
-    Storage::disk(CandidateFiles::DISK)->assertExists($profile->photo_path);
-    $page->set('form.phone', '')->call('save')->assertHasNoErrors();
-    expect($profile->fresh()->profile_status)->toBe(ProfileStatus::Incomplete);
+
+    Storage::disk(CandidateFiles::DISK)
+        ->assertExists($profile->photo_path);
+
+    $page->set('form.phone', '')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($profile->fresh()->profile_status)
+        ->toBe(ProfileStatus::Incomplete);
 });
 
 test('editing a verified profile preserves verification and candidate code', function () {
@@ -177,4 +340,21 @@ test('failed profile persistence removes the new photo and keeps the old photo',
     } finally {
         Event::forget('eloquent.saving: '.CandidateProfile::class);
     }
+});
+test('candidate profile rejects nonexistent province and high school ids', function () {
+    $locations = createProfileLocationFixtures();
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->set('selectedProvinceId', 999999)
+        ->call('save')
+        ->assertHasErrors('selectedProvinceId');
+
+    Livewire::test(Profile::class)
+        ->set('selectedProvinceId', $locations['haNoi']->id)
+        ->set('selectedHighSchoolId', 999999)
+        ->call('save')
+        ->assertHasErrors('selectedHighSchoolId');
 });

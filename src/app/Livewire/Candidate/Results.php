@@ -9,7 +9,7 @@ use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Title;
 use Livewire\WithPagination;
 
-#[Title('My admission results')]
+#[Title('Kết quả xét tuyển')]
 class Results extends CandidatePage
 {
     use WithPagination;
@@ -18,7 +18,7 @@ class Results extends CandidatePage
     {
         $this->candidate();
         $confirmation->confirm($resultId);
-        Flux::toast(variant: 'success', text: __('Admission confirmed.'));
+        Flux::toast(variant: 'success', text: __('Đã xác nhận nhập học.'));
     }
 
     public function render(): View

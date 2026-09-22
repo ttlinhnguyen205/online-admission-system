@@ -21,7 +21,7 @@ function phaseFourPdf(string $name = 'transcript.pdf'): UploadedFile
 
 test('documents without an application show an empty state and create no records', function () {
     $this->actingAs(User::factory()->create());
-    $this->get(route('candidate.documents.index'))->assertOk()->assertSee('Chưa có hồ sơ đăng ký nhập học');
+    $this->get(route('candidate.documents.index'))->assertOk()->assertSee('Chưa có hồ sơ xét tuyển');
     $this->assertDatabaseCount('applications', 0);
     $this->assertDatabaseCount('candidate_documents', 0);
     $this->assertDatabaseCount('candidate_profiles', 0);
@@ -59,7 +59,7 @@ test('noneditable applications refuse every document mutation but retain readabl
     $application = Application::factory()->create(['status' => $status]);
     $document = CandidateDocument::factory()->for($application)->create();
     $this->actingAs($application->candidateProfile->user);
-    $page = Livewire::test(Documents::class, ['application' => $application->id])->assertSee('Read-only: application is not editable');
+    $page = Livewire::test(Documents::class, ['application' => $application->id])->assertSee('Không thể chỉnh sửa tài liệu');
     $page->call($action, ...($action === 'create' ? [] : [$document->id]))->assertForbidden();
     $this->assertModelExists($document);
 })->with([ApplicationStatus::Submitted, ApplicationStatus::UnderReview, ApplicationStatus::Verified, ApplicationStatus::Processing, ApplicationStatus::Completed])->with(['create', 'edit', 'confirmDeletion']);
@@ -209,7 +209,7 @@ test('storage write failure leaves the existing document untouched and gives act
     $failedDisk->shouldReceive('putFileAs')->once()->andThrow(new RuntimeException('Disk unavailable'));
     $failedDisk->shouldReceive('delete')->once()->andReturn(true);
     Storage::set(CandidateFiles::DISK, $failedDisk);
-    $page->call('save')->assertHasErrors('file')->assertSee('The file could not be stored. Please try again.');
+    $page->call('save')->assertHasErrors('file')->assertSee('Không thể lưu tệp. Vui lòng thử lại.');
     expect($document->fresh()->file_path)->toBe($document->file_path);
     $disk->assertExists($document->file_path);
 });

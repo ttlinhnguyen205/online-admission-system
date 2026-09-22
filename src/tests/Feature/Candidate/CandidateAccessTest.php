@@ -3,6 +3,7 @@
 use App\Enums\AdmissionRoundStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Livewire\Candidate\AdmissionInformation;
 use App\Livewire\Candidate\ApplicationDetails;
 use App\Livewire\Candidate\Applications;
 use App\Livewire\Candidate\Documents;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 
-dataset('candidate pages', [['candidate.profile.edit', Profile::class], ['candidate.scores.index', Scores::class], ['candidate.documents.index', Documents::class], ['candidate.applications.index', Applications::class]]);
+dataset('candidate pages', [['candidate.profile.edit', Profile::class], ['candidate.admission-information.index', AdmissionInformation::class], ['candidate.scores.index', Scores::class], ['candidate.documents.index', Documents::class], ['candidate.applications.index', Applications::class]]);
 
 test('candidate routes require authenticated verified candidates', function (string $route, string $component) {
     $this->get(route($route))->assertRedirect(route('login'));
@@ -40,7 +41,11 @@ test('candidate navigation respects role and account status while account settin
     $this->actingAs(User::factory()->create(['role' => $role, 'status' => $status]));
     $response = $this->get(route('profile.edit'))->assertOk();
     if ($role === UserRole::Candidate && $status === UserStatus::Active) {
-        $response->assertSee(route('candidate.profile.edit'))->assertSee(route('candidate.scores.index'))->assertSee(route('candidate.documents.index'))->assertSee(route('candidate.applications.index'));
+        $response->assertSeeInOrder(['Hồ sơ cá nhân', 'Thông tin tuyển sinh', 'Đăng ký nguyện vọng', 'Kết quả xét tuyển', 'Thông báo'])
+            ->assertSee(route('candidate.profile.edit'))->assertSee(route('candidate.admission-information.index'))
+            ->assertDontSee('Điểm & minh chứng')
+            ->assertSee(route('candidate.applications.index'))->assertSee(route('candidate.results.index'))
+            ->assertSee(route('candidate.notifications.index'))->assertDontSee(route('candidate.documents.index'));
     } else {
         $response->assertDontSee(route('candidate.profile.edit'));
     }

@@ -25,7 +25,7 @@ test('review details contain only the application documents wishes and shared pr
     $this->actingAs(User::factory()->create(['role' => UserRole::Staff]));
     Livewire::test(ApplicationDetails::class, ['application' => $application->id])
         ->assertSee('Own shared score')->assertSee('own.pdf')->assertDontSee('Foreign hidden score')->assertDontSee('foreign-hidden.pdf')
-        ->assertSeeInOrder(['First preference', 'Second preference'])->assertSee('profile-level');
+        ->assertSeeInOrder(['First preference', 'Second preference'])->assertSee('Điểm thuộc hồ sơ thí sinh');
 });
 
 test('review details escape reasons identity filenames and catalog content without exposing paths', function () {

@@ -25,9 +25,23 @@ function readyApplication(): Application
     $application = Application::factory()->create();
     $application->admissionRound->update(['status' => AdmissionRoundStatus::Open]);
     $application->candidateProfile->update([
-        'profile_status' => ProfileStatus::Complete, 'date_of_birth' => '2008-01-02', 'gender' => 'Female',
-        'citizen_id' => fake()->unique()->numerify('############'), 'phone' => '0901234567', 'address' => 'Hanoi',
-        'province_code' => '01', 'high_school_name' => 'Demo school', 'graduation_year' => 2026, 'photo_path' => 'candidate-photos/example.png',
+        'profile_status' => ProfileStatus::Complete,
+        'date_of_birth' => '2008-01-02',
+        'gender' => 'female',
+        'ethnicity' => 'Kinh',
+        'religion' => null,
+        'citizen_id' => fake()->unique()->numerify('############'),
+        'citizen_id_issued_date' => '2022-01-02',
+        'citizen_id_issued_place' => 'Cục Cảnh sát QLHC về TTXH',
+        'phone' => '0901234567',
+        'address' => 'Hanoi',
+        'province_code' => '01',
+        'high_school_code' => '0103',
+        'high_school_name' => 'Demo school',
+        'graduation_year' => 2026,
+        'photo_path' => 'candidate-photos/example.png',
+        'citizen_id_front_path' => 'candidate-citizen-ids/example/front.png',
+        'citizen_id_back_path' => 'candidate-citizen-ids/example/back.png',
     ]);
     AdmissionWish::factory()->for($application)->create();
 
@@ -45,7 +59,7 @@ test('draft and needs revision submit with zero documents and preserve review me
     $originalWish = $wish->getAttributes();
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmSubmission')->assertSet('showSubmission', true)
-        ->call('submit')->assertHasNoErrors()->assertSet('showSubmission', false)->assertSee('Read-only');
+        ->call('submit')->assertHasNoErrors()->assertSet('showSubmission', false)->assertSee('Chỉ có thể sửa nguyện vọng');
     $application->refresh();
     expect($application->status)->toBe(ApplicationStatus::Submitted);
     expect($application->submitted_at->format('Y-m-d H:i:s'))->toBe('2026-09-14 12:00:00');
@@ -64,7 +78,7 @@ test('submission requires saved completion status without requiring staff verifi
     $application->candidateProfile->update(['profile_status' => $status]);
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('submit');
-    if ($status === ProfileStatus::Incomplete) {
+    if (in_array($status, [ProfileStatus::Incomplete, ProfileStatus::Rejected], true)) {
         $page->assertHasErrors('profile');
         expect($application->fresh()->status)->toBe(ApplicationStatus::Draft);
         expect($application->fresh()->submitted_at)->toBeNull();
@@ -89,7 +103,7 @@ test('submission rejects an application without wishes', function () {
     $application = readyApplication();
     $application->wishes()->delete();
     $this->actingAs($application->candidateProfile->user);
-    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('submit')->assertHasErrors('wishes')->assertSee('Add at least one admission wish');
+    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('submit')->assertHasErrors('wishes')->assertSee('Cần có ít nhất một nguyện vọng');
     expect($application->fresh()->status)->toBe(ApplicationStatus::Draft);
 });
 

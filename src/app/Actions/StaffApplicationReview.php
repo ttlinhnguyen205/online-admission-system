@@ -6,6 +6,9 @@ use App\Enums\ApplicationStatus;
 use App\Enums\DocumentStatus;
 use App\Models\Application;
 use App\Models\User;
+use App\Notifications\ApplicationReviewStarted;
+use App\Notifications\ApplicationRevisionRequested;
+use App\Notifications\CandidateScoreVerified;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +27,7 @@ class StaffApplicationReview
                 throw ValidationException::withMessages(['review' => __('A recorded submission is required to start review.')]);
             }
             $this->save($application, ['status' => ApplicationStatus::UnderReview, 'reviewed_by' => Auth::id(), 'reviewed_at' => null], 'application.review_started');
+            $application->candidateProfile()->firstOrFail()->user()->firstOrFail()->notify(new ApplicationReviewStarted($application->getKey()));
         });
     }
 
@@ -34,6 +38,7 @@ class StaffApplicationReview
             $reason = $this->reason($form, 'revision_reason');
             $this->save($application, ['status' => ApplicationStatus::NeedsRevision, 'reviewed_by' => Auth::id(),
                 'reviewed_at' => now(config('app.timezone')), 'revision_reason' => $reason], 'application.revision_requested');
+            $application->candidateProfile()->firstOrFail()->user()->firstOrFail()->notify(new ApplicationRevisionRequested($application->getKey(), $reason));
         });
     }
 
@@ -91,7 +96,11 @@ class StaffApplicationReview
             if ($score->getAttribute('verified')) {
                 throw ValidationException::withMessages(['review' => __('This score is already verified. Its reviewer has not been changed.')]);
             }
+            if (! $this->snapshots->fileAvailable($score->getAttribute('evidence_path'), scoreEvidence: true)) {
+                throw ValidationException::withMessages(['review' => __('Không thể xác minh điểm khi ảnh minh chứng không có hoặc không đọc được.')]);
+            }
             $this->save($score, ['verified' => true, 'verified_by' => Auth::id()], 'score.verified');
+            $score->candidateProfile()->firstOrFail()->user()->firstOrFail()->notify(new CandidateScoreVerified($score->getKey()));
         });
     }
 

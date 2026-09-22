@@ -1,7 +1,7 @@
 <section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
     <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-            <flux:heading size="xl" level="1">{{ __('Hồ sơ xét tuyển') }}</flux:heading>
+            <flux:heading size="xl" level="1">{{ __('Đăng ký nguyện vọng') }}</flux:heading>
             <flux:text class="mt-2">{{ __('Tạo một hồ sơ cho mỗi đợt tuyển sinh, sắp xếp nguyện vọng rồi nộp khi đã sẵn sàng.') }}</flux:text>
         </div>
         @if ($profile && $rounds->isNotEmpty())
@@ -9,7 +9,7 @@
         @endif
     </div>
     @if (! $profile)
-        <flux:callout>{{ __('Hãy tạo hồ sơ thí sinh trước khi tạo hồ sơ xét tuyển.') }} <a class="underline" href="{{ route('candidate.profile.edit') }}" wire:navigate>{{ __('Mở hồ sơ') }}</a></flux:callout>
+        <flux:callout>{{ __('Hãy tạo hồ sơ cá nhân trước khi đăng ký xét tuyển.') }} <a class="underline" href="{{ route('candidate.profile.edit') }}" wire:navigate>{{ __('Mở hồ sơ') }}</a></flux:callout>
     @else
         @if ($rounds->isEmpty())
             <flux:callout>{{ __('Hiện không có đợt tuyển sinh mới. Đợt tuyển sinh phải đang mở trong thời hạn nhận hồ sơ và bạn chưa có hồ sơ trong đợt đó.') }}</flux:callout>
@@ -29,7 +29,7 @@
                         <flux:table.row :key="$record->id">
                             <flux:table.cell>{{ $record->application_code }}</flux:table.cell>
                             <flux:table.cell><div>{{ $record->admissionRound->name }}</div><div class="text-xs">{{ $record->admissionRound->code }}</div></flux:table.cell>
-                            <flux:table.cell><flux:badge>{{ match ($record->status) { App\Enums\ApplicationStatus::Draft => 'Bản nháp', App\Enums\ApplicationStatus::Submitted => 'Đã nộp', App\Enums\ApplicationStatus::UnderReview => 'Đang xét duyệt', App\Enums\ApplicationStatus::NeedsRevision => 'Cần bổ sung', App\Enums\ApplicationStatus::Verified => 'Đã xác minh', App\Enums\ApplicationStatus::Processing => 'Đang xử lý', App\Enums\ApplicationStatus::Completed => 'Đã hoàn tất' } }}</flux:badge></flux:table.cell>
+                            <flux:table.cell><flux:badge>{{ App\Support\CandidateStatusLabels::application($record->status) }}</flux:badge></flux:table.cell>
                             <flux:table.cell>{{ $record->submitted_at?->format('Y-m-d H:i:s') ?? __('Chưa nộp') }}</flux:table.cell>
                             <flux:table.cell><flux:button size="sm" :href="route('candidate.applications.show', $record->id)" wire:navigate>{{ __('Mở hồ sơ') }}</flux:button></flux:table.cell>
                         </flux:table.row>
@@ -58,4 +58,7 @@
             </div>
         </form>
     </flux:modal>
+    <div class="flex justify-end">
+        <flux:button :href="route('candidate.results.index')" wire:navigate>{{ __('Tiếp theo: Kết quả xét tuyển') }}</flux:button>
+    </div>
 </section>

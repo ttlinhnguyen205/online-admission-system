@@ -18,6 +18,6 @@ class AdmissionResultsPublished extends Notification
     public function toDatabase(object $notifiable): array
     {
         return ['round_id' => $this->roundId, 'round_name' => $this->roundName,
-            'application_id' => $this->applicationId, 'message' => 'Admission results are available.'];
+            'application_id' => $this->applicationId, 'message' => 'Kết quả xét tuyển đã được công bố.'];
     }
 }

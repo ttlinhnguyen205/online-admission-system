@@ -5,22 +5,22 @@
             <flux:text class="mt-2">{{ $round->name }} · {{ $round->code }}</flux:text>
         </div>
         <div class="flex flex-wrap gap-3">
-            <flux:button :href="route('candidate.applications.index')" wire:navigate>{{ __('All applications') }}</flux:button>
-            <flux:button :href="route('candidate.applications.documents.index', $application->id)" wire:navigate>{{ __('Application documents') }}</flux:button>
+            <flux:button :href="route('candidate.applications.index')" wire:navigate>{{ __('Danh sách hồ sơ') }}</flux:button>
+            <flux:button :href="route('candidate.applications.documents.index', $application->id)" wire:navigate>{{ __('Tài liệu hồ sơ') }}</flux:button>
         </div>
     </div>
     <div class="flex flex-col gap-3 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
         <div class="flex flex-wrap gap-3">
-            <flux:badge>{{ __(ucwords(str_replace('_', ' ', $application->status->value))) }}</flux:badge>
-            <flux:badge>{{ __('Round') }}: {{ __(ucfirst($round->status->value)) }}</flux:badge>
+            <flux:badge>{{ App\Support\CandidateStatusLabels::application($application->status) }}</flux:badge>
+            <flux:badge>{{ __('Đợt tuyển sinh') }}: {{ App\Support\CandidateStatusLabels::round($round->status) }}</flux:badge>
         </div>
-        <flux:text>{{ __('Application window') }}: {{ $round->start_date->format('Y-m-d H:i:s') }} – {{ $round->end_date->format('Y-m-d H:i:s') }} ({{ config('app.timezone') }})</flux:text>
-        <flux:text>{{ __('Latest submission') }}: {{ $application->submitted_at?->format('Y-m-d H:i:s') ?? __('Not submitted') }} ({{ config('app.timezone') }})</flux:text>
+        <flux:text>{{ __('Thời gian nhận hồ sơ') }}: {{ $round->start_date->format('Y-m-d H:i:s') }} – {{ $round->end_date->format('Y-m-d H:i:s') }} ({{ config('app.timezone') }})</flux:text>
+        <flux:text>{{ __('Thời điểm nộp gần nhất') }}: {{ $application->submitted_at?->format('Y-m-d H:i:s') ?? __('Chưa nộp') }} ({{ config('app.timezone') }})</flux:text>
         @if ($application->revision_reason)
-            <flux:callout><div class="font-medium">{{ __('Previous review: revision reason') }}</div><p class="whitespace-pre-wrap break-words">{{ $application->revision_reason }}</p></flux:callout>
+            <flux:callout><div class="font-medium">{{ __('Lý do yêu cầu bổ sung') }}</div><p class="whitespace-pre-wrap break-words">{{ $application->revision_reason }}</p></flux:callout>
         @endif
         @if (! $editable)
-            <flux:callout>{{ __('Read-only: wish changes require a draft or needs-revision application and an open round within its date window.') }}</flux:callout>
+            <flux:callout>{{ __('Chỉ có thể sửa nguyện vọng khi hồ sơ ở trạng thái bản nháp hoặc cần bổ sung và đợt tuyển sinh còn nhận hồ sơ.') }}</flux:callout>
         @endif
     </div>
     <flux:error name="round" />
@@ -28,10 +28,10 @@
     <flux:error name="order" />
     <flux:error name="order.*" />
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <div><flux:heading>{{ __('Ranked admission wishes / Nguyện vọng') }}</flux:heading><flux:text>{{ __('Priority 1 is your highest preference. Use Move up or Move down to change the order.') }}</flux:text></div>
-        <flux:button size="sm" wire:click="reloadWishes" wire:loading.attr="disabled">{{ __('Reload wishes') }}</flux:button>
+        <div><flux:heading>{{ __('Nguyện vọng xét tuyển') }}</flux:heading><flux:text>{{ __('Nguyện vọng 1 là ưu tiên cao nhất. Dùng các nút di chuyển để thay đổi thứ tự.') }}</flux:text></div>
+        <flux:button size="sm" wire:click="reloadWishes" wire:loading.attr="disabled">{{ __('Tải lại nguyện vọng') }}</flux:button>
     </div>
-    <div role="status" wire:loading.delay>{{ __('Updating application...') }}</div>
+    <div role="status" wire:loading.delay>{{ __('Đang cập nhật hồ sơ...') }}</div>
     <div class="flex flex-col gap-3">
         @forelse ($wishes as $wish)
             @php($reason = App\Actions\CandidateWishes::unavailableReason($wish->admissionProgram, $round))
@@ -39,87 +39,90 @@
                 <div class="min-w-0 space-y-2">
                     <flux:heading>{{ $wish->priority }}. {{ $wish->admissionProgram->major->name }}</flux:heading>
                     <flux:text>{{ $wish->admissionProgram->major->code }} · {{ $wish->admissionProgram->admissionMethod->name }} ({{ $wish->admissionProgram->admissionMethod->code }})</flux:text>
-                    <flux:text>{{ __('Round') }}: {{ $wish->admissionProgram->admissionRound->name }}</flux:text>
+                    <flux:text>{{ __('Đợt tuyển sinh') }}: {{ $wish->admissionProgram->admissionRound->name }}</flux:text>
                     @if ($reason)<flux:badge color="amber">{{ $reason }}</flux:badge>@endif
-                    @if ($wish->result_exists)<flux:text>{{ __('An admission result protects this wish from removal or priority changes.') }}</flux:text>@endif
+                    @if ($wish->result_exists)<flux:text>{{ __('Nguyện vọng đã có kết quả xét tuyển nên không thể xóa hoặc thay đổi thứ tự.') }}</flux:text>@endif
                 </div>
                 @if ($editable)
                     <div class="flex flex-wrap items-start gap-2">
-                        <flux:button size="sm" wire:click="moveWish({{ $wish->id }}, 'up')" :disabled="$loop->first || $wish->result_exists" wire:loading.attr="disabled">{{ __('Move up') }}</flux:button>
-                        <flux:button size="sm" wire:click="moveWish({{ $wish->id }}, 'down')" :disabled="$loop->last || $wish->result_exists" wire:loading.attr="disabled">{{ __('Move down') }}</flux:button>
-                        @can('delete', $wish)<flux:button size="sm" variant="ghost" wire:click="confirmDeletion({{ $wish->id }})" wire:loading.attr="disabled">{{ __('Remove') }}</flux:button>@endcan
+                        <flux:button size="sm" wire:click="moveWish({{ $wish->id }}, 'up')" :disabled="$loop->first || $wish->result_exists" wire:loading.attr="disabled">{{ __('Chuyển lên') }}</flux:button>
+                        <flux:button size="sm" wire:click="moveWish({{ $wish->id }}, 'down')" :disabled="$loop->last || $wish->result_exists" wire:loading.attr="disabled">{{ __('Chuyển xuống') }}</flux:button>
+                        @can('delete', $wish)<flux:button size="sm" variant="ghost" wire:click="confirmDeletion({{ $wish->id }})" wire:loading.attr="disabled">{{ __('Xóa') }}</flux:button>@endcan
                     </div>
                 @endif
             </article>
         @empty
-            <flux:callout>{{ __('No wishes yet. Choose a program below to add your first wish.') }}</flux:callout>
+            <flux:callout>{{ __('Chưa có nguyện vọng. Hãy chọn chương trình bên dưới để thêm nguyện vọng đầu tiên.') }}</flux:callout>
         @endforelse
     </div>
     @if ($editable)
         <form wire:submit="addWish" class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
-            <flux:heading>{{ __('Add an admission wish') }}</flux:heading>
+            <flux:heading>{{ __('Thêm nguyện vọng xét tuyển') }}</flux:heading>
             <flux:error name="form" />
-            <flux:select wire:model="form.admission_program_id" :label="__('Program / Major / Admission method')" required>
-                <flux:select.option value="">{{ __('Select a program') }}</flux:select.option>
+            <flux:select wire:model="form.admission_program_id" :label="__('Chương trình / Ngành / Phương thức xét tuyển')" required>
+                <flux:select.option value="">{{ __('Chọn chương trình') }}</flux:select.option>
                 @foreach ($programs as $program)
                     @php($unavailable = $reasons->get($program->id))
                     @php($alreadySelected = in_array($program->id, $selected, true))
-                    <flux:select.option :value="$program->id" :disabled="$unavailable !== null || $alreadySelected" wire:key="program-{{ $program->id }}">{{ $program->major->name }} · {{ $program->admissionMethod->name }}{{ $alreadySelected ? ' — '.__('Already selected') : ($unavailable ? ' — '.$unavailable : '') }}</flux:select.option>
+                    <flux:select.option :value="$program->id" :disabled="$unavailable !== null || $alreadySelected" wire:key="program-{{ $program->id }}">{{ $program->major->name }} · {{ $program->admissionMethod->name }}{{ $alreadySelected ? ' — '.__('Đã chọn') : ($unavailable ? ' — '.$unavailable : '') }}</flux:select.option>
                 @endforeach
             </flux:select>
-            <flux:text>{{ __('Only active programs with active majors and methods and positive configured capacity can be selected. Capacity is not a count of remaining places.') }}</flux:text>
-            @if ($programs->isEmpty())<flux:callout>{{ __('No programs have been configured for this round.') }}</flux:callout>@endif
-            <div><flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="addWish">{{ __('Add wish at the end') }}</flux:button></div>
+            <flux:text>{{ __('Chỉ có thể chọn chương trình, ngành và phương thức đang hoạt động với chỉ tiêu lớn hơn 0. Chỉ tiêu cấu hình không phải số chỗ còn lại.') }}</flux:text>
+            @if ($programs->isEmpty())<flux:callout>{{ __('Chưa có chương trình nào được cấu hình cho đợt tuyển sinh này.') }}</flux:callout>@endif
+            <div><flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="addWish">{{ __('Thêm nguyện vọng cuối danh sách') }}</flux:button></div>
         </form>
     @endif
     <details class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
-        <summary class="cursor-pointer font-medium">{{ __('Program information for this round') }}</summary>
+        <summary class="cursor-pointer font-medium">{{ __('Thông tin chương trình trong đợt tuyển sinh') }}</summary>
         <div class="mt-4 grid gap-4 md:grid-cols-2">
             @forelse ($programs as $program)
                 <div wire:key="catalog-{{ $program->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
                     <div class="font-medium">{{ $program->major->name }} · {{ $program->admissionMethod->name }}</div>
-                    <flux:text>{{ __('Configured capacity') }}: {{ $program->quota }} · {{ __('Minimum score') }}: {{ $program->minimum_score ?? __('Unspecified') }} · {{ __('Previous cutoff') }}: {{ $program->previous_cutoff_score ?? __('Unspecified') }}</flux:text>
-                    <flux:text>{{ __('Tuition fee') }}: {{ $program->tuition_fee ?? __('Unspecified') }}</flux:text>
+                    <flux:text>{{ __('Chỉ tiêu') }}: {{ $program->quota }} · {{ __('Điểm tối thiểu') }}: {{ $program->minimum_score ?? __('Chưa xác định') }} · {{ __('Điểm chuẩn trước đây') }}: {{ $program->previous_cutoff_score ?? __('Chưa xác định') }}</flux:text>
+                    <flux:text>{{ __('Học phí') }}: {{ $program->tuition_fee ?? __('Chưa xác định') }}</flux:text>
                     @if ($reasons->get($program->id))<flux:badge color="amber">{{ $reasons->get($program->id) }}</flux:badge>@endif
                 </div>
             @empty
-                <flux:text>{{ __('No programs for this round.') }}</flux:text>
+                <flux:text>{{ __('Chưa có chương trình cho đợt tuyển sinh này.') }}</flux:text>
             @endforelse
         </div>
     </details>
     <div class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
-        <flux:heading>{{ __('Submission checklist') }}</flux:heading>
+        <flux:heading>{{ __('Điều kiện nộp hồ sơ') }}</flux:heading>
         <flux:error name="profile" />
         <flux:error name="submission" />
         @if ($checklist === [])
-            <flux:callout variant="success">{{ __('Your saved profile, wishes and round are ready for submission. They will be checked again when you submit.') }}</flux:callout>
+            <flux:callout variant="success">{{ __('Hồ sơ cá nhân, nguyện vọng và đợt tuyển sinh đã sẵn sàng. Hệ thống sẽ kiểm tra lại khi bạn nộp.') }}</flux:callout>
         @else
             <ul class="list-inside list-disc space-y-2 text-sm">
                 @foreach ($checklist as $key => $message)<li wire:key="check-{{ $key }}">{{ $message }}</li>@endforeach
             </ul>
         @endif
-        <flux:text>{{ __('No document count or document type is required for submission in this phase. You can manage application files on the Documents page.') }}</flux:text>
+        <flux:text>{{ __('Hiện không bắt buộc số lượng hoặc loại tài liệu khi nộp hồ sơ. Bạn có thể quản lý tài liệu trong mục Tài liệu hồ sơ của hồ sơ này.') }}</flux:text>
         <div class="flex flex-wrap gap-3">
-            <flux:button :href="route('candidate.profile.edit')" wire:navigate>{{ __('Open candidate profile') }}</flux:button>
+            <flux:button :href="route('candidate.profile.edit')" wire:navigate>{{ __('Mở hồ sơ cá nhân') }}</flux:button>
             @if ($editable)
-                <flux:button variant="primary" wire:click="confirmSubmission" :disabled="$checklist !== []" wire:loading.attr="disabled">{{ $application->status === App\Enums\ApplicationStatus::NeedsRevision ? __('Resubmit application') : __('Submit application') }}</flux:button>
+                <flux:button variant="primary" wire:click="confirmSubmission" :disabled="$checklist !== []" wire:loading.attr="disabled">{{ $application->status === App\Enums\ApplicationStatus::NeedsRevision ? __('Nộp lại hồ sơ') : __('Nộp hồ sơ') }}</flux:button>
             @endif
         </div>
     </div>
     <flux:modal wire:model="showDeletion" class="md:w-96">
         <form wire:submit="deleteWish" class="flex flex-col gap-5">
-            <flux:heading>{{ __('Remove this wish?') }}</flux:heading>
-            <flux:text>{{ __('This wish will be removed. Remaining priorities will be updated in order.') }}</flux:text>
+            <flux:heading>{{ __('Xóa nguyện vọng này?') }}</flux:heading>
+            <flux:text>{{ __('Nguyện vọng sẽ bị xóa. Thứ tự ưu tiên còn lại sẽ được cập nhật.') }}</flux:text>
             <flux:error name="deletion" /><flux:error name="round" /><flux:error name="order" />
-            <div class="flex justify-end gap-3"><flux:modal.close><flux:button>{{ __('Cancel') }}</flux:button></flux:modal.close><flux:button type="submit" variant="danger" wire:loading.attr="disabled" wire:target="deleteWish">{{ __('Remove wish') }}</flux:button></div>
+            <div class="flex justify-end gap-3"><flux:modal.close><flux:button>{{ __('Hủy') }}</flux:button></flux:modal.close><flux:button type="submit" variant="danger" wire:loading.attr="disabled" wire:target="deleteWish">{{ __('Xóa nguyện vọng') }}</flux:button></div>
         </form>
     </flux:modal>
     <flux:modal wire:model="showSubmission" class="w-full md:max-w-xl">
         <form wire:submit="submit" class="flex flex-col gap-5">
-            <flux:heading>{{ __('Submit this application?') }}</flux:heading>
-            <flux:text>{{ __('After submission, you cannot change wishes or application documents unless the application is returned for revision. Your saved information will be checked again now.') }}</flux:text>
+            <flux:heading>{{ __('Nộp hồ sơ này?') }}</flux:heading>
+            <flux:text>{{ __('Sau khi nộp, bạn không thể sửa nguyện vọng hoặc tài liệu hồ sơ trừ khi được yêu cầu bổ sung. Hệ thống sẽ kiểm tra lại thông tin đã lưu.') }}</flux:text>
             <flux:error name="submission" /><flux:error name="profile" /><flux:error name="round" /><flux:error name="wishes" />
-            <div class="flex justify-end gap-3"><flux:modal.close><flux:button>{{ __('Cancel') }}</flux:button></flux:modal.close><flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="submit">{{ __('Confirm submission') }}</flux:button></div>
+            <div class="flex justify-end gap-3"><flux:modal.close><flux:button>{{ __('Hủy') }}</flux:button></flux:modal.close><flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="submit">{{ __('Xác nhận nộp hồ sơ') }}</flux:button></div>
         </form>
     </flux:modal>
+    <div class="flex justify-end">
+        <flux:button :href="route('candidate.results.index')" wire:navigate>{{ __('Tiếp theo: Kết quả xét tuyển') }}</flux:button>
+    </div>
 </section>

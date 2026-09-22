@@ -42,6 +42,7 @@ test('audit persistence failure rolls back every review mutation', function (str
     $document = CandidateDocument::factory()->for($application)->create();
     Storage::disk('candidate-private')->put($document->file_path, '%PDF-1.4');
     $score = CandidateScore::factory()->for($application->candidateProfile)->create();
+    reviewScoreEvidence($score);
     if ($operation === 'verify') {
         $document->update(['status' => 'verified']);
         $score->update(['verified' => true]);
@@ -82,6 +83,7 @@ test('document and score audit payloads contain only workflow values and their o
     $document = CandidateDocument::factory()->for($application)->create();
     Storage::disk('candidate-private')->put($document->file_path, '%PDF-1.4 sensitive bytes');
     $score = CandidateScore::factory()->for($application->candidateProfile)->create();
+    reviewScoreEvidence($score);
     $actor = User::factory()->create(['role' => UserRole::Staff]);
     $this->actingAs($actor);
     $review = app(StaffApplicationReview::class);

@@ -133,6 +133,7 @@ test('candidate revision replacement and resubmission preserve existing file wor
 test('actual candidate score edits invalidate staff verification and staff verification blocks an open candidate editor', function () {
     $application = reviewApplication();
     $score = CandidateScore::factory()->for($application->candidateProfile)->create();
+    reviewScoreEvidence($score);
     $reviewer = User::factory()->create(['role' => UserRole::Staff]);
     $this->actingAs($reviewer);
     $token = reviewToken($application);
@@ -149,6 +150,7 @@ test('actual candidate score edits invalidate staff verification and staff verif
 test('staff verification blocks candidate score dialogs opened before the decision', function (string $operation) {
     $application = reviewApplication();
     $score = CandidateScore::factory()->for($application->candidateProfile)->create(['score' => '6.500']);
+    reviewScoreEvidence($score);
     $reviewer = User::factory()->create(['role' => UserRole::Staff]);
     $candidate = $application->candidateProfile->user;
     $this->actingAs($candidate);
