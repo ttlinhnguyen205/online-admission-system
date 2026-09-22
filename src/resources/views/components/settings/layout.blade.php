@@ -4,6 +4,7 @@
             <flux:navlist.item :href="route('profile.edit')" wire:navigate>{{ __('Hồ sơ') }}</flux:navlist.item>
             <flux:navlist.item :href="route('security.edit')" wire:navigate>{{ __('Bảo mật') }}</flux:navlist.item>
             <flux:navlist.item :href="route('appearance.edit')" wire:navigate>{{ __('Giao diện') }}</flux:navlist.item>
+            <flux:navlist.item :href="route('language.edit')" wire:navigate>{{ __('Ngôn ngữ') }}</flux:navlist.item>
         </flux:navlist>
     </div>
 
