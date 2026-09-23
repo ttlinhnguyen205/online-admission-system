@@ -8,6 +8,7 @@ use App\Models\AdmissionProgram;
 use App\Models\AdmissionRound;
 use App\Models\AdmissionWish;
 use App\Models\Application;
+use App\Models\CandidateMajorOffering;
 use App\Models\Major;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
@@ -23,8 +24,8 @@ class CandidateWishes
     public function add(int $applicationId, array $form): void
     {
         $validated = Validator::make(['form' => $form], [
-            'form' => ['required', 'array:admission_program_id'],
-            'form.admission_program_id' => ['required', 'integer', 'min:1'],
+            'form' => ['required', 'array:candidate_major_offering_id'],
+            'form.candidate_major_offering_id' => ['required', 'integer', 'min:1'],
         ])->validate();
         try {
             DB::transaction(function () use ($applicationId, $validated): void {
@@ -33,22 +34,27 @@ class CandidateWishes
                 CandidateApplications::requireEditable($application);
                 Gate::authorize('browseForApplication', [AdmissionProgram::class, $application]);
                 $wishes = $application->wishes()->orderBy('id')->lockForUpdate()->get();
-                $programs = self::lockPrograms($application, [(int) $validated['form']['admission_program_id']]);
+                $offering = CandidateMajorOffering::query()->where('admission_round_id', $application->getAttribute('admission_round_id'))
+                    ->lockForUpdate()->find((int) $validated['form']['candidate_major_offering_id']);
+                $programIds = $wishes->pluck('admission_program_id')->map(fn ($id): int => (int) $id)->all();
+                $programIds[] = (int) $offering?->getAttribute('admission_program_id');
+                $programs = self::lockPrograms($application, array_values($programIds));
                 $round = $application->admissionRound()->lockForUpdate()->firstOrFail();
                 self::lockProgramParents($programs);
                 CandidateApplications::requireOpenRound($round);
-                $program = $programs->first();
-                if ($program === null || self::unavailableReason($program, $round) !== null) {
-                    throw ValidationException::withMessages(['form.admission_program_id' => __('Chương trình đã chọn không khả dụng trong đợt tuyển sinh này.')]);
+                $program = $programs->get((int) $offering?->getAttribute('admission_program_id'));
+                if ($offering === null || $program === null || ! CandidateMajorOfferings::available($offering, $program, $round)) {
+                    throw ValidationException::withMessages(['form.candidate_major_offering_id' => __('Ngành đã chọn hiện không nhận đăng ký trong đợt tuyển sinh này.')]);
                 }
-                if ($wishes->contains('admission_program_id', $program->getKey())) {
-                    throw ValidationException::withMessages(['form.admission_program_id' => __('Chương trình này đã có trong danh sách nguyện vọng.')]);
+                if ($wishes->contains(fn (AdmissionWish $wish): bool => $programs->get($wish->getAttribute('admission_program_id'))?->getAttribute('major_id') === $program->getAttribute('major_id'))) {
+                    throw ValidationException::withMessages(['form.candidate_major_offering_id' => __('Ngành này đã có trong danh sách nguyện vọng.')]);
                 }
                 if ($wishes->count() >= 65535) {
                     throw ValidationException::withMessages(['wishes' => __('Đã đạt giới hạn thứ tự ưu tiên nguyện vọng.')]);
                 }
                 $this->applyOrder($wishes, self::orderedIds($wishes));
                 $wish = $application->wishes()->make([
+                    'candidate_major_offering_id' => $offering->getKey(),
                     'admission_program_id' => $program->getKey(), 'priority' => $wishes->count() + 1,
                     'status' => WishStatus::Pending, 'calculated_score' => null,
                 ]);
@@ -59,10 +65,10 @@ class CandidateWishes
             }, 3);
         } catch (UniqueConstraintViolationException $exception) {
             $message = (string) ($exception->errorInfo[2] ?? '');
-            if (! str_contains($message, 'admission_wishes_application_id_') && ! str_contains($message, 'admission_wishes.application_id,')) {
+            if (! str_contains($message, 'admission_wishes_application_id_') && ! str_contains($message, 'admission_wishes.application_id,') && ! str_contains($message, 'wish_application_offering_unique')) {
                 throw $exception;
             }
-            throw ValidationException::withMessages(['wishes' => __('Danh sách nguyện vọng đã thay đổi hoặc chương trình đã được chọn. Hãy tải lại và thử lại.')]);
+            throw ValidationException::withMessages(['wishes' => __('Danh sách nguyện vọng đã thay đổi hoặc ngành đã được chọn. Hãy tải lại và thử lại.')]);
         }
     }
 

@@ -85,7 +85,7 @@ test('program relationships cannot be reassigned after wishes exist even from a 
     $wish = AdmissionWish::factory()->for($record, 'admissionProgram')->create();
     $replacement = $model::factory()->create();
     $page->set('form.'.$field, $replacement->id)->call('save')->assertHasErrors('form.'.$field)
-        ->assertSee('The round, major and method cannot change once this program has wishes.');
+        ->assertSee('The round, major and method cannot change once this program has wishes or candidate offerings.');
     $this->assertDatabaseHas('admission_programs', ['id' => $record->id, $field => $record->getAttribute($field)]);
     $this->assertModelExists($wish);
     $page->call('edit', $record->id)->assertSet('relationshipsLocked', true)->set('form.quota', 0)->call('save')->assertHasNoErrors();

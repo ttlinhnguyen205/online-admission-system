@@ -34,13 +34,11 @@
     <div role="status" wire:loading.delay>{{ __('Đang cập nhật hồ sơ...') }}</div>
     <div class="flex flex-col gap-3">
         @forelse ($wishes as $wish)
-            @php($reason = App\Actions\CandidateWishes::unavailableReason($wish->admissionProgram, $round))
             <article wire:key="wish-{{ $wish->id }}" class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700 sm:flex-row sm:justify-between">
                 <div class="min-w-0 space-y-2">
-                    <flux:heading>{{ $wish->priority }}. {{ $wish->admissionProgram->major->name }}</flux:heading>
-                    <flux:text>{{ $wish->admissionProgram->major->code }} · {{ $wish->admissionProgram->admissionMethod->name }} ({{ $wish->admissionProgram->admissionMethod->code }})</flux:text>
-                    <flux:text>{{ __('Đợt tuyển sinh') }}: {{ $wish->admissionProgram->admissionRound->name }}</flux:text>
-                    @if ($reason)<flux:badge color="amber">{{ $reason }}</flux:badge>@endif
+                    <flux:text>{{ __('Nguyện vọng :priority', ['priority' => $wish->priority]) }}</flux:text>
+                    <flux:heading>{{ $wish->admissionProgram->major->name }}</flux:heading>
+                    <flux:text>{{ $wish->admissionProgram->major->code }}</flux:text>
                     @if ($wish->result_exists)<flux:text>{{ __('Nguyện vọng đã có kết quả xét tuyển nên không thể xóa hoặc thay đổi thứ tự.') }}</flux:text>@endif
                 </div>
                 @if ($editable)
@@ -52,41 +50,24 @@
                 @endif
             </article>
         @empty
-            <flux:callout>{{ __('Chưa có nguyện vọng. Hãy chọn chương trình bên dưới để thêm nguyện vọng đầu tiên.') }}</flux:callout>
+            <flux:callout>{{ __('Chưa có nguyện vọng. Hãy chọn ngành xét tuyển để thêm nguyện vọng đầu tiên.') }}</flux:callout>
         @endforelse
     </div>
     @if ($editable)
         <form wire:submit="addWish" class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
             <flux:heading>{{ __('Thêm nguyện vọng xét tuyển') }}</flux:heading>
             <flux:error name="form" />
-            <flux:select wire:model="form.admission_program_id" :label="__('Chương trình / Ngành / Phương thức xét tuyển')" required>
-                <flux:select.option value="">{{ __('Chọn chương trình') }}</flux:select.option>
-                @foreach ($programs as $program)
-                    @php($unavailable = $reasons->get($program->id))
-                    @php($alreadySelected = in_array($program->id, $selected, true))
-                    <flux:select.option :value="$program->id" :disabled="$unavailable !== null || $alreadySelected" wire:key="program-{{ $program->id }}">{{ $program->major->name }} · {{ $program->admissionMethod->name }}{{ $alreadySelected ? ' — '.__('Đã chọn') : ($unavailable ? ' — '.$unavailable : '') }}</flux:select.option>
+            <flux:select wire:model="form.candidate_major_offering_id" :label="__('Ngành xét tuyển')" required>
+                <flux:select.option value="">{{ __('Chọn ngành xét tuyển') }}</flux:select.option>
+                @foreach ($offerings as $offering)
+                    <flux:select.option :value="$offering->id" wire:key="offering-{{ $offering->id }}">{{ $offering->major->name }} · {{ $offering->major->code }}</flux:select.option>
                 @endforeach
             </flux:select>
-            <flux:text>{{ __('Chỉ có thể chọn chương trình, ngành và phương thức đang hoạt động với chỉ tiêu lớn hơn 0. Chỉ tiêu cấu hình không phải số chỗ còn lại.') }}</flux:text>
-            @if ($programs->isEmpty())<flux:callout>{{ __('Chưa có chương trình nào được cấu hình cho đợt tuyển sinh này.') }}</flux:callout>@endif
+            <flux:text>{{ __('Chọn ngành muốn học rồi sắp xếp theo thứ tự ưu tiên. Mỗi ngành chỉ đăng ký một lần.') }}</flux:text>
+            @if ($offerings->isEmpty())<flux:callout>{{ __('Không còn ngành nào có thể thêm trong đợt tuyển sinh này.') }}</flux:callout>@endif
             <div><flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="addWish">{{ __('Thêm nguyện vọng cuối danh sách') }}</flux:button></div>
         </form>
     @endif
-    <details class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
-        <summary class="cursor-pointer font-medium">{{ __('Thông tin chương trình trong đợt tuyển sinh') }}</summary>
-        <div class="mt-4 grid gap-4 md:grid-cols-2">
-            @forelse ($programs as $program)
-                <div wire:key="catalog-{{ $program->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
-                    <div class="font-medium">{{ $program->major->name }} · {{ $program->admissionMethod->name }}</div>
-                    <flux:text>{{ __('Chỉ tiêu') }}: {{ $program->quota }} · {{ __('Điểm tối thiểu') }}: {{ $program->minimum_score ?? __('Chưa xác định') }} · {{ __('Điểm chuẩn trước đây') }}: {{ $program->previous_cutoff_score ?? __('Chưa xác định') }}</flux:text>
-                    <flux:text>{{ __('Học phí') }}: {{ $program->tuition_fee ?? __('Chưa xác định') }}</flux:text>
-                    @if ($reasons->get($program->id))<flux:badge color="amber">{{ $reasons->get($program->id) }}</flux:badge>@endif
-                </div>
-            @empty
-                <flux:text>{{ __('Chưa có chương trình cho đợt tuyển sinh này.') }}</flux:text>
-            @endforelse
-        </div>
-    </details>
     <div class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
         <flux:heading>{{ __('Điều kiện nộp hồ sơ') }}</flux:heading>
         <flux:error name="profile" />

@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Models\AdmissionMethod;
 use App\Models\AdmissionProgram;
 use App\Models\AdmissionRound;
+use App\Models\CandidateMajorOffering;
 use App\Models\Major;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
@@ -15,7 +16,7 @@ class DeleteAdmissionConfiguration
 {
     public function __invoke(Model $record): void
     {
-        abort_unless(in_array($record::class, [AdmissionRound::class, Major::class, AdmissionMethod::class, AdmissionProgram::class], true), 404);
+        abort_unless(in_array($record::class, [AdmissionRound::class, Major::class, AdmissionMethod::class, AdmissionProgram::class, CandidateMajorOffering::class], true), 404);
         $record->getConnection()->transaction(function () use ($record): void {
             $current = $record->newQuery()->whereKey($record->getKey())->lockForUpdate()->firstOrFail();
             Gate::authorize('update', $current);

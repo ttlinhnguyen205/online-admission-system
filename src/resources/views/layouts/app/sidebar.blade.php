@@ -40,7 +40,7 @@
                 <flux:sidebar.nav>
                     <flux:sidebar.group :heading="__('Cấu hình tuyển sinh')">
                         <flux:sidebar.item :href="route('admin.home')" :current="request()->routeIs('admin.home')" wire:navigate>{{ __('Trang cấu hình') }}</flux:sidebar.item>
-                        @foreach ([['admission-rounds', 'Đợt tuyển sinh', App\Models\AdmissionRound::class], ['majors', 'Ngành đào tạo', App\Models\Major::class], ['admission-methods', 'Phương thức xét tuyển', App\Models\AdmissionMethod::class], ['admission-programs', 'Chương trình tuyển sinh', App\Models\AdmissionProgram::class]] as [$path, $label, $model])
+                        @foreach ([['admission-rounds', 'Đợt tuyển sinh', App\Models\AdmissionRound::class], ['majors', 'Ngành đào tạo', App\Models\Major::class], ['admission-methods', 'Phương thức xét tuyển', App\Models\AdmissionMethod::class], ['admission-programs', 'Chương trình tuyển sinh', App\Models\AdmissionProgram::class], ['candidate-major-offerings', 'Ngành nhận đăng ký', App\Models\CandidateMajorOffering::class]] as [$path, $label, $model])
                             @can('viewAny', $model)
                                 <flux:sidebar.item :href="route('admin.'.$path.'.index')" :current="request()->routeIs('admin.'.$path.'.*')" wire:navigate>{{ __($label) }}</flux:sidebar.item>
                             @endcan

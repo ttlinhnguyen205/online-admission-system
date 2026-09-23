@@ -79,21 +79,28 @@ class CandidateApplications
             Gate::authorize('submit', $application);
             self::requireEditable($application);
             $wishes = $application->wishes()->orderBy('id')->lockForUpdate()->get();
+            $offerings = CandidateMajorOfferings::lockForWishes($wishes);
             $programs = CandidateWishes::lockPrograms($application, array_values($wishes->map(fn ($wish): int => $wish->getAttribute('admission_program_id'))->all()));
             $round = $application->admissionRound()->lockForUpdate()->firstOrFail();
             CandidateWishes::lockProgramParents($programs);
 
             $errors = self::submissionErrors($profile, $application, $round);
+            $majorCounts = $wishes->countBy(fn ($wish): int => (int) $programs->get($wish->getAttribute('admission_program_id'))?->getAttribute('major_id'));
             if ($wishes->isEmpty()) {
                 $errors['wishes'] = __('Cần có ít nhất một nguyện vọng trước khi nộp hồ sơ.');
             } elseif ($wishes->sortBy('priority')->pluck('priority')->values()->all() !== range(1, $wishes->count())
                 || $wishes->pluck('admission_program_id')->unique()->count() !== $wishes->count()) {
-                $errors['wishes'] = __('Thứ tự ưu tiên hoặc chương trình không nhất quán. Hãy tải lại và sắp xếp nguyện vọng.');
+                $errors['wishes'] = __('Danh sách nguyện vọng không nhất quán. Hãy tải lại và sắp xếp nguyện vọng.');
             }
             foreach ($wishes as $wish) {
                 $program = $programs->get($wish->getAttribute('admission_program_id'));
                 if ($program === null || CandidateWishes::unavailableReason($program, $round) !== null) {
                     $errors['wishes'] = __('Một hoặc nhiều nguyện vọng không khả dụng hoặc thuộc đợt khác. Hãy kiểm tra trước khi nộp.');
+                }
+                if ($wish->getAttribute('candidate_major_offering_id') !== null
+                    && (! CandidateMajorOfferings::available($offerings->get($wish->getAttribute('candidate_major_offering_id')), $program, $round)
+                        || $majorCounts->get((int) $program?->getAttribute('major_id')) !== 1)) {
+                    $errors['wishes'] = __('Một hoặc nhiều ngành đã thay đổi hoặc bị trùng. Hãy kiểm tra danh sách nguyện vọng trước khi nộp.');
                 }
             }
             if ($errors !== []) {

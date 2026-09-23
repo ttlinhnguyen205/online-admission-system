@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['application_id', 'admission_program_id', 'priority', 'calculated_score', 'status'])]
+#[Fillable(['application_id', 'admission_program_id', 'candidate_major_offering_id', 'priority', 'calculated_score', 'status'])]
 class AdmissionWish extends Model
 {
     /** @use HasFactory<AdmissionWishFactory> */
@@ -38,6 +38,12 @@ class AdmissionWish extends Model
     public function admissionProgram(): BelongsTo
     {
         return $this->belongsTo(AdmissionProgram::class);
+    }
+
+    /** @return BelongsTo<CandidateMajorOffering, $this> */
+    public function candidateMajorOffering(): BelongsTo
+    {
+        return $this->belongsTo(CandidateMajorOffering::class);
     }
 
     /** @return HasOne<AdmissionResult, $this> */

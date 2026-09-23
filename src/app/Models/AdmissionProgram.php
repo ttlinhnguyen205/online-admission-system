@@ -51,4 +51,10 @@ class AdmissionProgram extends Model
     {
         return $this->hasMany(AdmissionWish::class);
     }
+
+    /** @return HasMany<CandidateMajorOffering, $this> */
+    public function candidateMajorOfferings(): HasMany
+    {
+        return $this->hasMany(CandidateMajorOffering::class);
+    }
 }

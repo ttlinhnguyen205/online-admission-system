@@ -30,4 +30,10 @@ class Major extends Model
     {
         return $this->hasMany(AdmissionProgram::class);
     }
+
+    /** @return HasMany<CandidateMajorOffering, $this> */
+    public function candidateMajorOfferings(): HasMany
+    {
+        return $this->hasMany(CandidateMajorOffering::class);
+    }
 }

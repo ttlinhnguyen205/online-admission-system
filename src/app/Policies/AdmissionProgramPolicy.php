@@ -41,6 +41,6 @@ class AdmissionProgramPolicy
     public function delete(User $user, AdmissionProgram $record): bool
     {
         return $user->isAdmin() && AdmissionProgram::query()->whereKey($record->getKey())
-            ->doesntHave('wishes')->exists();
+            ->doesntHave('wishes')->doesntHave('candidateMajorOfferings')->exists();
     }
 }

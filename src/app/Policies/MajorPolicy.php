@@ -33,6 +33,6 @@ class MajorPolicy
     public function delete(User $user, Major $record): bool
     {
         return $user->isAdmin() && Major::query()->whereKey($record->getKey())
-            ->doesntHave('programs')->exists();
+            ->doesntHave('programs')->doesntHave('candidateMajorOfferings')->exists();
     }
 }
