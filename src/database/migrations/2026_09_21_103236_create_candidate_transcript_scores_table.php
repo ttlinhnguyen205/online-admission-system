@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('subject_code', 30);
             $table->string('subject_name', 100);
             $table->enum('grade_level', ['10', '11', '12']);
-            $table->decimal('score', 8, 3);
+            $table->decimal('score', 8, 2);
             $table->timestamps();
 
             $table->unique(['candidate_transcript_id', 'subject_code', 'grade_level'], 'candidate_transcript_subject_grade_unique');

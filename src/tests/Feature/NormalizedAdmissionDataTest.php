@@ -53,17 +53,17 @@ test('candidate profile exposes each normalized admission data relationship', fu
 });
 
 test('exam and transcript child relationships retain decimal precision', function () {
-    $exam = CandidateExamResult::factory()->create(['overall_score' => '987.654']);
+    $exam = CandidateExamResult::factory()->create(['overall_score' => '120']);
     $examScore = CandidateExamSubjectScore::factory()->for($exam, 'examResult')->create(['score' => '8.125']);
     $transcript = CandidateTranscript::factory()->create();
-    $transcriptScore = CandidateTranscriptScore::factory()->for($transcript, 'transcript')->create(['score' => '9.375', 'grade_level' => 12]);
+    $transcriptScore = CandidateTranscriptScore::factory()->for($transcript, 'transcript')->create(['score' => '9.38', 'grade_level' => 12]);
 
-    expect($exam->refresh()->overall_score)->toBe('987.654');
+    expect($exam->refresh()->overall_score)->toBe('120');
     expect($exam->subjectScores()->sole()->is($examScore))->toBeTrue();
     expect($examScore->refresh()->score)->toBe('8.125');
     expect($examScore->examResult->is($exam))->toBeTrue();
     expect($transcript->scores()->sole()->is($transcriptScore))->toBeTrue();
-    expect($transcriptScore->refresh()->score)->toBe('9.375');
+    expect($transcriptScore->refresh()->score)->toBe('9.38');
     expect($transcriptScore->grade_level)->toBe(12);
     expect($transcriptScore->transcript->is($transcript))->toBeTrue();
 });
@@ -161,10 +161,10 @@ test('deleting an exam or transcript cascades to its score rows', function () {
 
 test('canonical exam certificate and subject definitions preserve phase seven codes', function () {
     expect(array_column(ExamType::cases(), 'value'))->toBe(['thpt', 'dgnl', 'dgtd', 'vsat', 'spt']);
-    expect(array_column(CertificateType::cases(), 'value'))->toBe(['ielts', 'sat']);
+    expect(array_column(CertificateType::cases(), 'value'))->toBe(['ielts', 'toeic', 'sat']);
     expect(array_column(VerificationStatus::cases(), 'value'))->toBe(['pending', 'verified', 'rejected']);
     expect(array_keys(config('admission_data.exam_types')))->toBe(['thpt', 'dgnl', 'dgtd', 'vsat', 'spt']);
-    expect(array_keys(config('admission_data.certificate_types')))->toBe(['ielts', 'sat']);
+    expect(array_keys(config('admission_data.certificate_types')))->toBe(['ielts', 'toeic', 'sat']);
     expect(array_keys(config('admission_data.subjects')))->toBe([
         'MATH',
         'LITERATURE',
@@ -185,17 +185,18 @@ test('canonical exam certificate and subject definitions preserve phase seven co
         'RUSSIAN',
     ]);
     expect(config('admission_data.certificate_types.ielts.score.max'))->toBeNull();
+    expect(config('admission_data.certificate_types.toeic.score.decimal_places'))->toBe(2);
     expect(config('admission_data.certificate_types.sat.score.max'))->toBeNull();
 });
 
 test('certificate dates types and decimal scores are cast without shared range assumptions', function () {
     $certificate = CandidateCertificate::factory()->create([
-        'certificate_type' => CertificateType::Sat, 'score' => '1500.125', 'issued_at' => '2026-01-15',
+        'certificate_type' => CertificateType::Sat, 'score' => '1500.12', 'issued_at' => '2026-01-15',
         'expires_at' => '2031-01-15', 'status' => VerificationStatus::Rejected,
     ])->refresh();
 
     expect($certificate->certificate_type)->toBe(CertificateType::Sat);
-    expect($certificate->score)->toBe('1500.125');
+    expect($certificate->score)->toBe('1500.12');
     expect($certificate->issued_at->toDateString())->toBe('2026-01-15');
     expect($certificate->expires_at->toDateString())->toBe('2031-01-15');
     expect($certificate->status)->toBe(VerificationStatus::Rejected);

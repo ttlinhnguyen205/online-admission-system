@@ -17,7 +17,7 @@ class CandidateTranscriptScore extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['grade_level' => 'integer', 'score' => 'decimal:3'];
+        return ['grade_level' => 'integer', 'score' => 'decimal:2'];
     }
 
     /** @return BelongsTo<CandidateTranscript, $this> */

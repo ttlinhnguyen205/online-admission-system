@@ -19,7 +19,7 @@ class CandidateCertificate extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['certificate_type' => CertificateType::class, 'score' => 'decimal:3', 'issued_at' => 'date',
+        return ['certificate_type' => CertificateType::class, 'score' => 'decimal:2', 'issued_at' => 'date',
             'expires_at' => 'date', 'status' => VerificationStatus::class, 'verified_at' => 'datetime'];
     }
 

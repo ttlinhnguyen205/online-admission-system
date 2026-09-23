@@ -54,7 +54,12 @@ class AdmissionInformation extends CandidatePage
     public bool $removeLegacyTranscriptEvidence = false;
 
     /** @var array<string, bool> */
-    public array $claimSelections = ['direct_admission' => false, 'priority_admission' => false];
+    public array $claimSelections = [
+        'direct_admission' => false,
+        'priority_admission' => false,
+        'abc' => false,
+        'xyz' => false,
+    ];
 
     /** @var array<string, array<string, mixed>> */
     public array $declarations = [];
@@ -110,7 +115,7 @@ class AdmissionInformation extends CandidatePage
 
     public function saveDeclaration(string $type, CandidateFiles $files): void
     {
-        abort_unless(in_array($type, ['direct_admission', 'priority_admission'], true), 404);
+        abort_unless(in_array($type, ['direct_admission', 'priority_admission', 'abc', 'xyz'], true), 404);
         abort_unless($this->claimSelections[$type] ?? false, 403);
         $this->validate([
             'declarations.'.$type => ['required', 'array:claim_code,description'],
@@ -131,6 +136,21 @@ class AdmissionInformation extends CandidatePage
             )->all());
         }
         unset($this->declarationEvidence[$type]);
+    }
+
+    public function saveSelectedDeclarations(CandidateFiles $files): void
+    {
+        $selectedTypes = array_keys(array_filter($this->claimSelections));
+        abort_unless($selectedTypes !== [], 422);
+
+        foreach ($selectedTypes as $type) {
+            $declared = $this->profile()->admissionClaims()->where('claim_type', $type)->first();
+            if ($declared?->status === VerificationStatus::Verified) {
+                continue;
+            }
+
+            $this->saveDeclaration($type, $files);
+        }
     }
 
     public function createCertificate(): void
@@ -296,7 +316,15 @@ class AdmissionInformation extends CandidatePage
             'competencyForm.exam_session' => ['nullable', 'string', 'max:100'],
             'competencyForm.registration_number' => ['nullable', 'string', 'max:100'],
             'competencyEvidence' => CandidateFiles::scoreEvidenceRules($this->competencyId === null),
-        ], $this->evidenceMessages('competencyEvidence'));
+        ], [
+            'competencyForm.overall_score.min' => __('Điểm phải từ 0 đến 150.'),
+            'competencyForm.overall_score.max' => __('Điểm phải từ 0 đến 150.'),
+            'competencyForm.overall_score.between' => __('Điểm phải từ 0 đến 150.'),
+            'competencyForm.overall_score.decimal' => __('Điểm phải là số nguyên, không có dấu chấm hoặc dấu phẩy.'),
+            'competencyForm.overall_score.numeric' => __('Điểm phải là số nguyên từ 0 đến 150.'),
+            'competencyForm.exam_year.between' => __('Năm thi phải từ 1900 đến :year.', ['year' => now()->year]),
+            ...$this->evidenceMessages('competencyEvidence'),
+        ]);
 
         $this->saveExam($this->competencyId, $validated['competencyForm'], [], $this->competencyEvidence, $files);
         $this->competencyEvidence = null;
@@ -635,8 +663,10 @@ class AdmissionInformation extends CandidatePage
     /** @return list<mixed> */
     private function scoreRules(?string $group = null, ?string $type = null): array
     {
-        $rules = ['required', 'numeric', 'decimal:0,3', 'between:0,99999.999'];
+        $decimalPlaces = 3;
+        $rules = [];
         if ($group !== null && $type !== null) {
+            $decimalPlaces = (int) config("admission_data.{$group}.{$type}.score.decimal_places", 3);
             $minimum = config("admission_data.{$group}.{$type}.score.min");
             $maximum = config("admission_data.{$group}.{$type}.score.max");
             if (is_numeric($minimum)) {
@@ -647,13 +677,15 @@ class AdmissionInformation extends CandidatePage
             }
         }
 
-        return $rules;
+        $maximumValue = str_repeat('9', 5).($decimalPlaces > 0 ? '.'.str_repeat('9', $decimalPlaces) : '');
+
+        return ['required', 'numeric', 'decimal:0,'.$decimalPlaces, 'between:0,'.$maximumValue, ...$rules];
     }
 
     /** @return list<mixed> */
     private function optionalScoreRules(): array
     {
-        return ['nullable', 'numeric', 'decimal:0,3', 'between:0,99999.999'];
+        return ['nullable', 'numeric', 'decimal:0,2', 'between:0,99999.99'];
     }
 
     /** @param list<array<string, mixed>> $subjects

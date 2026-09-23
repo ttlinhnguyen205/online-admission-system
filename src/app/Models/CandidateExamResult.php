@@ -21,7 +21,7 @@ class CandidateExamResult extends Model
     protected function casts(): array
     {
         return ['exam_type' => ExamType::class, 'exam_year' => 'integer', 'exam_date' => 'date',
-            'overall_score' => 'decimal:3', 'status' => VerificationStatus::class, 'verified_at' => 'datetime'];
+            'overall_score' => 'decimal:0', 'status' => VerificationStatus::class, 'verified_at' => 'datetime'];
     }
 
     /** @return BelongsTo<CandidateProfile, $this> */

@@ -24,7 +24,7 @@ class CandidateExamResultFactory extends Factory
             'candidate_profile_id' => CandidateProfile::factory(),
             'exam_type' => ExamType::Dgnl,
             'exam_year' => 2026,
-            'overall_score' => '850.000',
+            'overall_score' => '120',
             'status' => VerificationStatus::Pending,
         ];
     }

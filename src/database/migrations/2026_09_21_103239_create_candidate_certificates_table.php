@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('candidate_certificates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('candidate_profile_id')->constrained()->restrictOnDelete();
-            $table->enum('certificate_type', ['ielts', 'sat']);
-            $table->decimal('score', 8, 3);
+            $table->enum('certificate_type', ['ielts', 'toeic', 'sat']);
+            $table->decimal('score', 8, 2);
             $table->string('certificate_number', 100)->nullable();
             $table->date('issued_at')->nullable();
             $table->date('expires_at')->nullable();

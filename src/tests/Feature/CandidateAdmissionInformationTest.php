@@ -44,21 +44,21 @@ test('candidate creates edits replaces evidence and deletes a certificate', func
     $this->actingAs($profile->user);
     $page = Livewire::test(AdmissionInformation::class)->call('createCertificate')
         ->set('certificateForm', [
-            'certificate_type' => 'ielts', 'score' => '6.500', 'certificate_number' => 'IELTS-001',
+            'certificate_type' => 'ielts', 'score' => '6.50', 'certificate_number' => 'IELTS-001',
             'issued_at' => '2026-01-15', 'expires_at' => '2028-01-15',
         ])->set('certificateEvidence', admissionInformationImage())->call('saveCertificate')->assertHasNoErrors();
     $certificate = $profile->certificates()->sole();
     $oldPath = $certificate->evidence_path;
 
-    expect($certificate->score)->toBe('6.500');
+    expect($certificate->score)->toBe('6.50');
     expect($certificate->status)->toBe(VerificationStatus::Pending);
     expect($oldPath)->toStartWith('candidate-certificates/'.$profile->id.'/');
     Storage::disk(CandidateFiles::DISK)->assertExists($oldPath);
 
-    $page->call('editCertificate', $certificate->id)->set('certificateForm.score', '7.000')
+    $page->call('editCertificate', $certificate->id)->set('certificateForm.score', '7.00')
         ->set('certificateEvidence', admissionInformationImage('replacement.png'))
         ->call('saveCertificate')->assertHasNoErrors();
-    expect($certificate->refresh()->score)->toBe('7.000');
+    expect($certificate->refresh()->score)->toBe('7.00');
     expect($certificate->evidence_path)->not->toBe($oldPath);
     Storage::disk(CandidateFiles::DISK)->assertMissing($oldPath);
     Storage::disk(CandidateFiles::DISK)->assertExists($certificate->evidence_path);
@@ -75,7 +75,7 @@ test('certificate types use the canonical allow list without an invented score r
 
     Livewire::test(AdmissionInformation::class)->call('createCertificate')
         ->set('certificateForm', [
-            'certificate_type' => 'unsupported', 'score' => '1500.125', 'certificate_number' => null,
+            'certificate_type' => 'unsupported', 'score' => '1500.12', 'certificate_number' => null,
             'issued_at' => null, 'expires_at' => null,
         ])->set('certificateEvidence', admissionInformationImage())->call('saveCertificate')
         ->assertHasErrors('certificateForm.certificate_type');
@@ -83,10 +83,43 @@ test('certificate types use the canonical allow list without an invented score r
 
     Livewire::test(AdmissionInformation::class)->call('createCertificate')
         ->set('certificateForm', [
-            'certificate_type' => 'sat', 'score' => '1500.125', 'certificate_number' => null,
+            'certificate_type' => 'sat', 'score' => '1500.12', 'certificate_number' => null,
             'issued_at' => null, 'expires_at' => null,
         ])->set('certificateEvidence', admissionInformationImage())->call('saveCertificate')->assertHasNoErrors();
-    expect($profile->certificates()->sole()->score)->toBe('1500.125');
+    expect($profile->certificates()->sole()->score)->toBe('1500.12');
+});
+
+test('certificate supports TOEIC and rejects a third decimal place', function () {
+    Storage::fake(CandidateFiles::DISK);
+    $profile = CandidateProfile::factory()->create();
+    $this->actingAs($profile->user);
+
+    Livewire::test(AdmissionInformation::class)->call('createCertificate')
+        ->assertSee('value="toeic"', false)->assertSee('TOEIC')
+        ->set('certificateForm', [
+            'certificate_type' => 'toeic', 'score' => '850.12', 'certificate_number' => null,
+            'issued_at' => null, 'expires_at' => null,
+        ])->set('certificateEvidence', admissionInformationImage())->call('saveCertificate')->assertHasNoErrors();
+
+    expect($profile->certificates()->sole()->certificate_type->value)->toBe('toeic');
+
+    Livewire::test(AdmissionInformation::class)->call('editCertificate', $profile->certificates()->sole()->id)
+        ->set('certificateForm.score', '850.123')->call('saveCertificate')
+        ->assertHasErrors('certificateForm.score');
+});
+
+test('certificate evidence required message is rendered once', function () {
+    Storage::fake(CandidateFiles::DISK);
+    $profile = CandidateProfile::factory()->create();
+    $this->actingAs($profile->user);
+
+    $page = Livewire::test(AdmissionInformation::class)->call('createCertificate')
+        ->set('certificateForm', [
+            'certificate_type' => 'ielts', 'score' => '6.50', 'certificate_number' => null,
+            'issued_at' => null, 'expires_at' => null,
+        ])->call('saveCertificate')->assertHasErrors('certificateEvidence');
+
+    expect(substr_count($page->html(), __('Vui lòng tải ảnh minh chứng.')))->toBe(1);
 });
 
 test('candidate creates edits and deletes a descriptive admission claim', function () {
@@ -116,17 +149,17 @@ test('candidate records every supported competency exam type', function (string 
 
     $page = Livewire::test(AdmissionInformation::class)->call('createCompetency')
         ->set('competencyForm', [
-            'exam_type' => $type, 'overall_score' => '875.125', 'exam_year' => 2026,
+            'exam_type' => $type, 'overall_score' => '120', 'exam_year' => 2026,
             'exam_date' => null, 'exam_session' => 'Đợt 1', 'registration_number' => 'ABC123',
         ])->set('competencyEvidence', admissionInformationImage())->call('saveCompetency')->assertHasNoErrors();
     $result = $profile->examResults()->sole();
 
     expect($result->exam_type->value)->toBe($type);
-    expect($result->overall_score)->toBe('875.125');
+    expect($result->overall_score)->toBe('120');
     expect($result->subjectScores()->count())->toBe(0);
-    $page->call('editCompetency', $result->id)->set('competencyForm.overall_score', '900.000')
+    $page->call('editCompetency', $result->id)->set('competencyForm.overall_score', '150')
         ->call('saveCompetency')->assertHasNoErrors();
-    expect($result->refresh()->overall_score)->toBe('900.000');
+    expect($result->refresh()->overall_score)->toBe('150');
     $page->call('deleteCompetency', $result->id)->assertHasNoErrors();
     $this->assertModelMissing($result);
 })->with(['dgnl', 'dgtd', 'vsat', 'spt']);
@@ -138,12 +171,39 @@ test('competency result rejects THPT and arbitrary exam types', function (string
 
     Livewire::test(AdmissionInformation::class)->call('createCompetency')
         ->set('competencyForm', [
-            'exam_type' => $type, 'overall_score' => '800', 'exam_year' => 2026,
+            'exam_type' => $type, 'overall_score' => '80', 'exam_year' => 2026,
             'exam_date' => null, 'exam_session' => null, 'registration_number' => null,
         ])->set('competencyEvidence', admissionInformationImage())->call('saveCompetency')
         ->assertHasErrors('competencyForm.exam_type');
     $this->assertDatabaseCount('candidate_exam_results', 0);
 })->with(['thpt', 'unknown']);
+
+test('competency score is an integer between zero and 150', function (string $score) {
+    Storage::fake(CandidateFiles::DISK);
+    $profile = CandidateProfile::factory()->create();
+    $this->actingAs($profile->user);
+
+    Livewire::test(AdmissionInformation::class)->call('createCompetency')
+        ->set('competencyForm', [
+            'exam_type' => 'dgnl', 'overall_score' => $score, 'exam_year' => 2026,
+            'exam_date' => null, 'exam_session' => null, 'registration_number' => null,
+        ])->set('competencyEvidence', admissionInformationImage())->call('saveCompetency')
+        ->assertHasErrors('competencyForm.overall_score');
+})->with(['150.5', '151']);
+
+test('competency evidence required message is rendered once', function () {
+    Storage::fake(CandidateFiles::DISK);
+    $profile = CandidateProfile::factory()->create();
+    $this->actingAs($profile->user);
+
+    $page = Livewire::test(AdmissionInformation::class)->call('createCompetency')
+        ->set('competencyForm.exam_type', 'dgnl')
+        ->set('competencyForm.overall_score', '150')
+        ->call('saveCompetency')
+        ->assertHasErrors('competencyEvidence');
+
+    expect(substr_count($page->html(), __('Vui lòng tải ảnh minh chứng.')))->toBe(1);
+});
 
 test('transcript stores only nonempty normalized grade cells', function () {
     Storage::fake(CandidateFiles::DISK);
@@ -154,8 +214,8 @@ test('transcript stores only nonempty normalized grade cells', function () {
         ->set('transcriptForm', [
             'school_name' => 'Trường THPT Kiểm thử', 'graduation_year' => 2026,
             'subjects' => [
-                ['subject_code' => 'MATH', 'grade_10' => '8.000', 'grade_11' => null, 'grade_12' => '9.000'],
-                ['subject_code' => 'ENG', 'grade_10' => '', 'grade_11' => '7.500', 'grade_12' => null],
+                ['subject_code' => 'MATH', 'grade_10' => '8.00', 'grade_11' => null, 'grade_12' => '9.00'],
+                ['subject_code' => 'ENG', 'grade_10' => '', 'grade_11' => '7.50', 'grade_12' => null],
             ],
         ])->set('transcriptEvidence', [admissionInformationImage()])->call('saveTranscript')->assertHasNoErrors();
     $transcript = $profile->transcripts()->with('scores')->sole();
@@ -164,18 +224,18 @@ test('transcript stores only nonempty normalized grade cells', function () {
     expect($transcript->scores)->toHaveCount(3);
     expect($transcript->scores->sortBy(fn ($score) => $score->subject_code.$score->grade_level)
         ->map->only(['subject_code', 'grade_level', 'score'])->values()->all())->toBe([
-            ['subject_code' => 'ENG', 'grade_level' => 11, 'score' => '7.500'],
-            ['subject_code' => 'MATH', 'grade_level' => 10, 'score' => '8.000'],
-            ['subject_code' => 'MATH', 'grade_level' => 12, 'score' => '9.000'],
+            ['subject_code' => 'ENG', 'grade_level' => 11, 'score' => '7.50'],
+            ['subject_code' => 'MATH', 'grade_level' => 10, 'score' => '8.00'],
+            ['subject_code' => 'MATH', 'grade_level' => 12, 'score' => '9.00'],
         ]);
     expect($transcript->scores->contains(fn ($score) => $score->score === '0.000'))->toBeFalse();
 
     $page->call('editTranscript', $transcript->id)
         ->set('transcriptForm.subjects', [
-            ['subject_code' => 'ENG', 'grade_10' => '8.500', 'grade_11' => null, 'grade_12' => null],
+            ['subject_code' => 'ENG', 'grade_10' => '8.50', 'grade_11' => null, 'grade_12' => null],
         ])
         ->call('saveTranscript')->assertHasNoErrors();
-    expect($transcript->scores()->where('subject_code', 'ENG')->where('grade_level', 10)->value('score'))->toBe('8.500');
+    expect($transcript->scores()->where('subject_code', 'ENG')->where('grade_level', 10)->value('score'))->toBe('8.50');
     $page->call('deleteTranscript', $transcript->id)->assertHasNoErrors();
     $this->assertModelMissing($transcript);
 });
@@ -196,7 +256,7 @@ test('transcript saves when candidate fills a single grid score cell', function 
     expect($transcript->scores->first()->only(['subject_code', 'grade_level', 'score']))->toBe([
         'subject_code' => 'MATH',
         'grade_level' => 10,
-        'score' => '8.000',
+        'score' => '8.00',
     ]);
     expect($transcript->evidenceImages)->toHaveCount(1);
 });

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('exam_date')->nullable();
             $table->string('exam_session', 100)->nullable();
             $table->string('registration_number', 100)->nullable();
-            $table->decimal('overall_score', 8, 3)->nullable();
+            $table->decimal('overall_score', 8, 0)->nullable();
             $table->string('evidence_path', 500)->nullable();
             $table->enum('status', ['pending', 'verified', 'rejected'])->default('pending');
             $table->foreignId('verified_by')->nullable()->index()->constrained('users')->nullOnDelete();
