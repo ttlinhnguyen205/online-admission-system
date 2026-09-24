@@ -10,6 +10,7 @@ use App\Livewire\Candidate\Profile;
 use App\Models\AdmissionProgram;
 use App\Models\AdmissionWish;
 use App\Models\Application;
+use App\Models\CandidateMajorOffering;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Event;
@@ -47,6 +48,45 @@ function readyApplication(): Application
 
     return $application;
 }
+
+test('submission rechecks an offering after confirmation without changing its pinned program', function (bool $disabled) {
+    $application = readyApplication();
+    $wish = $application->wishes()->sole();
+    $offering = CandidateMajorOffering::factory()->for($wish->admissionProgram)->create();
+    $wish->update(['candidate_major_offering_id' => $offering->id]);
+    $this->actingAs($application->candidateProfile->user);
+    $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmSubmission');
+    if ($disabled) {
+        $offering->update(['is_selectable' => false]);
+    }
+
+    $page->call('submit');
+
+    $disabled ? $page->assertHasErrors('wishes') : $page->assertHasNoErrors();
+    expect($application->fresh()->status)->toBe($disabled ? ApplicationStatus::Draft : ApplicationStatus::Submitted);
+    expect($wish->fresh()->admission_program_id)->toBe($wish->admission_program_id);
+    expect($wish->fresh()->candidate_major_offering_id)->toBe($offering->id);
+    $this->assertDatabaseCount('notifications', $disabled ? 0 : 1);
+})->with([true, false]);
+
+test('submission preserves duplicate major legacy wishes but rejects duplicates involving a new offering', function (bool $newMode) {
+    $application = readyApplication();
+    $wish = $application->wishes()->sole();
+    $program = AdmissionProgram::factory()->for($application->admissionRound)->for($wish->admissionProgram->major)->create();
+    AdmissionWish::factory()->for($application)->for($program)->create(['priority' => 2]);
+    if ($newMode) {
+        $offering = CandidateMajorOffering::factory()->for($wish->admissionProgram)->create();
+        $wish->update(['candidate_major_offering_id' => $offering->id]);
+    }
+    $before = $application->wishes()->orderBy('id')->get()->toArray();
+    $this->actingAs($application->candidateProfile->user);
+
+    $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('submit');
+
+    $newMode ? $page->assertHasErrors('wishes') : $page->assertHasNoErrors();
+    expect($application->fresh()->status)->toBe($newMode ? ApplicationStatus::Draft : ApplicationStatus::Submitted);
+    expect($application->wishes()->orderBy('id')->get()->toArray())->toBe($before);
+})->with([true, false]);
 
 test('draft and needs revision submit with zero documents and preserve review metadata', function (ApplicationStatus $status) {
     $application = readyApplication();

@@ -149,7 +149,7 @@ test('candidate sees only own published result with score rank major and decisio
     app(PublishAdmissionResults::class)->publish($program->admission_round_id);
     $this->actingAs($candidate);
     Livewire::test(Results::class)->assertSee('8.125')->assertSee('Trúng tuyển')->assertSee($program->major->name)
-        ->assertDontSee($program->admissionMethod->name)->assertDontSee('7.500')
+        ->assertDontSee($program->admissionMethod->name)->assertDontSee($program->admissionMethod->code)->assertDontSee('7.500')
         ->assertViewHas('results', fn ($results) => $results->count() === 1 && $results->first()->rank === 1);
     $this->actingAs($other->candidateProfile->user);
     Livewire::test(Results::class)->assertSee('Không trúng tuyển')->assertSee('Điểm xét tuyển')

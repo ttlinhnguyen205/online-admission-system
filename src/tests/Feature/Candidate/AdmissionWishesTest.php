@@ -9,6 +9,7 @@ use App\Models\AdmissionResult;
 use App\Models\AdmissionRound;
 use App\Models\AdmissionWish;
 use App\Models\Application;
+use App\Models\CandidateMajorOffering;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +35,7 @@ test('candidates add and remove wishes with server assigned system fields', func
     $program = AdmissionProgram::factory()->for($application->admissionRound)->create();
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])
-        ->set('form.admission_program_id', $program->id)->call('addWish')->assertHasNoErrors();
+        ->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($program)->create()->id)->call('addWish')->assertHasNoErrors();
     $wish = $application->wishes()->sole();
     expect($wish->priority)->toBe(1);
     expect($wish->status)->toBe(WishStatus::Pending);
@@ -54,11 +55,15 @@ test('wish selection rejects unavailable and foreign round programs server side'
         'inactive-major' => $program->major->update(['is_active' => false]),
         'inactive-method' => $program->admissionMethod->update(['is_active' => false]),
         'zero-quota' => $program->update(['quota' => 0]),
-        'missing' => $program->delete(),
+        'missing' => null,
     };
+    $offering = CandidateMajorOffering::factory()->for($program)->create();
+    if ($condition === 'missing') {
+        $offering->delete();
+    }
     $this->actingAs($application->candidateProfile->user);
     Livewire::test(ApplicationDetails::class, ['application' => $application->id])
-        ->set('form.admission_program_id', $program->id)->call('addWish')->assertHasErrors('form.admission_program_id');
+        ->set('form.candidate_major_offering_id', $offering->id)->call('addWish')->assertHasErrors('form.candidate_major_offering_id');
     $this->assertDatabaseCount('admission_wishes', 0);
 })->with(['cross-round', 'inactive-program', 'unknown-status', 'inactive-major', 'inactive-method', 'zero-quota', 'missing']);
 
@@ -68,8 +73,8 @@ test('programs becoming unavailable after rendering are rejected without removin
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id]);
     $wish->admissionProgram->update(['status' => 'inactive']);
-    $page->call('$refresh')->assertSee('Chương trình không hoạt động')->assertSee($wish->admissionProgram->major->name);
-    $page->set('form.admission_program_id', $wish->admission_program_id)->call('addWish')->assertHasErrors('form.admission_program_id');
+    $page->call('$refresh')->assertSee('Một hoặc nhiều nguyện vọng không còn nhận đăng ký.')->assertSee($wish->admissionProgram->major->name);
+    $page->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($wish->admissionProgram)->create()->id)->call('addWish')->assertHasErrors('form.candidate_major_offering_id');
     $this->assertModelExists($wish);
 });
 
@@ -95,7 +100,7 @@ test('duplicate programs cannot overwrite existing wishes', function () {
     $wish = AdmissionWish::factory()->for($application)->create();
     $this->actingAs($application->candidateProfile->user);
     Livewire::test(ApplicationDetails::class, ['application' => $application->id])
-        ->set('form.admission_program_id', $wish->admission_program_id)->call('addWish')->assertHasErrors('form.admission_program_id');
+        ->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($wish->admissionProgram)->create()->id)->call('addWish')->assertHasErrors('form.candidate_major_offering_id');
     expect($application->wishes()->count())->toBe(1);
     expect($wish->fresh()->priority)->toBe(1);
 });
@@ -105,14 +110,14 @@ test('wish forms reject system fields and unexpected keys', function (string $fi
     $program = AdmissionProgram::factory()->for($application->admissionRound)->create();
     $this->actingAs($application->candidateProfile->user);
     Livewire::test(ApplicationDetails::class, ['application' => $application->id])
-        ->set('form', ['admission_program_id' => $program->id, $field => 'tampered'])->call('addWish')->assertHasErrors('form');
+        ->set('form', ['candidate_major_offering_id' => CandidateMajorOffering::factory()->for($program)->create()->id, $field => 'tampered'])->call('addWish')->assertHasErrors('form');
     $this->assertDatabaseCount('admission_wishes', 0);
 })->with(['application_id', 'candidate_profile_id', 'admission_round_id', 'priority', 'calculated_score', 'status', 'application_code', 'submitted_at', 'reviewed_by', 'reviewed_at', 'revision_reason', 'id', 'unexpected']);
 
-test('wish program identifiers must be valid positive integers', function (mixed $id) {
+test('wish offering identifiers must be valid positive integers', function (mixed $id) {
     $application = editableWishApplication();
     $this->actingAs($application->candidateProfile->user);
-    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->set('form.admission_program_id', $id)->call('addWish')->assertHasErrors('form.admission_program_id');
+    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->set('form.candidate_major_offering_id', $id)->call('addWish')->assertHasErrors('form.candidate_major_offering_id');
     $this->assertDatabaseCount('admission_wishes', 0);
 })->with([null, '', -1, 0, 1.5, [1]]);
 
@@ -128,7 +133,7 @@ test('all noneditable lifecycles deny wish actions while retaining readable data
     $arguments = match ($action) {
         'confirmDeletion' => [$wish->id], 'reorderWishes' => [[$wish->id]], default => [],
     };
-    $page->set('form.admission_program_id', $wish->admission_program_id)->call($action, ...$arguments)->assertForbidden();
+    $page->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($wish->admissionProgram)->create()->id)->call($action, ...$arguments)->assertForbidden();
     $this->get(route('candidate.applications.show', $application->id))->assertOk()->assertSee('Chỉ có thể sửa nguyện vọng');
     $this->assertModelExists($wish);
 })->with([ApplicationStatus::Submitted, ApplicationStatus::UnderReview, ApplicationStatus::Verified, ApplicationStatus::Processing, ApplicationStatus::Completed])
@@ -141,7 +146,7 @@ test('wish mutations require an open round even after an editor opens', function
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmDeletion', $wish->id);
     $application->admissionRound->update(['status' => $status]);
-    $page->set('form.admission_program_id', $program->id)->call($action, ...($action === 'reorderWishes' ? [[$wish->id]] : []))->assertHasErrors('round');
+    $page->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($program)->create()->id)->call($action, ...($action === 'reorderWishes' ? [[$wish->id]] : []))->assertHasErrors('round');
     $this->assertModelExists($wish);
     expect($application->wishes()->count())->toBe(1);
 })->with([AdmissionRoundStatus::Draft, AdmissionRoundStatus::Closed, AdmissionRoundStatus::Processing, AdmissionRoundStatus::Published])->with(['addWish', 'deleteWish', 'reorderWishes']);
@@ -154,7 +159,7 @@ test('wish mutation time boundaries are inclusive', function (string $time, bool
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmDeletion', $wish->id);
     $this->travelTo(CarbonImmutable::parse($time, 'UTC'));
-    $page->set('form.admission_program_id', $program->id)->call($action, ...($action === 'reorderWishes' ? [[$wish->id]] : []));
+    $page->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($program)->create()->id)->call($action, ...($action === 'reorderWishes' ? [[$wish->id]] : []));
     $allowed ? $page->assertHasNoErrors() : $page->assertHasErrors('round');
     expect($application->wishes()->count())->toBe($allowed ? match ($action) {
         'addWish' => 2, 'deleteWish' => 0, default => 1
@@ -211,7 +216,7 @@ test('failed wish saving and deletion roll back without success', function (stri
     $event = 'eloquent.'.($operation === 'addWish' ? 'saving' : 'deleting').': '.AdmissionWish::class;
     Event::listen($event, fn () => false);
     try {
-        $page->set('form.admission_program_id', $program->id)->call($operation)->assertHasErrors($operation === 'addWish' ? 'wishes' : 'deletion');
+        $page->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($program)->create()->id)->call($operation)->assertHasErrors($operation === 'addWish' ? 'wishes' : 'deletion');
         expect($application->wishes()->count())->toBe(1);
         $this->assertModelExists($wish);
     } finally {
@@ -241,7 +246,7 @@ test('a duplicate wish priority race fails safely instead of overwriting a wish'
         ]);
     });
     try {
-        Livewire::test(ApplicationDetails::class, ['application' => $application->id])->set('form.admission_program_id', $program->id)->call('addWish')->assertHasErrors('wishes');
+        Livewire::test(ApplicationDetails::class, ['application' => $application->id])->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($program)->create()->id)->call('addWish')->assertHasErrors('wishes');
         $this->assertDatabaseCount('admission_wishes', 0);
     } finally {
         Event::forget('eloquent.creating: '.AdmissionWish::class);
@@ -253,6 +258,6 @@ test('wish creation must authorize the existing create ability', function () {
     $program = AdmissionProgram::factory()->for($application->admissionRound)->create();
     $this->actingAs($application->candidateProfile->user);
     Gate::before(fn (User $user, string $ability) => $ability === 'create' ? false : null);
-    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->set('form.admission_program_id', $program->id)->call('addWish')->assertForbidden();
+    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($program)->create()->id)->call('addWish')->assertForbidden();
     $this->assertDatabaseCount('admission_wishes', 0);
 });

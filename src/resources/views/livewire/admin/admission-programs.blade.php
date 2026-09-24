@@ -78,7 +78,7 @@
     <x-slot:editor>
         @if ($this->relationshipsLocked)
             <div class="sm:col-span-2">
-                <flux:callout>This program has wishes. Its round, major and method cannot be changed.</flux:callout>
+                <flux:callout>This program has wishes or candidate offerings. Its round, major and method cannot be changed.</flux:callout>
             </div>
         @endif
         <flux:select wire:model="form.admission_round_id" label="Admission round *" :disabled="$this->relationshipsLocked" required>

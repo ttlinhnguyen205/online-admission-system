@@ -54,7 +54,7 @@ class AdmissionPrograms extends ConfigurationPage
 
     protected function recordForm(Model $record): array
     {
-        $this->relationshipsLocked = $record instanceof AdmissionProgram && $record->wishes()->exists();
+        $this->relationshipsLocked = $record instanceof AdmissionProgram && ($record->wishes()->exists() || $record->candidateMajorOfferings()->exists());
 
         return parent::recordForm($record);
     }
@@ -85,10 +85,10 @@ class AdmissionPrograms extends ConfigurationPage
             Gate::authorize('view', $parent);
         }
 
-        if ($record instanceof AdmissionProgram && $record->wishes()->exists()) {
+        if ($record instanceof AdmissionProgram && ($record->wishes()->exists() || $record->candidateMajorOfferings()->exists())) {
             foreach (array_keys($parents) as $field) {
                 if ((int) $validated[$field] !== (int) $record->getAttribute($field)) {
-                    throw ValidationException::withMessages(['form.'.$field => 'The round, major and method cannot change once this program has wishes.']);
+                    throw ValidationException::withMessages(['form.'.$field => 'The round, major and method cannot change once this program has wishes or candidate offerings.']);
                 }
             }
         }

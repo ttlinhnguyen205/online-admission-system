@@ -3,6 +3,7 @@
 namespace App\Livewire\Candidate;
 
 use App\Actions\CandidateApplications;
+use App\Actions\CandidateMajorOfferings;
 use App\Actions\CandidateWishes;
 use App\Models\AdmissionProgram;
 use App\Models\Application;
@@ -27,7 +28,7 @@ class ApplicationDetails extends CandidatePage
     public ?int $deleteId = null;
 
     /** @var array<string, mixed> */
-    public array $form = ['admission_program_id' => ''];
+    public array $form = ['candidate_major_offering_id' => ''];
 
     public bool $showDeletion = false;
 
@@ -60,7 +61,7 @@ class ApplicationDetails extends CandidatePage
     {
         $this->candidate();
         $wishes->add($this->applicationId, $this->form);
-        $this->form = ['admission_program_id' => ''];
+        $this->form = ['candidate_major_offering_id' => ''];
         $this->reloadWishes();
         Flux::toast(variant: 'success', text: __('Đã thêm nguyện vọng.'));
     }
@@ -126,7 +127,7 @@ class ApplicationDetails extends CandidatePage
     public function submit(CandidateApplications $applications): void
     {
         $this->candidate();
-        $this->validate(['form' => ['array:admission_program_id']]);
+        $this->validate(['form' => ['array:candidate_major_offering_id']]);
         $applications->submit($this->applicationId);
         $this->reloadWishes();
         Flux::toast(variant: 'success', text: __('Đã nộp hồ sơ xét tuyển.'));
@@ -138,11 +139,11 @@ class ApplicationDetails extends CandidatePage
         $application = $this->application();
         Gate::authorize('browseForApplication', [AdmissionProgram::class, $application]);
         $round = $application->admissionRound()->firstOrFail();
-        $wishes = $application->wishes()->with(['admissionProgram.major', 'admissionProgram.admissionMethod', 'admissionProgram.admissionRound'])->withExists('result')->orderBy('priority')->get();
-        $programs = $round->programs()->with(['major', 'admissionMethod'])->orderBy('id')->get();
-        $reasons = $programs->mapWithKeys(fn (AdmissionProgram $program): array => [$program->getKey() => CandidateWishes::unavailableReason($program, $round)]);
-        $selected = $wishes->pluck('admission_program_id')->all();
+        $wishes = $application->wishes()->with(['admissionProgram.major', 'admissionProgram.admissionMethod', 'candidateMajorOffering'])->withExists('result')->orderBy('priority')->get();
+        $selectedMajors = $wishes->pluck('admissionProgram.major_id')->all();
+        $majorCounts = $wishes->countBy('admissionProgram.major_id');
         $editable = Gate::allows('update', $application) && CandidateApplications::roundIsOpen($round);
+        $offerings = $editable ? CandidateMajorOfferings::choices($round)->reject(fn ($offering): bool => in_array($offering->major_id, $selectedMajors, true)) : collect();
         $checklist = CandidateApplications::submissionErrors($profile, $application, $round);
         if ($wishes->isEmpty()) {
             $checklist['wishes'] = __('Cần có ít nhất một nguyện vọng trước khi nộp hồ sơ.');
@@ -150,11 +151,13 @@ class ApplicationDetails extends CandidatePage
             $checklist['wishes'] = __('Hãy tải lại và sắp xếp nguyện vọng để thứ tự ưu tiên liên tục.');
         }
         foreach ($wishes as $wish) {
-            if (CandidateWishes::unavailableReason($wish->admissionProgram, $round) !== null) {
-                $checklist['programs'] = __('Một hoặc nhiều nguyện vọng không còn khả dụng. Hãy kiểm tra danh sách nguyện vọng.');
+            if (CandidateWishes::unavailableReason($wish->admissionProgram, $round) !== null
+                || ($wish->candidate_major_offering_id !== null && (! CandidateMajorOfferings::available($wish->candidateMajorOffering, $wish->admissionProgram, $round)
+                    || $majorCounts->get($wish->admissionProgram->major_id) !== 1))) {
+                $checklist['wishes'] = __('Một hoặc nhiều nguyện vọng không còn nhận đăng ký. Hãy kiểm tra danh sách nguyện vọng.');
             }
         }
 
-        return view('livewire.candidate.application-details', compact('application', 'round', 'wishes', 'programs', 'reasons', 'selected', 'editable', 'checklist'));
+        return view('livewire.candidate.application-details', compact('application', 'round', 'wishes', 'offerings', 'editable', 'checklist'));
     }
 }

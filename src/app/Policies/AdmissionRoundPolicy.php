@@ -51,6 +51,6 @@ class AdmissionRoundPolicy
     public function delete(User $user, AdmissionRound $record): bool
     {
         return $user->isAdmin() && AdmissionRound::query()->whereKey($record->getKey())
-            ->doesntHave('programs')->doesntHave('applications')->exists();
+            ->doesntHave('programs')->doesntHave('applications')->doesntHave('candidateMajorOfferings')->exists();
     }
 }

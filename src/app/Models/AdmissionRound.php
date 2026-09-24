@@ -40,4 +40,10 @@ class AdmissionRound extends Model
     {
         return $this->hasMany(Application::class);
     }
+
+    /** @return HasMany<CandidateMajorOffering, $this> */
+    public function candidateMajorOfferings(): HasMany
+    {
+        return $this->hasMany(CandidateMajorOffering::class);
+    }
 }

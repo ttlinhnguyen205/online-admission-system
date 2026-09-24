@@ -6,6 +6,7 @@ use App\Enums\AdmissionRoundStatus;
 use App\Models\AdmissionMethod;
 use App\Models\AdmissionProgram;
 use App\Models\AdmissionRound;
+use App\Models\CandidateMajorOffering;
 use App\Models\Major;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +62,7 @@ class AdmissionDemoSeeder extends Seeder
                 ]);
             }
 
+            $programs = [];
             foreach ([
                 ['D1', '7480201', 'THPT-A00', 120, 22, 25.750, 32000000, 'active'],
                 ['D1', '7480101', 'THPT-A00', 80, 23, 26.125, 35000000, 'active'],
@@ -90,7 +92,7 @@ class AdmissionDemoSeeder extends Seeder
                 $admissionMethod = $methods[$method]
                     ?? throw new \RuntimeException("Missing demo admission method: {$method}");
 
-                AdmissionProgram::query()->updateOrCreate([
+                $programs[$round.':'.$major.':'.$method] = AdmissionProgram::query()->updateOrCreate([
                     'admission_round_id' => $admissionRound->id,
                     'major_id' => $majorModel->id,
                     'admission_method_id' => $admissionMethod->id,
@@ -101,6 +103,27 @@ class AdmissionDemoSeeder extends Seeder
                     'tuition_fee' => $fee,
                     'status' => $status,
                 ]);
+            }
+
+            /**
+             * Explicit transitional mappings for the open demo intake only.
+             * Each wish uses ONE legacy pathway, not automatic evaluation under all methods.
+             * Existing mappings are preserved on repeat seeds, especially once wishes exist.
+             */
+            foreach ([
+                ['D2', '7480201', 'DGNL'],
+                ['D2', '7480101', 'DGNL'],
+                ['D2', '7340101', 'THPT-A00'],
+                ['D2', '7340201', 'HB-D01'],
+                ['D2', '7340301', 'THPT-A00'],
+                ['D2', '7220201', 'HB-D01'],
+            ] as [$round, $major, $method]) {
+                $program = $programs[$round.':'.$major.':'.$method]
+                    ?? throw new \RuntimeException('Missing explicit demo compatibility program: '.$round.':'.$major.':'.$method);
+                CandidateMajorOffering::query()->firstOrCreate([
+                    'admission_round_id' => $program->admission_round_id,
+                    'major_id' => $program->major_id,
+                ], ['admission_program_id' => $program->id, 'is_selectable' => true]);
             }
         });
     }

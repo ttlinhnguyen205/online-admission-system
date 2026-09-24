@@ -12,6 +12,7 @@ use App\Livewire\Candidate\Scores;
 use App\Models\AdmissionWish;
 use App\Models\Application;
 use App\Models\CandidateDocument;
+use App\Models\CandidateMajorOffering;
 use App\Models\CandidateProfile;
 use App\Models\CandidateScore;
 use App\Models\User;
@@ -169,7 +170,7 @@ test('application actions recheck ownership after the page was mounted', functio
     $wish = AdmissionWish::factory()->for($application)->create();
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmDeletion', $wish->id)
-        ->set('form.admission_program_id', $wish->admission_program_id);
+        ->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($wish->admissionProgram)->create()->id);
     $application->update(['candidate_profile_id' => CandidateProfile::factory()->create()->id]);
     expect(fn () => $page->call($action, ...($action === 'reorderWishes' ? [[$wish->id]] : [])))->toThrow(ModelNotFoundException::class);
     $this->assertModelExists($wish);
@@ -183,7 +184,7 @@ test('actions reject a changed role status or verification after application for
     $user = $application->candidateProfile->user;
     $this->actingAs($user);
     $page = $action === 'save' ? Livewire::test(Applications::class)->set('form.admission_round_id', $application->admission_round_id)
-        : Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmDeletion', $wish->id)->set('form.admission_program_id', $wish->admission_program_id);
+        : Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmDeletion', $wish->id)->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($wish->admissionProgram)->create()->id);
     User::query()->whereKey($user->id)->update(match ($change) {
         'inactive' => ['status' => UserStatus::Inactive], 'locked' => ['status' => UserStatus::Locked],
         'staff' => ['role' => UserRole::Staff], 'admin' => ['role' => UserRole::Admin], 'unverified' => ['email_verified_at' => null],
