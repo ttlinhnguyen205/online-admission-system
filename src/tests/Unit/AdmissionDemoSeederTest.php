@@ -6,6 +6,7 @@ use App\Models\AdmissionRound;
 use App\Models\Major;
 use App\Models\User;
 use Database\Seeders\AdmissionDemoSeeder;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -53,6 +54,15 @@ test('demo catalogs include the requested admission variations', function () {
         expect($program->major)->toBeInstanceOf(Major::class);
         expect($program->admissionMethod)->toBeInstanceOf(AdmissionMethod::class);
     }
+});
+
+test('default database seeding creates candidate and admission demo data', function () {
+    $this->seed(DatabaseSeeder::class);
+
+    $this->assertDatabaseHas('users', ['email' => 'candidate@example.com']);
+    $this->assertDatabaseCount('admission_rounds', 3);
+    $this->assertDatabaseCount('admission_programs', 18);
+    $this->assertDatabaseHas('admission_rounds', ['code' => 'DEMO-2026-D2', 'status' => 'open']);
 });
 
 test('rerunning restores demo values without duplicating records or changing unrelated data', function () {

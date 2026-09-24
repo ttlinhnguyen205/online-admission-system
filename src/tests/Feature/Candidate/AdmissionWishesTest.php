@@ -73,6 +73,23 @@ test('programs becoming unavailable after rendering are rejected without removin
     $this->assertModelExists($wish);
 });
 
+test('candidate wish pages show majors without admission methods or program details', function () {
+    $application = editableWishApplication();
+    $program = AdmissionProgram::factory()->for($application->admissionRound)->create();
+    $wish = AdmissionWish::factory()->for($application)->for($program)->create();
+    $this->actingAs($application->candidateProfile->user);
+
+    Livewire::test(ApplicationDetails::class, ['application' => $application->id])
+        ->assertSee($program->major->name)
+        ->assertSee((string) $wish->priority)
+        ->assertDontSee($program->admissionMethod->name)
+        ->assertDontSee($program->admissionMethod->code)
+        ->assertDontSee('Chỉ tiêu')
+        ->assertDontSee('Điểm tối thiểu')
+        ->assertDontSee('Điểm chuẩn trước đây')
+        ->assertDontSee('Chương trình / Ngành / Phương thức xét tuyển');
+});
+
 test('duplicate programs cannot overwrite existing wishes', function () {
     $application = editableWishApplication();
     $wish = AdmissionWish::factory()->for($application)->create();

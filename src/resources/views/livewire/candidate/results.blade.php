@@ -4,7 +4,7 @@
     @forelse ($results as $result)
         <article wire:key="result-{{ $result->id }}" class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
             <flux:heading size="lg">{{ __('Đợt tuyển sinh') }}: {{ $result->admissionWish->application->admissionRound->name }}</flux:heading>
-            <flux:text>{{ __('Thứ tự nguyện vọng') }}: {{ $result->admissionWish->priority }} · {{ __('Ngành xét tuyển') }}: {{ $result->admissionWish->admissionProgram->major->name }} · {{ $result->admissionWish->admissionProgram->admissionMethod->name }}</flux:text>
+            <flux:text>{{ __('Thứ tự nguyện vọng') }}: {{ $result->admissionWish->priority }} · {{ __('Ngành xét tuyển') }}: {{ $result->admissionWish->admissionProgram->major->name }}</flux:text>
             <dl class="grid gap-4 sm:grid-cols-3">
                 <div><dt>{{ __('Điểm xét tuyển') }}</dt><dd>{{ $result->final_score }}</dd></div>
                 <div><dt>{{ __('Thứ hạng') }}</dt><dd>{{ $result->rank ?? '—' }}</dd></div>
