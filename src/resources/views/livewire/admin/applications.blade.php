@@ -64,5 +64,4 @@
             </flux:table.rows>
         </flux:table>
     </div>
-    <flux:text>{{ __('Times use') }} {{ config('app.timezone') }}. {{ __('Draft applications are not included in the review queue.') }}</flux:text>
 </section>

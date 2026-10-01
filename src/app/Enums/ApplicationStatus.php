@@ -9,6 +9,7 @@ enum ApplicationStatus: string
     case UnderReview = 'under_review';
     case NeedsRevision = 'needs_revision';
     case Verified = 'verified';
+    case Rejected = 'rejected';
     case Processing = 'processing';
     case Completed = 'completed';
 }

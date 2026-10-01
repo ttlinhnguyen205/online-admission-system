@@ -49,26 +49,28 @@ class AdmissionReviewSnapshot
             abort_unless($actor instanceof User && $actor->isActive() && $actor->canReviewAdmissions() && $actor->hasVerifiedEmail(), 403);
             Auth::setUser($actor);
         }
-        $profile = CandidateProfile::query()->whereKey($hint->getAttribute('candidate_profile_id'))->when($lock, fn ($q) => $q->lockForUpdate())->first();
-        $application = Application::query()->whereKey($id)->when($lock, fn ($q) => $q->lockForUpdate())->firstOrFail();
+        $profile = CandidateProfile::query()->whereKey($hint->getAttribute('candidate_profile_id'))->when($lock, fn($q) => $q->lockForUpdate())->first();
+        $application = Application::query()->whereKey($id)->when($lock, fn($q) => $q->lockForUpdate())->firstOrFail();
         Gate::authorize('view', $application);
-        if ($application->getAttribute('candidate_profile_id') !== $hint->getAttribute('candidate_profile_id')
-            || $profile?->getAttribute('user_id') !== $profileHint?->getAttribute('user_id')) {
+        if (
+            $application->getAttribute('candidate_profile_id') !== $hint->getAttribute('candidate_profile_id')
+            || $profile?->getAttribute('user_id') !== $profileHint?->getAttribute('user_id')
+        ) {
             self::stale();
         }
         $application->setRelation('candidateProfile', $profile);
         if ($profile !== null) {
             $profile->setRelation('user', $lock ? $users->get($profile->getAttribute('user_id')) : $profile->user()->first());
         }
-        $documents = $application->documents()->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get();
-        $scores = $profile?->scores()->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get();
+        $documents = $application->documents()->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get();
+        $scores = $profile?->scores()->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get();
         $profile?->setRelation('scores', $scores);
-        $wishes = $application->wishes()->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get();
-        $programs = AdmissionProgram::query()->whereKey($wishes->pluck('admission_program_id'))->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('id');
-        $round = AdmissionRound::query()->whereKey($application->getAttribute('admission_round_id'))->when($lock, fn ($q) => $q->lockForUpdate())->first();
-        $majors = Major::query()->whereKey($programs->pluck('major_id'))->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('id');
-        $methods = AdmissionMethod::query()->whereKey($programs->pluck('admission_method_id'))->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('id');
-        $results = AdmissionResult::query()->whereIn('admission_wish_id', $wishes->modelKeys())->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('admission_wish_id');
+        $wishes = $application->wishes()->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get();
+        $programs = AdmissionProgram::query()->whereKey($wishes->pluck('admission_program_id'))->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get()->keyBy('id');
+        $round = AdmissionRound::query()->whereKey($application->getAttribute('admission_round_id'))->when($lock, fn($q) => $q->lockForUpdate())->first();
+        $majors = Major::query()->whereKey($programs->pluck('major_id'))->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get()->keyBy('id');
+        $methods = AdmissionMethod::query()->whereKey($programs->pluck('admission_method_id'))->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get()->keyBy('id');
+        $results = AdmissionResult::query()->whereIn('admission_wish_id', $wishes->modelKeys())->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get()->keyBy('admission_wish_id');
         foreach ($programs as $program) {
             $program->setRelation('major', $majors->get($program->getAttribute('major_id')));
             $program->setRelation('admissionMethod', $methods->get($program->getAttribute('admission_method_id')));
@@ -82,9 +84,17 @@ class AdmissionReviewSnapshot
         $application->setRelation('admissionRound', $round);
         $application->setRelation('reviewer', $application->reviewer()->first());
         $application->setRelation('latestReviewActivity', ActivityLog::query()
-            ->where('subject_type', $application->getMorphClass())->where('subject_id', $id)
-            ->whereIn('action', ['application.review_started', 'application.revision_requested', 'application.verified'])
-            ->orderByDesc('id')->when($lock, fn ($q) => $q->lockForUpdate())->first());
+            ->where('subject_type', $application->getMorphClass())
+            ->where('subject_id', $id)
+            ->whereIn('action', [
+                'application.review_started',
+                'application.revision_requested',
+                'application.rejected',
+                'application.verified',
+            ])
+            ->orderByDesc('id')
+            ->when($lock, fn($q) => $q->lockForUpdate())
+            ->first());
 
         return $application;
     }
@@ -99,12 +109,14 @@ class AdmissionReviewSnapshot
             'profile' => $this->fields($profile, ['id', 'user_id', 'candidate_code', 'date_of_birth', 'gender', 'citizen_id', 'phone', 'address', 'province_code', 'high_school_code', 'high_school_name', 'graduation_year', 'priority_area', 'priority_object', 'photo_path', 'profile_status']),
             'user' => $this->fields($profile?->user, ['id', 'name', 'email']),
             'round' => $this->fields($application->admissionRound, ['id']),
-            'documents' => $application->documents->map(fn ($d) => $this->fields($d, ['id', 'application_id', 'document_type', 'original_name', 'file_path', 'mime_type', 'file_size', 'status', 'verified_by', 'verified_at', 'rejection_reason']))->all(),
-            'scores' => $profile?->scores->map(fn ($s) => $this->fields($s, ['id', 'candidate_profile_id', 'score_type', 'subject_code', 'subject_name', 'score', 'exam_year', 'evidence_path', 'verified', 'verified_by']))->all(),
-            'wishes' => $application->wishes->map(fn ($w) => [
+            'documents' => $application->documents->map(fn($d) => $this->fields($d, ['id', 'application_id', 'document_type', 'original_name', 'file_path', 'mime_type', 'file_size', 'status', 'verified_by', 'verified_at', 'rejection_reason']))->all(),
+            'scores' => $profile?->scores->map(fn($s) => $this->fields($s, ['id', 'candidate_profile_id', 'score_type', 'subject_code', 'subject_name', 'score', 'exam_year', 'evidence_path', 'verified', 'verified_by']))->all(),
+            'wishes' => $application->wishes->map(fn($w) => [
                 $this->fields($w, ['id', 'application_id', 'admission_program_id', 'priority']),
                 $this->fields($w->admissionProgram, ['id', 'admission_round_id', 'major_id', 'admission_method_id']),
-                $w->admissionProgram?->major?->getKey(), $w->admissionProgram?->admissionMethod?->getKey(), $w->result?->getKey(),
+                $w->admissionProgram?->major?->getKey(),
+                $w->admissionProgram?->admissionMethod?->getKey(),
+                $w->result?->getKey(),
             ])->all(),
         ];
 
@@ -173,14 +185,18 @@ class AdmissionReviewSnapshot
         $wishes = $application->wishes;
         if ($wishes->isEmpty()) {
             $errors['wishes'] = __('At least one wish is required.');
-        } elseif ($wishes->sortBy('priority')->pluck('priority')->values()->all() !== range(1, $wishes->count())
-            || $wishes->pluck('admission_program_id')->unique()->count() !== $wishes->count()) {
+        } elseif (
+            $wishes->sortBy('priority')->pluck('priority')->values()->all() !== range(1, $wishes->count())
+            || $wishes->pluck('admission_program_id')->unique()->count() !== $wishes->count()
+        ) {
             $errors['wishes'] = __('Wish priorities must be contiguous and programs must not repeat.');
         }
         foreach ($wishes as $wish) {
             $program = $wish->admissionProgram;
-            if ($program === null || $program->major === null || $program->admissionMethod === null
-                || $program->getAttribute('admission_round_id') !== $application->getAttribute('admission_round_id')) {
+            if (
+                $program === null || $program->major === null || $program->admissionMethod === null
+                || $program->getAttribute('admission_round_id') !== $application->getAttribute('admission_round_id')
+            ) {
                 $errors['wishes'] = __('Every wish must reference an existing program, major and method in this application round.');
             }
             if ($wish->result !== null) {
@@ -195,7 +211,7 @@ class AdmissionReviewSnapshot
                 $errors['files'] = __('One or more private document files are unavailable.');
             }
         }
-        if ($profile?->scores->contains(fn ($score): bool => ! $score->getAttribute('verified'))) {
+        if ($profile?->scores->contains(fn($score): bool => ! $score->getAttribute('verified'))) {
             $errors['scores'] = __('Every existing profile score must be verified.');
         }
 

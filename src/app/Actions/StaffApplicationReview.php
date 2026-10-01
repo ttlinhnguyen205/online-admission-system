@@ -36,8 +36,12 @@ class StaffApplicationReview
     {
         $this->mutate($id, $expected, ApplicationStatus::UnderReview, function (Application $application) use ($form): void {
             $reason = $this->reason($form, 'revision_reason');
-            $this->save($application, ['status' => ApplicationStatus::NeedsRevision, 'reviewed_by' => Auth::id(),
-                'reviewed_at' => now(config('app.timezone')), 'revision_reason' => $reason], 'application.revision_requested');
+            $this->save($application, [
+                'status' => ApplicationStatus::NeedsRevision,
+                'reviewed_by' => Auth::id(),
+                'reviewed_at' => now(config('app.timezone')),
+                'revision_reason' => $reason
+            ], 'application.revision_requested');
             $application->candidateProfile()->firstOrFail()->user()->firstOrFail()->notify(new ApplicationRevisionRequested($application->getKey(), $reason));
         });
     }
@@ -49,9 +53,37 @@ class StaffApplicationReview
             if ($errors !== []) {
                 throw ValidationException::withMessages(['review' => implode(' ', $errors)]);
             }
-            $this->save($application, ['status' => ApplicationStatus::Verified, 'reviewed_by' => Auth::id(),
-                'reviewed_at' => now(config('app.timezone')), 'revision_reason' => null], 'application.verified');
+            $this->save($application, [
+                'status' => ApplicationStatus::Verified,
+                'reviewed_by' => Auth::id(),
+                'reviewed_at' => now(config('app.timezone')),
+                'revision_reason' => null
+            ], 'application.verified');
         });
+    }
+
+    /** @param array<string, mixed> $form */
+    public function reject(int $id, string $expected, array $form): void
+    {
+        $this->mutate(
+            $id,
+            $expected,
+            ApplicationStatus::UnderReview,
+            function (Application $application) use ($form): void {
+                $reason = $this->reason($form, 'rejection_reason');
+
+                $this->save(
+                    $application,
+                    [
+                        'status' => ApplicationStatus::Rejected,
+                        'reviewed_by' => Auth::id(),
+                        'reviewed_at' => now(config('app.timezone')),
+                        'revision_reason' => $reason,
+                    ],
+                    'application.rejected'
+                );
+            }
+        );
     }
 
     public function verifyDocument(int $id, int $documentId, string $expected): void
@@ -66,8 +98,12 @@ class StaffApplicationReview
             if (! $this->snapshots->fileAvailable($document->getAttribute('file_path'))) {
                 throw ValidationException::withMessages(['review' => __('The private document file is unavailable. Verification was not saved.')]);
             }
-            $this->save($document, ['status' => DocumentStatus::Verified, 'verified_by' => Auth::id(),
-                'verified_at' => now(config('app.timezone')), 'rejection_reason' => null], 'document.verified');
+            $this->save($document, [
+                'status' => DocumentStatus::Verified,
+                'verified_by' => Auth::id(),
+                'verified_at' => now(config('app.timezone')),
+                'rejection_reason' => null
+            ], 'document.verified');
         });
     }
 
@@ -82,8 +118,12 @@ class StaffApplicationReview
                 throw ValidationException::withMessages(['review' => __('Only pending documents can be reviewed. Reload the application.')]);
             }
             $reason = $this->reason($form, 'rejection_reason');
-            $this->save($document, ['status' => DocumentStatus::Rejected, 'verified_by' => null,
-                'verified_at' => null, 'rejection_reason' => $reason], 'document.rejected');
+            $this->save($document, [
+                'status' => DocumentStatus::Rejected,
+                'verified_by' => null,
+                'verified_at' => null,
+                'rejection_reason' => $reason
+            ], 'document.rejected');
         });
     }
 
@@ -113,7 +153,7 @@ class StaffApplicationReview
             if ($application->getAttribute('status') !== $state) {
                 throw ValidationException::withMessages(['review' => __('The application is no longer in the required review state. Reload before continuing.')]);
             }
-            if ($application->wishes->contains(fn ($wish): bool => $wish->result !== null)) {
+            if ($application->wishes->contains(fn($wish): bool => $wish->result !== null)) {
                 throw ValidationException::withMessages(['review' => __('Admission results already exist. Review mutations are blocked for this historical application.')]);
             }
             if (! hash_equals($this->snapshots->fingerprint($application), $expected)) {
@@ -130,8 +170,8 @@ class StaffApplicationReview
             $form[$field] = trim($form[$field]);
         }
         $validated = Validator::make(['form' => $form], [
-            'form' => ['required', 'array:'.$field],
-            'form.'.$field => ['required', 'string', 'max:5000'],
+            'form' => ['required', 'array:' . $field],
+            'form.' . $field => ['required', 'string', 'max:5000'],
         ])->validate();
 
         return $validated['form'][$field];

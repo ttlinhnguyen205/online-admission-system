@@ -54,12 +54,12 @@ class ApplicationDetails extends ReviewPage
 
     public function confirm(string $operation, ?int $childId = null): void
     {
-        abort_unless(in_array($operation, ['start', 'revision', 'verify', 'verifyDocument', 'rejectDocument', 'verifyScore'], true), 404);
+        abort_unless(in_array($operation, ['start', 'revision', 'reject', 'verify', 'verifyDocument', 'rejectDocument', 'verifyScore'], true), 404);
         $snapshots = new AdmissionReviewSnapshot;
         $application = $snapshots->load($this->applicationId);
         Gate::authorize('review', $application);
         $required = $operation === 'start' ? ApplicationStatus::Submitted : ApplicationStatus::UnderReview;
-        if ($application->getAttribute('status') !== $required || $application->wishes->contains(fn ($wish) => $wish->result !== null)) {
+        if ($application->getAttribute('status') !== $required || $application->wishes->contains(fn($wish) => $wish->result !== null)) {
             throw ValidationException::withMessages(['review' => __('This application is read-only for that review action.')]);
         }
         if (! hash_equals($snapshots->fingerprint($application), $this->expected)) {
@@ -87,7 +87,7 @@ class ApplicationDetails extends ReviewPage
         $this->childId = $childId;
         $this->form = match ($operation) {
             'revision' => ['revision_reason' => ''],
-            'rejectDocument' => ['rejection_reason' => ''],
+            'reject', 'rejectDocument' => ['rejection_reason' => ''],
             default => [],
         };
         $this->showConfirmation = true;
@@ -97,12 +97,13 @@ class ApplicationDetails extends ReviewPage
     {
         AdmissionReviewSnapshot::reviewer();
         try {
-            if (! in_array($this->operation, ['revision', 'rejectDocument'], true) && $this->form !== []) {
+            if (! in_array($this->operation, ['revision', 'reject', 'rejectDocument'], true) && $this->form !== []) {
                 throw ValidationException::withMessages(['form' => __('This action does not accept form fields.')]);
             }
             match ($this->operation) {
                 'start' => $review->start($this->applicationId, $this->expected),
                 'revision' => $review->requestRevision($this->applicationId, $this->expected, $this->form),
+                'reject' => $review->reject($this->applicationId, $this->expected, $this->form),
                 'verify' => $review->verify($this->applicationId, $this->expected),
                 'verifyDocument' => $review->verifyDocument($this->applicationId, $this->childId ?? 0, $this->expected),
                 'rejectDocument' => $review->rejectDocument($this->applicationId, $this->childId ?? 0, $this->expected, $this->form),
@@ -124,16 +125,21 @@ class ApplicationDetails extends ReviewPage
         $profile = $application->candidateProfile;
         $checklist = $snapshots->checklist($application);
         $stale = ! hash_equals($snapshots->fingerprint($application), $this->expected);
-        $hasResults = $application->wishes->contains(fn ($wish) => $wish->result !== null);
+        $hasResults = $application->wishes->contains(fn($wish) => $wish->result !== null);
         $reviewable = $application->getAttribute('status') === ApplicationStatus::UnderReview && ! $hasResults;
         $canStart = $application->getAttribute('status') === ApplicationStatus::Submitted && ! $hasResults;
         $windowOpen = $application->admissionRound !== null && CandidateApplications::roundIsOpen($application->admissionRound);
         $photoAvailable = $snapshots->fileAvailable($profile?->getAttribute('photo_path'), true);
-        $documentAvailability = $application->documents->mapWithKeys(fn ($document) => [$document->getKey() => $snapshots->fileAvailable($document->getAttribute('file_path'))]);
-        $scoreEvidenceAvailability = $profile?->scores->mapWithKeys(fn ($score) => [$score->getKey() => $snapshots->fileAvailable($score->getAttribute('evidence_path'), scoreEvidence: true)]) ?? collect();
+        $documentAvailability = $application->documents->mapWithKeys(fn($document) => [$document->getKey() => $snapshots->fileAvailable($document->getAttribute('file_path'))]);
+        $scoreEvidenceAvailability = $profile?->scores->mapWithKeys(fn($score) => [$score->getKey() => $snapshots->fileAvailable($score->getAttribute('evidence_path'), scoreEvidence: true)]) ?? collect();
         $history = ActivityLog::query()->with('user')->where('subject_type', $application->getMorphClass())
             ->where('subject_id', $application->getKey())
-            ->whereIn('action', ['application.review_started', 'application.revision_requested', 'application.verified'])
+            ->whereIn('action', [
+                'application.review_started',
+                'application.revision_requested',
+                'application.rejected',
+                'application.verified',
+            ])
             ->orderByDesc('id')->limit(20)->get();
 
         return view('livewire.admin.application-details', compact('application', 'profile', 'checklist', 'stale', 'reviewable', 'canStart', 'hasResults', 'windowOpen', 'photoAvailable', 'documentAvailability', 'scoreEvidenceAvailability', 'history'));

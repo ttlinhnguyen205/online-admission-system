@@ -20,6 +20,7 @@ class CandidateStatusLabels
             ApplicationStatus::NeedsRevision => 'Cần bổ sung',
             ApplicationStatus::Verified => 'Đã xác minh',
             ApplicationStatus::Processing => 'Đang xét tuyển',
+            ApplicationStatus::Rejected => 'Không hợp lệ',
             ApplicationStatus::Completed => 'Hoàn tất xét tuyển',
         };
     }
