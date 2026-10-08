@@ -402,8 +402,9 @@ class AdmissionInformation extends CandidatePage
             return;
         }
 
-        unset($this->transcriptEvidence[$index]);
-        $this->transcriptEvidence = array_values($this->transcriptEvidence);
+        $evidence = $this->transcriptEvidence;
+        unset($evidence[$index]);
+        $this->transcriptEvidence = array_values($evidence);
         $this->resetValidation();
 
         if ($this->transcriptEvidence !== []) {

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active', 'verified'])->group(function (): void {
     Route::prefix('candidate')->name('candidate.')->group(function (): void {
+        Route::livewire('counseling', Candidate\AdmissionCounseling::class)->name('counseling.index');
         Route::livewire('results', Candidate\Results::class)->name('results.index');
         Route::livewire('notifications', Candidate\Notifications::class)->name('notifications.index');
         Route::livewire('profile', Candidate\Profile::class)->name('profile.edit');

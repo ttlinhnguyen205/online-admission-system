@@ -12,8 +12,21 @@ test('the default queue contains only submitted and under review applications', 
     foreach (ApplicationStatus::cases() as $status) {
         Application::factory()->create(['status' => $status, 'submitted_at' => now()]);
     }
-    Livewire::test(Applications::class)->assertViewHas('records', fn ($records) => $records->total() === 2)
-        ->set('statusFilter', 'all')->assertViewHas('records', fn ($records) => $records->total() === 6);
+    Livewire::test(Applications::class)->assertViewHas('records', function ($records) {
+        expect($records->pluck('status')->all())->toEqualCanonicalizing([
+            ApplicationStatus::Submitted, ApplicationStatus::UnderReview,
+        ]);
+
+        return true;
+    })->set('statusFilter', 'all')->assertViewHas('records', function ($records) {
+        expect($records->pluck('status')->all())->toEqualCanonicalizing([
+            ApplicationStatus::Submitted, ApplicationStatus::UnderReview,
+            ApplicationStatus::NeedsRevision, ApplicationStatus::Verified,
+            ApplicationStatus::Rejected, ApplicationStatus::Processing, ApplicationStatus::Completed,
+        ]);
+
+        return true;
+    });
 });
 
 test('queue search matches only the intended application by every supported identity field', function (string $field) {

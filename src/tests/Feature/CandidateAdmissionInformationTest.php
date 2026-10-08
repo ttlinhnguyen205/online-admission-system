@@ -34,7 +34,8 @@ test('candidate admission information page contains four Vietnamese sections', f
             'Điểm ĐGNL/ĐGTD/V-SAT/SPT',
             'Điểm tổng kết học bạ THPT',
         ])
-        ->assertDontSee('Điểm & minh chứng')->assertDontSee('Điểm thi tốt nghiệp THPT');
+        ->assertSee('Điểm & minh chứng')->assertSee(route('candidate.scores.index'))
+        ->assertDontSee('Điểm thi tốt nghiệp THPT');
     expect(substr_count($response->getContent(), 'data-admission-section='))->toBe(4);
 });
 

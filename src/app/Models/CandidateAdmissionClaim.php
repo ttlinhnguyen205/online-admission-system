@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/** @property VerificationStatus $status */
 #[Fillable(['candidate_profile_id', 'claim_type', 'claim_code', 'description', 'evidence_path', 'status', 'verified_by', 'verified_at', 'rejection_reason'])]
 class CandidateAdmissionClaim extends Model
 {

@@ -60,6 +60,6 @@ test('missing former reviewer is displayed without losing application history', 
     $application->update(['reviewed_by' => $previous->id]);
     $previous->delete();
     $this->actingAs(User::factory()->create(['role' => UserRole::Staff]));
-    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->assertSee('Not recorded / unavailable');
+    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->assertSee('Chưa ghi nhận / không khả dụng');
     expect($application->fresh()->reviewed_by)->toBeNull();
 });

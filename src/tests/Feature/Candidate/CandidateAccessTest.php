@@ -3,6 +3,7 @@
 use App\Enums\AdmissionRoundStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Livewire\Candidate\AdmissionCounseling;
 use App\Livewire\Candidate\AdmissionInformation;
 use App\Livewire\Candidate\ApplicationDetails;
 use App\Livewire\Candidate\Applications;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 
-dataset('candidate pages', [['candidate.profile.edit', Profile::class], ['candidate.admission-information.index', AdmissionInformation::class], ['candidate.scores.index', Scores::class], ['candidate.documents.index', Documents::class], ['candidate.applications.index', Applications::class]]);
+dataset('candidate pages', [['candidate.profile.edit', Profile::class], ['candidate.admission-information.index', AdmissionInformation::class], ['candidate.scores.index', Scores::class], ['candidate.documents.index', Documents::class], ['candidate.applications.index', Applications::class], ['candidate.counseling.index', AdmissionCounseling::class]]);
 
 test('candidate routes require authenticated verified candidates', function (string $route, string $component) {
     $this->get(route($route))->assertRedirect(route('login'));
@@ -109,7 +110,7 @@ test('profile and child identifiers cannot be tampered with through hydration', 
             $page->call($property === 'recordId' ? 'edit' : 'confirmDeletion', $document->id);
         }
     }
-    expect(fn() => $page->set($property, 999999))->toThrow(CannotUpdateLockedPropertyException::class);
+    expect(fn () => $page->set($property, 999999))->toThrow(CannotUpdateLockedPropertyException::class);
 })->with(['profile', 'score-edit', 'score-delete', 'document-edit', 'document-delete', 'application']);
 
 test('foreign score ids return 404 through real Livewire action requests', function (string $action) {
@@ -146,7 +147,7 @@ test('ownership is rechecked from storage before saving an already opened score'
     $this->actingAs($score->candidateProfile->user);
     $page = Livewire::test(Scores::class)->call('edit', $score->id);
     $score->update(['candidate_profile_id' => CandidateProfile::factory()->create()->id]);
-    expect(fn() => $page->set('form.score', '9')->call('save'))->toThrow(ModelNotFoundException::class);
+    expect(fn () => $page->set('form.score', '9')->call('save'))->toThrow(ModelNotFoundException::class);
     expect($score->fresh()->score)->toBe('8.250');
 });
 
@@ -154,7 +155,7 @@ test('application context and order cannot be replaced through Livewire hydratio
     $application = Application::factory()->create();
     $this->actingAs($application->candidateProfile->user);
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id]);
-    expect(fn() => $page->set($property, $property === 'expectedOrder' ? [999999] : 999999))
+    expect(fn () => $page->set($property, $property === 'expectedOrder' ? [999999] : 999999))
         ->toThrow(CannotUpdateLockedPropertyException::class);
 })->with(['applicationId', 'deleteId', 'expectedOrder']);
 
@@ -191,7 +192,7 @@ test('application actions recheck ownership after the page was mounted', functio
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id])->call('confirmDeletion', $wish->id)
         ->set('form.candidate_major_offering_id', CandidateMajorOffering::factory()->for($wish->admissionProgram)->create()->id);
     $application->update(['candidate_profile_id' => CandidateProfile::factory()->create()->id]);
-    expect(fn() => $page->call($action, ...($action === 'reorderWishes' ? [[$wish->id]] : [])))->toThrow(ModelNotFoundException::class);
+    expect(fn () => $page->call($action, ...($action === 'reorderWishes' ? [[$wish->id]] : [])))->toThrow(ModelNotFoundException::class);
     $this->assertModelExists($wish);
     expect($application->fresh()->submitted_at)->toBeNull();
 })->with(['addWish', 'deleteWish', 'reorderWishes', 'submit']);

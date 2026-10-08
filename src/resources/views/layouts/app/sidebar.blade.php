@@ -12,6 +12,38 @@
             <flux:sidebar.collapse class="lg:hidden" />
         </flux:sidebar.header>
 
+        @if (auth()->user()->isAdmin())
+        @can('viewAny', App\Models\Application::class)
+        <flux:sidebar.nav>
+            <flux:sidebar.group :heading="__('QUẢN LÝ HỒ SƠ')">
+                <flux:sidebar.item :href="route('admin.applications.index')" :current="request()->routeIs('admin.applications.*')" wire:navigate>{{ __('Hồ sơ xét tuyển') }}</flux:sidebar.item>
+                <flux:sidebar.item :href="route('admin.review-history.index')" :current="request()->routeIs('admin.review-history.*')" wire:navigate>{{ __('Lịch sử xử lý') }}</flux:sidebar.item>
+            </flux:sidebar.group>
+            @canany(['process', 'publishResults'], App\Models\AdmissionRound::class)
+            <flux:sidebar.group :heading="__('QUẢN LÝ XÉT TUYỂN')">
+                @can('process', App\Models\AdmissionRound::class)
+                <flux:sidebar.item :href="route('admin.admission-engine')" :current="request()->routeIs('admin.admission-engine')" wire:navigate>{{ __('Công cụ xét tuyển') }}</flux:sidebar.item>
+                @endcan
+                @can('publishResults', App\Models\AdmissionRound::class)
+                <flux:sidebar.item :href="route('admin.results.index')" :current="request()->routeIs('admin.results.*')" wire:navigate>{{ __('Kết quả xét tuyển') }}</flux:sidebar.item>
+                @endcan
+            </flux:sidebar.group>
+            @endcanany
+        </flux:sidebar.nav>
+        @endcan
+
+        @can('viewAny', App\Models\AdmissionRound::class)
+        <flux:sidebar.nav>
+            <flux:sidebar.group :heading="__('CẤU HÌNH TUYỂN SINH')">
+                @foreach ([['admission-rounds', 'Đợt tuyển sinh', App\Models\AdmissionRound::class], ['majors', 'Ngành đào tạo', App\Models\Major::class], ['admission-methods', 'Phương thức xét tuyển', App\Models\AdmissionMethod::class], ['admission-programs', 'Chương trình tuyển sinh', App\Models\AdmissionProgram::class], ['candidate-major-offerings', 'Ngành mở xét tuyển', App\Models\CandidateMajorOffering::class]] as [$path, $label, $model])
+                @can('viewAny', $model)
+                <flux:sidebar.item :href="route('admin.'.$path.'.index')" :current="request()->routeIs('admin.'.$path.'.*')" wire:navigate>{{ __($label) }}</flux:sidebar.item>
+                @endcan
+                @endforeach
+            </flux:sidebar.group>
+        </flux:sidebar.nav>
+        @endcan
+        @else
         <flux:sidebar.nav>
             <flux:sidebar.group :heading="__('Hệ thống')" class="grid">
                 <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
@@ -57,9 +89,12 @@
         </flux:sidebar.nav>
         @endcan
 
+        @endif
+
         @if (auth()->user()->isActive() && auth()->user()->isCandidate())
         <flux:sidebar.nav>
             <flux:sidebar.group :heading="__('Tuyển sinh thí sinh')">
+                <flux:sidebar.item :href="route('candidate.counseling.index')" :current="request()->routeIs('candidate.counseling.*')" wire:navigate>{{ __('Tư vấn tuyển sinh') }}</flux:sidebar.item>
                 <flux:sidebar.item :href="route('candidate.profile.edit')" :current="request()->routeIs('candidate.profile.*')" wire:navigate>{{ __('Hồ sơ cá nhân') }}</flux:sidebar.item>
                 <flux:sidebar.item :href="route('candidate.admission-information.index')" :current="request()->routeIs('candidate.admission-information.*')" wire:navigate>{{ __('Thông tin tuyển sinh') }}</flux:sidebar.item>
                 <flux:sidebar.item :href="route('candidate.scores.index')" :current="request()->routeIs('candidate.scores.*')" wire:navigate>{{ __('Điểm & minh chứng') }}</flux:sidebar.item>

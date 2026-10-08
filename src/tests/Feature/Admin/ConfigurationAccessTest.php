@@ -37,7 +37,7 @@ test('configuration routes require authentication verification and policy access
 test('staff can read configuration but every mutation entry point remains forbidden', function (string $path, string $component, string $model) {
     $this->actingAs(User::factory()->create(['role' => UserRole::Staff]));
     $record = $model::factory()->create();
-    $this->get(route('admin.'.$path.'.index'))->assertOk()->assertSee('Read-only access')->assertDontSee('Save configuration');
+    $this->get(route('admin.'.$path.'.index'))->assertOk()->assertSee('Quyền chỉ xem')->assertDontSee('Lưu cấu hình');
     Livewire::test($component)->call('details', $record->id)->assertSet('readOnly', true);
     Livewire::test($component)->call('create')->assertForbidden();
     Livewire::test($component)->call('edit', $record->id)->assertForbidden();
@@ -111,7 +111,7 @@ test('configuration landing and navigation follow existing policies', function (
     $this->actingAs(User::factory()->create(['role' => $role, 'status' => $status]));
     $response = $this->get(route('profile.edit'));
     if ($allowed) {
-        $response->assertSee(route('admin.home'))->assertSee(route('admin.admission-programs.index'));
+        $response->assertSee(route('admin.admission-rounds.index'))->assertSee(route('admin.admission-programs.index'));
         $this->get(route('admin.home'))->assertOk()->assertSee('Admission configuration');
     } else {
         $response->assertDontSee(route('admin.home'));

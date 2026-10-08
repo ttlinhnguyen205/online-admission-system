@@ -62,7 +62,7 @@ test('admission_rounds search pagination and reset expose only matching records'
         ->call('setPage', 2)->set('search', 'SEARCH-TARGET')->assertSet('paginators.page', 1)
         ->assertViewHas('records', fn ($records) => $records->total() === 1 && $records->first()->id === $target->id)
         ->set('search', 'Unique needle')->assertViewHas('records', fn ($records) => $records->total() === 1)
-        ->set('search', 'nothing-matches')->assertSee('No admission rounds found')
+        ->set('search', 'nothing-matches')->assertSee('Không tìm thấy đợt tuyển sinh')
         ->call('clearFilters')->assertViewHas('records', fn ($records) => $records->total() === 17);
 });
 

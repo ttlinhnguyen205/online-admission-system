@@ -122,7 +122,7 @@ test('program search filters and pagination combine and reset correctly', functi
         ->set('roundFilter', (string) $target->admission_round_id)->set('majorFilter', (string) $target->major_id)
         ->set('methodFilter', (string) $target->admission_method_id)->set('statusFilter', 'inactive')
         ->assertViewHas('records', fn ($records) => $records->total() === 1 && $records->first()->id === $target->id);
-    $page->set('statusFilter', 'active')->assertSee('No admission programs found')
+    $page->set('statusFilter', 'active')->assertSee('Không tìm thấy chương trình tuyển sinh')
         ->call('clearFilters')->assertViewHas('records', fn ($records) => $records->total() === 17);
 });
 

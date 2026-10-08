@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Notifications\ApplicationSubmitted;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Carbon\FactoryImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -147,7 +148,7 @@ class CandidateApplications
 
     public static function roundIsOpen(AdmissionRound $round): bool
     {
-        $testNow = CarbonImmutable::getTestNow();
+        $testNow = FactoryImmutable::getInstance()->getTestNow();
         $timezone = $testNow instanceof CarbonInterface ? $testNow->timezone : config('app.timezone');
         $now = CarbonImmutable::now($timezone);
         $start = CarbonImmutable::parse($round->getRawOriginal('start_date'), $timezone);
