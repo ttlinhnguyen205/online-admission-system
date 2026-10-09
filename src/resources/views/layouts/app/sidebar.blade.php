@@ -13,6 +13,11 @@
         </flux:sidebar.header>
 
         @if (auth()->user()->isAdmin())
+        <flux:sidebar.nav>
+            <flux:sidebar.group :heading="__('TỔNG QUAN')">
+                <flux:sidebar.item icon="chart-bar" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Bảng điều khiển') }}</flux:sidebar.item>
+            </flux:sidebar.group>
+        </flux:sidebar.nav>
         @can('viewAny', App\Models\Application::class)
         <flux:sidebar.nav>
             <flux:sidebar.group :heading="__('QUẢN LÝ HỒ SƠ')">

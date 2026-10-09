@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdmissionReportController;
 use App\Livewire\Admin;
 use App\Models\AdmissionMethod;
 use App\Models\AdmissionProgram;
@@ -10,6 +11,8 @@ use App\Models\Major;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active', 'verified'])->prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('reports/{format}', AdmissionReportController::class)->whereIn('format', ['xlsx', 'pdf'])
+        ->can('export', Application::class)->middleware('throttle:6,1')->name('reports.download');
     Route::livewire('results', Admin\Results::class)->can('publishResults', AdmissionRound::class)->name('results.index');
     Route::livewire('admission-engine', Admin\AdmissionEngine::class)->can('process', AdmissionRound::class)->name('admission-engine');
     Route::livewire('applications', Admin\Applications::class)->can('viewAny', Application::class)->name('applications.index');

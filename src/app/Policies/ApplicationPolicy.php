@@ -19,6 +19,11 @@ class ApplicationPolicy
         return $user->canReviewAdmissions();
     }
 
+    public function export(User $user): bool
+    {
+        return $user->isActive() && $user->hasVerifiedEmail() && $user->canReviewAdmissions();
+    }
+
     public function view(User $user, Application $application): Response
     {
         return $user->canReviewAdmissions() || ($user->isCandidate()
