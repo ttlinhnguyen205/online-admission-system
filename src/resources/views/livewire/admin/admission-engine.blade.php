@@ -18,7 +18,7 @@
     <div role="status" wire:loading.delay>{{ __('Checking and processing admission data…') }}</div>
 
     @if ($previewData !== [])
-        <div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+        <div class="space-y-4 admission-panel p-5">
             <flux:heading size="lg">{{ __('Readiness for round') }} #{{ $previewData['round_id'] }}</flux:heading>
             <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach (['round_status' => 'Round status', 'verified' => 'Verified applications ready', 'drafts' => 'Excluded drafts', 'submitted' => 'Submitted awaiting review', 'under_review' => 'Under review', 'needs_revision' => 'Needs revision', 'wishes' => 'Participating wishes ready', 'existing_results' => 'Existing results', 'existing_events' => 'Existing engine events'] as $field => $label)
@@ -75,7 +75,7 @@
     @endif
 
     @if ($summary !== [])
-        <div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700" role="status">
+        <div class="space-y-4 admission-panel p-5" role="status">
             <flux:heading size="lg">{{ __('Saved admission summary') }}</flux:heading>
             <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach (['run_id' => 'Run', 'included' => 'Completed applications', 'excluded_drafts' => 'Excluded drafts at processing', 'wishes' => 'Processed wishes', 'results' => 'Results saved', 'admitted' => 'Admitted wishes', 'not_admitted' => 'Not admitted wishes', 'decided_at' => 'Decision time'] as $field => $label)

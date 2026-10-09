@@ -16,7 +16,7 @@
             <flux:badge>{{ __('Read-only access') }}</flux:badge>
         @endcan
     </div>
-    <div class="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
+    <div class="flex flex-col gap-4 admission-panel p-4">
         <div class="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <flux:input wire:model.live.debounce.300ms="search" :label="__('Search')" :placeholder="__('Search code or name')" maxlength="100" type="search" />
             {{ $filters }}

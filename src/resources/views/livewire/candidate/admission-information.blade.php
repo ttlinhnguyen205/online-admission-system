@@ -9,14 +9,14 @@
     <flux:error name="form" />
     <flux:error name="cleanup" />
 
-    <div data-admission-section="certificates" class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div data-admission-section="certificates" class="space-y-4 admission-panel p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div><flux:heading size="lg">{{ __('Chứng chỉ') }}</flux:heading><flux:text>{{ __('Bạn có thể bỏ qua mục này nếu không có chứng chỉ.') }}</flux:text></div>
             @if ($certificates->isEmpty() && ! $showCertificateEditor)<flux:button wire:click="createCertificate">{{ __('Khai báo chứng chỉ') }}</flux:button>@endif
         </div>
         <div class="space-y-3">
             @forelse ($certificates as $certificate)
-                <article wire:key="certificate-{{ $certificate->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <article wire:key="certificate-{{ $certificate->id }}" class="space-y-2 admission-panel p-4">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <strong>{{ $certificateTypes[$certificate->certificate_type->value]['label'] }}</strong>
                         <flux:badge>{{ App\Support\CandidateStatusLabels::verification($certificate->status) }}</flux:badge>
@@ -50,7 +50,7 @@
         @endif
     </div>
 
-    <div data-admission-section="claims" class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div data-admission-section="claims" class="space-y-4 admission-panel p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div><flux:heading size="lg">{{ __('Xét tuyển thẳng & ưu tiên xét tuyển') }}</flux:heading><flux:text>{{ __('Bạn có thể bỏ qua mục này nếu không thuộc diện xét tuyển thẳng hoặc ưu tiên xét tuyển.') }}</flux:text></div>
 
@@ -136,7 +136,7 @@
         @endif
         <div class="space-y-3">
             @forelse ($claims->reject(fn ($claim) => in_array($claim->claim_type, ['direct_admission', 'priority_admission', 'abc', 'xyz'], true)) as $claim)
-                <article wire:key="claim-{{ $claim->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <article wire:key="claim-{{ $claim->id }}" class="space-y-2 admission-panel p-4">
                     <div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $claim->claim_type }}</strong><flux:badge>{{ App\Support\CandidateStatusLabels::verification($claim->status) }}</flux:badge></div>
                     @if ($claim->claim_code)<flux:text>{{ __('Mã diện: :code', ['code' => $claim->claim_code]) }}</flux:text>@endif
                     @if ($claim->description)<p class="whitespace-pre-wrap text-sm">{{ $claim->description }}</p>@endif
@@ -155,14 +155,14 @@
         </div>
     </div>
 
-    <div data-admission-section="competency" class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div data-admission-section="competency" class="space-y-4 admission-panel p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div><flux:heading size="lg">{{ __('Điểm ĐGNL/ĐGTD/V-SAT/SPT') }}</flux:heading><flux:text>{{ __('Khai báo điểm tổng của kỳ thi phù hợp với bạn.') }}</flux:text></div>
             @if ($competencyResults->isEmpty() && ! $showCompetencyEditor)<flux:button wire:click="createCompetency">{{ __('Khai báo kết quả kỳ thi') }}</flux:button>@endif
         </div>
         <div class="space-y-3">
             @forelse ($competencyResults as $result)
-                <article wire:key="competency-{{ $result->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <article wire:key="competency-{{ $result->id }}" class="space-y-2 admission-panel p-4">
                     <div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $examTypes[$result->exam_type->value]['label'] }}</strong><flux:badge>{{ App\Support\CandidateStatusLabels::verification($result->status) }}</flux:badge></div>
                     <flux:text>{{ __('Điểm: :score · Năm thi: :year', ['score' => $result->overall_score, 'year' => $result->exam_year]) }}</flux:text>
                     <flux:text>{{ __('Đợt thi: :session', ['session' => $result->exam_session ?? '—']) }} · {{ __('Mã dự thi: :number', ['number' => $result->registration_number ?? '—']) }}</flux:text>
@@ -193,13 +193,13 @@
         @endif
     </div>
 
-    <div data-admission-section="transcripts" class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div data-admission-section="transcripts" class="space-y-4 admission-panel p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div><flux:heading size="lg">{{ __('Điểm tổng kết học bạ THPT') }}</flux:heading><flux:text>{{ __('Chỉ thêm những môn bạn cần sử dụng để đăng ký xét tuyển.') }}</flux:text></div>
             <flux:button variant="primary" wire:click="createTranscript">{{ __('Thêm học bạ') }}</flux:button>
         </div>
         @forelse ($transcripts as $transcript)
-            <article wire:key="transcript-{{ $transcript->id }}" class="space-y-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+            <article wire:key="transcript-{{ $transcript->id }}" class="space-y-3 admission-panel p-4">
                 <div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $transcript->school_name ?? __('Chưa ghi tên trường') }} · {{ $transcript->graduation_year }}</strong><flux:badge>{{ App\Support\CandidateStatusLabels::verification($transcript->status) }}</flux:badge></div>
                 <div class="overflow-x-auto"><table class="w-full min-w-xl text-left text-sm"><thead><tr><th class="p-2">{{ __('Môn học') }}</th><th class="p-2">{{ __('Lớp 10') }}</th><th class="p-2">{{ __('Lớp 11') }}</th><th class="p-2">{{ __('Lớp 12') }}</th></tr></thead><tbody>
                     @foreach ($transcript->scores->groupBy('subject_code') as $subjectCode => $scores)

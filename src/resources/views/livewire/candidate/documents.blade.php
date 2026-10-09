@@ -27,7 +27,7 @@
                 <flux:badge>{{ __('Không thể chỉnh sửa tài liệu ở trạng thái hồ sơ hiện tại') }}</flux:badge>
             @endcan
         </div>
-        <div class="overflow-x-auto rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+        <div class="overflow-x-auto admission-panel p-4">
             <flux:table :paginate="$records">
                 <flux:table.columns><flux:table.column>{{ __('Tài liệu') }}</flux:table.column><flux:table.column>{{ __('Trạng thái duyệt') }}</flux:table.column><flux:table.column>{{ __('Thao tác') }}</flux:table.column></flux:table.columns>
                 <flux:table.rows>
@@ -61,7 +61,7 @@
             <div>
                 <div class="mb-2 text-sm font-medium text-zinc-800 dark:text-white">{{ $recordId ? __('Tệp thay thế (không bắt buộc)') : __('Tệp *') }}</div>
                 <input id="candidate-document" wire:model="file" type="file" accept="application/pdf,image/jpeg,image/png" class="sr-only" x-on:change="fileName = $event.target.files[0]?.name ?? ''" />
-                <label for="candidate-document" class="inline-flex h-10 cursor-pointer items-center rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-xs hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600/75">{{ __('Chọn tệp') }}</label>
+                <label for="candidate-document" class="inline-flex h-10 cursor-pointer items-center admission-panel px-4 text-sm font-medium text-zinc-800 shadow-xs hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600/75">{{ __('Chọn tệp') }}</label>
                 <span class="ms-3 text-sm text-zinc-500 dark:text-zinc-300" x-text="fileName || 'Chưa chọn tệp nào'"></span>
                 <flux:error name="file" />
             </div>

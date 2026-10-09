@@ -30,7 +30,7 @@
         </div>
     </div>
     <div role="status" wire:loading.delay>{{ __('Đang cập nhật điểm...') }}</div>
-    <div class="overflow-x-auto rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+    <div class="overflow-x-auto admission-panel p-4">
         <flux:table :paginate="$records">
             <flux:table.columns>
                 <flux:table.column>{{ __('Loại điểm / Môn học') }}</flux:table.column>

@@ -45,7 +45,7 @@
         x-on:livewire-upload-error="uploading = false"
         x-on:livewire-upload-progress="progress = $event.detail.progress"
     >
-        <div class="flex flex-col gap-5 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700 lg:col-span-2">
+        <div class="flex flex-col gap-5 admission-panel p-5 lg:col-span-2">
 
             <flux:error name="form" />
 
@@ -267,7 +267,7 @@
         <div class="flex flex-col gap-5">
 
             {{-- Ảnh hồ sơ --}}
-            <div class="flex flex-col gap-3 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+            <div class="flex flex-col gap-3 admission-panel p-5">
 
                 <flux:heading>
                     {{ __('Ảnh hồ sơ 3×4') }}
@@ -316,7 +316,7 @@
                 </div>
             </div>
             {{-- CCCD --}}
-            <div class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+            <div class="flex flex-col gap-4 admission-panel p-5">
 
                 <flux:heading>
                     {{ __('Ảnh CCCD') }}
@@ -363,7 +363,7 @@
             </div>
 
             {{-- Checklist --}}
-            <div class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+            <div class="admission-panel p-5">
 
                 <flux:heading>
                     {{ __('Thông tin hồ sơ đã lưu') }}

@@ -1,22 +1,20 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     @include('partials.head')
 </head>
 
-<body class="min-h-screen bg-white dark:bg-zinc-800">
-    <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:sidebar.header>
+<body class="admission-shell min-h-screen bg-admission-canvas text-zinc-800 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+    <flux:sidebar sticky collapsible="mobile" class="admission-navigation w-60! gap-5! border-e border-zinc-200 bg-[#f8f9fc] px-3! dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar.header class="admission-brand -mx-3 -mt-4 min-h-20 px-5 py-4 text-white">
             <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
             <flux:sidebar.collapse class="lg:hidden" />
         </flux:sidebar.header>
 
         @if (auth()->user()->isAdmin())
         <flux:sidebar.nav>
-            <flux:sidebar.group :heading="__('TỔNG QUAN')">
-                <flux:sidebar.item icon="chart-bar" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Bảng điều khiển') }}</flux:sidebar.item>
-            </flux:sidebar.group>
+            <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Trang chủ') }}</flux:sidebar.item>
         </flux:sidebar.nav>
         @can('viewAny', App\Models\Application::class)
         <flux:sidebar.nav>
