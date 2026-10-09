@@ -30,7 +30,10 @@ class Dashboard extends ReviewPage
 
     public function updated(string $property): void
     {
-        if ($property === 'yearFilter') {
+        if ($property === 'yearFilter' && $this->roundFilter !== '' && ! AdmissionRound::query()
+            ->whereKey($this->roundFilter)
+            ->when($this->yearFilter !== '', fn ($query) => $query->where('year', $this->yearFilter))
+            ->exists()) {
             $this->reset('roundFilter');
         }
         if (in_array($property, ['roundFilter', 'statusFilter', 'search', 'yearFilter'], true)) {

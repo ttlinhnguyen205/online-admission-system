@@ -15,6 +15,66 @@ use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
+test('bundled dashboard filters survive hydration and scope rendered exports', function (bool $yearFirst, string $format) {
+    $first = Application::factory()->create(['status' => 'submitted']);
+    $second = Application::factory()->create(['status' => 'needs_revision']);
+    foreach ([$first, $second] as $application) {
+        $application->admissionRound->update(['year' => 2026]);
+    }
+    foreach (range(1, 3) as $priority) {
+        AdmissionWish::factory()->create(['application_id' => $first->id, 'priority' => $priority]);
+    }
+    AdmissionWish::factory()->create(['application_id' => $second->id]);
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
+    $document = new DOMDocument;
+    @$document->loadHTML('<?xml encoding="UTF-8">'.$this->get(route('dashboard'))->getContent());
+    $xpath = new DOMXPath($document);
+    $snapshot = $xpath->query('//*[@*[name()="wire:snapshot"]]')->item(0)->getAttribute('wire:snapshot');
+    $endpoint = $xpath->query('//script[@data-update-uri]')->item(0)->getAttribute('data-update-uri');
+    $initial = ['yearFilter' => '2026', 'roundFilter' => (string) $first->admission_round_id];
+    if (! $yearFirst) {
+        $initial = array_reverse($initial, true);
+    }
+    foreach ([
+        [$initial, [$first], 3],
+        [['roundFilter' => (string) $second->admission_round_id], [$second], 1],
+        [['roundFilter' => ''], [$first, $second], 4],
+        [['yearFilter' => '2026', 'roundFilter' => (string) $first->admission_round_id, 'statusFilter' => 'submitted', 'search' => $first->application_code], [$first], 3],
+        [['yearFilter' => '', 'roundFilter' => '', 'statusFilter' => '', 'search' => ''], [$first, $second], 4],
+    ] as [$updates, $included, $wishes]) {
+        $this->travel(1)->minutes();
+        $response = $this->postJson($endpoint, ['components' => [[
+            'snapshot' => $snapshot, 'updates' => $updates, 'calls' => [],
+        ]]], ['X-Livewire' => 'true'])->assertOk();
+        $snapshot = $response->json('components.0.snapshot');
+        $state = json_decode($snapshot, true, flags: JSON_THROW_ON_ERROR)['data'];
+        foreach ($updates as $key => $value) {
+            expect($state[$key])->toBe($value);
+        }
+        $html = $response->json('components.0.effects.html');
+        expect($html)->toContain('Tỷ lệ trên '.count($included).' hồ sơ đã nộp', 'Tỷ lệ trên '.$wishes.' nguyện vọng');
+        @$document->loadHTML('<?xml encoding="UTF-8">'.$html);
+        $xpath = new DOMXPath($document);
+        $url = $xpath->query('//a[contains(@href, "/reports/'.$format.'")]')->item(0)->getAttribute('href');
+        parse_str(parse_url($url, PHP_URL_QUERY), $parameters);
+        foreach (['yearFilter', 'roundFilter', 'statusFilter', 'search'] as $key) {
+            expect($parameters[$key] ?? '')->toBe($state[$key]);
+        }
+        $content = $this->get($url)->assertOk()->streamedContent();
+        $workbook = $format === 'xlsx' ? admissionWorkbookFiles($content) : [];
+        $export = $format === 'xlsx' ? $workbook['xl/worksheets/sheet2.xml'].$workbook['xl/worksheets/sheet3.xml'] : admissionPdfText($content);
+        foreach ([$first, $second] as $application) {
+            if (in_array($application, $included, true)) {
+                expect($html)->toContain($application->application_code);
+                expect($export)->toContain($application->application_code);
+            } else {
+                expect($html)->not->toContain($application->application_code);
+                expect($export)->not->toContain($application->application_code);
+            }
+        }
+    }
+})->with([true, false])->with(['xlsx', 'pdf']);
+
 /** @return array<string, string> */
 function admissionWorkbookFiles(string $content): array
 {
