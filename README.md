@@ -1,5 +1,5 @@
 
-# 🎓 Online Admission System
+# Online Admission System
 
 **Hệ thống tuyển sinh trực tuyến – Online Admission System**
 
@@ -7,7 +7,7 @@ Online Admission System là ứng dụng web hỗ trợ quản lý quy trình tu
 
 Dự án được phát triển bằng **Laravel 13, Livewire 4 và Tailwind CSS 4**, hướng đến việc số hóa quy trình tuyển sinh, giảm thao tác thủ công và nâng cao hiệu quả quản lý.
 
-## 📌 1. Giới thiệu dự án
+##  1. Giới thiệu dự án
 
 ### Mục tiêu
 
@@ -29,9 +29,9 @@ Dự án được phát triển bằng **Laravel 13, Livewire 4 và Tailwind CSS
 
 ---
 
-## 🚀 2. Chức năng chính
+##  2. Chức năng chính
 
-### 👨‍🎓 2.1. Thí sinh (Candidate)
+###  2.1. Thí sinh (Candidate)
 
 **Quản lý tài khoản**
 - Đăng ký và đăng nhập.
@@ -68,7 +68,7 @@ Dự án được phát triển bằng **Laravel 13, Livewire 4 và Tailwind CSS
 - Truy cập trang tư vấn tuyển sinh.
 - Hỗ trợ giải đáp thông tin tuyển sinh thông qua chatbot khi được cấu hình và kích hoạt.
 
-### 👩‍💼 2.2. Cán bộ tuyển sinh (Staff)
+###  2.2. Cán bộ tuyển sinh (Staff)
 
 - Xem danh sách hồ sơ thí sinh theo quyền được cấp.
 - Kiểm tra thông tin đăng ký xét tuyển.
@@ -78,7 +78,7 @@ Dự án được phát triển bằng **Laravel 13, Livewire 4 và Tailwind CSS
 - Theo dõi trạng thái xử lý hồ sơ.
 - Tra cứu lịch sử xét duyệt.
 
-### 🛠️ 2.3. Quản trị viên (Admin)
+###  2.3. Quản trị viên (Admin)
 
 **Quản lý tuyển sinh**
 - Quản lý các đợt tuyển sinh.
@@ -99,7 +99,7 @@ Dự án được phát triển bằng **Laravel 13, Livewire 4 và Tailwind CSS
 
 ---
 
-## 🔄 3. Quy trình hoạt động
+##  3. Quy trình hoạt động
 
 Hệ thống được thiết kế theo quy trình tuyển sinh:
 
@@ -144,7 +144,7 @@ Các bước xử lý phụ thuộc vào trạng thái hồ sơ, cấu hình đ�
 
 ---
 
-## 🧪 4. Kiểm thử
+##  4. Kiểm thử
 
 Dự án sử dụng Pest PHP để thực hiện kiểm thử.
 
@@ -188,7 +188,7 @@ Các nhóm kiểm thử bao gồm:
 
 ---
 
-## 🔐 5. Bảo mật
+##  5. Bảo mật
 
 Hệ thống sử dụng các cơ chế bảo mật của Laravel và các quy tắc nghiệp vụ riêng.
 
