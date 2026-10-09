@@ -5,7 +5,7 @@
 <section class="mx-auto flex w-full max-w-7xl flex-col gap-6 text-zinc-900 dark:text-zinc-100 sm:gap-8">
     <div>
         <p class="mb-2 text-xs font-semibold tracking-widest text-indigo-600 uppercase dark:text-indigo-400">Đồng hành cùng thí sinh</p>
-        <div class="flex flex-wrap items-center justify-between gap-4"><flux:heading size="xl" level="1">Tổng quan hồ sơ của tôi</flux:heading><flux:button x-data x-on:click="$flux.dark = ! $flux.dark" icon="moon" variant="subtle" aria-label="Chuyển chế độ sáng hoặc tối" /></div>
+        <flux:heading size="xl" level="1">Tổng quan hồ sơ của tôi</flux:heading>
         <flux:text class="mt-2 break-words">Xin chào {{ $candidate->name }}! Theo dõi hồ sơ, nguyện vọng và những việc cần thực hiện.</flux:text>
     </div>
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Thống kê cá nhân">

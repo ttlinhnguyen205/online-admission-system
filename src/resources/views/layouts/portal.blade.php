@@ -49,6 +49,15 @@
                 </a>
 
                 @auth
+                    <flux:button
+                        x-data
+                        x-on:click="$flux.dark = ! $flux.dark"
+                        icon="moon"
+                        variant="subtle"
+                        class="text-admission-blue! dark:text-rose-200!"
+                        aria-label="Chuyển chế độ sáng hoặc tối"
+                    />
+
                     <flux:dropdown position="bottom" align="end">
                         <button type="button" class="flex max-w-52 items-center gap-2 rounded px-1 py-2 text-sm font-semibold hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-admission-blue dark:hover:bg-zinc-800">
                             <flux:icon.user-circle class="size-8 shrink-0 text-admission-blue" />

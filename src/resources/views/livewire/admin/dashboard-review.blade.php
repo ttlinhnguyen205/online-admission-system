@@ -11,7 +11,6 @@
             <flux:text class="mt-2 max-w-xl">Ưu tiên hồ sơ nộp sớm, theo dõi yêu cầu bổ sung và tiến độ xác minh.</flux:text>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" icon="moon" variant="subtle" aria-label="Chuyển chế độ sáng hoặc tối" />
             <flux:button :href="route('admin.applications.index', ['roundFilter' => $roundFilter, 'statusFilter' => $statusFilter ?: 'all', 'search' => $search])" icon:trailing="arrow-right" wire:navigate>Mở danh sách xét duyệt</flux:button>
         </div>
     </header>
