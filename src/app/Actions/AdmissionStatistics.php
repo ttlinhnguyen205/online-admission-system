@@ -27,7 +27,8 @@ class AdmissionStatistics
     /** @return Builder<Application> */
     public function applications(User $user, AdmissionReportFilters $filters): Builder
     {
-        $this->authorize($user);
+        $actor = $this->authorize($user);
+        abort_unless($filters->yearFilter === '' || $actor->isAdmin(), 403);
 
         return $this->filteredApplications($filters)->where('status', '!=', ApplicationStatus::Draft);
     }
@@ -36,6 +37,7 @@ class AdmissionStatistics
     private function filteredApplications(AdmissionReportFilters $filters): Builder
     {
         return Application::query()
+            ->when($filters->yearFilter !== '', fn ($query) => $query->whereHas('admissionRound', fn ($rounds) => $rounds->where('year', $filters->yearFilter)))
             ->when($filters->roundFilter !== '', fn ($query) => $query->where('admission_round_id', $filters->roundFilter))
             ->when(! in_array($filters->statusFilter, ['', 'all'], true), fn ($query) => $query->where('status', $filters->statusFilter))
             ->when($filters->search !== '', fn ($query) => $query->where(function ($query) use ($filters): void {

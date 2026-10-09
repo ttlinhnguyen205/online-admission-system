@@ -17,6 +17,55 @@ use App\Support\AdmissionReportFilters;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 
+test('admin dropdown filters explicitly sync and send a request on selection change', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
+    $component = Livewire::test(ReviewDashboard::class);
+    $document = new DOMDocument;
+    @$document->loadHTML('<?xml encoding="UTF-8">'.$component->html());
+    foreach (['yearFilter', 'roundFilter', 'statusFilter'] as $property) {
+        $select = (new DOMXPath($document))->query('//select[@name="'.$property.'"]')->item(0);
+        expect($select)->toBeInstanceOf(DOMElement::class);
+        expect($select->getAttribute('wire:model.change.live'))->toBe($property);
+    }
+});
+
+test('admin year selection filters real years rounds statistics and resets incompatible round state', function () {
+    $round = AdmissionRound::factory()->create(['year' => 2026, 'name' => 'ROUND-YEAR-2026']);
+    $nextRound = AdmissionRound::factory()->create(['year' => 2027, 'name' => 'ROUND-YEAR-2027']);
+    $first = Application::factory()->create(['admission_round_id' => $round->id, 'status' => 'submitted']);
+    $second = Application::factory()->create(['admission_round_id' => $nextRound->id, 'status' => 'needs_revision']);
+    foreach (range(1, 3) as $priority) {
+        AdmissionWish::factory()->create(['application_id' => $first->id, 'priority' => $priority]);
+    }
+    AdmissionWish::factory()->create(['application_id' => $second->id]);
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
+
+    $component = Livewire::test(ReviewDashboard::class)
+        ->assertViewHas('years', fn ($years) => $years->all() === [2027, 2026])
+        ->set('roundFilter', (string) $round->id)->call('setPage', 2)->set('yearFilter', '2027')
+        ->assertSet('roundFilter', '')->assertViewHas('rounds', fn ($rows) => $rows->modelKeys() === [$nextRound->id])
+        ->assertViewHas('records', fn ($rows) => $rows->currentPage() === 1 && $rows->modelKeys() === [$second->id])
+        ->assertViewHas('summary', fn ($data) => $data['metrics']['Hồ sơ đã nộp'] === 1 && $data['metrics']['Nguyện vọng'] === 1)
+        ->assertViewHas('pending', fn ($rows) => $rows->isEmpty())->assertDontSee('ROUND-YEAR-2026');
+    foreach (['xlsx', 'pdf'] as $format) {
+        $component->assertSee(e(route('admin.reports.download', ['format' => $format, 'roundFilter' => '', 'statusFilter' => '', 'search' => '', 'yearFilter' => '2027'])), false);
+    }
+    $component->set('roundFilter', (string) $round->id)->assertHasErrors('filters.roundFilter')
+        ->assertViewHas('summary', null)->call('clearFilters')->assertSet('yearFilter', '')
+        ->assertViewHas('summary', fn ($data) => $data['metrics']['Hồ sơ đã nộp'] === 2 && $data['metrics']['Nguyện vọng'] === 4)
+        ->set('yearFilter', '2026')->assertViewHas('records', fn ($rows) => $rows->modelKeys() === [$first->id])
+        ->assertViewHas('pending', fn ($rows) => $rows->modelKeys() === [$first->id]);
+    foreach ($component->viewData('summary')['charts'] as $rows) {
+        expect(array_sum(array_column($rows, 'count')))->toBe(3);
+    }
+    $component->set('yearFilter', '1999')->assertHasErrors('filters.yearFilter')->assertViewHas('summary', null);
+});
+
+test('staff dashboard does not expose or accept the new admin year filter', function () {
+    $this->actingAs(User::factory()->create(['role' => 'staff']));
+    Livewire::test(ReviewDashboard::class)->assertDontSee('Năm tuyển sinh')->set('yearFilter', '2026')->assertForbidden();
+});
+
 test('candidate wish method display requires current program and method publication approvals', function () {
     $application = Application::factory()->create();
     $application->admissionRound->update(['status' => 'open']);

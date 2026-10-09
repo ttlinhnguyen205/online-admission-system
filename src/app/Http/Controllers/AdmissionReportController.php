@@ -33,7 +33,11 @@ class AdmissionReportController extends Controller
         try {
             $writer->write($actor, $filters, $format, $path);
         } catch (Throwable $exception) {
-            $disk->deleteDirectory($directory);
+            try {
+                $disk->deleteDirectory($directory);
+            } catch (Throwable $cleanupException) {
+                report($cleanupException);
+            }
             throw $exception;
         }
 

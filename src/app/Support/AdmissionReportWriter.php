@@ -26,6 +26,9 @@ class AdmissionReportWriter
     public function write(User $actor, AdmissionReportFilters $filters, string $format, string $path): void
     {
         $actor = $this->statistics->authorize($actor);
+        if ($format === 'xlsx' && ! extension_loaded('zip')) {
+            throw ValidationException::withMessages(['export' => __('PHP server chưa nạp extension ZIP. Hãy khởi động lại PHP server sau khi bật ZIP để xuất Excel.')]);
+        }
         $summary = $this->statistics->build($actor, $filters);
         $maximum = max(1, (int) config('admission_reports.'.$format.'_max_rows'));
         $total = $summary['metrics']['Hồ sơ đã nộp'] + $summary['metrics']['Kết quả xét tuyển'];

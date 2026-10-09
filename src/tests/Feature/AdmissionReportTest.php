@@ -1,15 +1,19 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Livewire\Admin\Dashboard;
 use App\Models\AdmissionResult;
 use App\Models\AdmissionRound;
 use App\Models\AdmissionWish;
 use App\Models\Application;
+use App\Models\CandidateProfile;
 use App\Models\User;
 use App\Support\AdmissionReportFilters;
 use App\Support\AdmissionReportWriter;
 use Illuminate\Routing\Exceptions\StreamedResponseException;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Livewire;
 
 /** @return array<string, string> */
 function admissionWorkbookFiles(string $content): array
@@ -34,10 +38,13 @@ function admissionWorkbookFiles(string $content): array
 
 function admissionPdfText(string $content): string
 {
-    preg_match_all('/<<([^>]+)>>\s*stream\r?\n(.*?)\r?\nendstream/s', $content, $streams, PREG_SET_ORDER);
+    preg_match_all('/<<([^>]+)>>\s*stream\r?\n/', $content, $streams, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
     $text = '';
     foreach ($streams as $stream) {
-        $data = str_contains($stream[1], '/FlateDecode') ? zlib_decode($stream[2]) : $stream[2];
+        preg_match('/\/Length\s+(\d+)\b/', $stream[1][0], $length);
+        expect($length)->toHaveCount(2);
+        $bytes = substr($content, $stream[0][1] + strlen($stream[0][0]), (int) $length[1]);
+        $data = str_contains($stream[1][0], '/FlateDecode') ? zlib_decode($bytes) : $bytes;
         expect($data)->toBeString();
         preg_match_all('/\[\((.*?)\)\] TJ/s', $data, $strings);
         foreach ($strings[1] as $string) {
@@ -52,6 +59,146 @@ function admissionPdfText(string $content): string
 beforeEach(function () {
     Storage::fake('candidate-private');
 });
+
+test('report generation errors are preserved when temporary directory cleanup also fails', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
+    $disk = Storage::disk('candidate-private');
+    $diskWithFailure = Mockery::mock($disk);
+    $cleanupFailure = new RuntimeException('Cleanup failed');
+    $diskWithFailure->shouldReceive('deleteDirectory')->once()->andThrow($cleanupFailure);
+    Storage::shouldReceive('disk')->with('candidate-private')->andReturn($diskWithFailure);
+    $this->mock(AdmissionReportWriter::class)->shouldReceive('write')->once()->andThrow(new RuntimeException('Original generation error'));
+    Exceptions::fake();
+    $this->withoutExceptionHandling();
+
+    expect(fn () => $this->get(route('admin.reports.download', 'xlsx')))->toThrow(RuntimeException::class, 'Original generation error');
+    Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception === $cleanupFailure);
+});
+
+test('admin year exports include matching applications wishes and results and reject mismatched rounds', function (string $format) {
+    $round = AdmissionRound::factory()->create(['year' => 2026]);
+    $otherRound = AdmissionRound::factory()->create(['year' => 2027]);
+    $target = Application::factory()->create(['admission_round_id' => $round->id, 'status' => 'submitted', 'application_code' => 'YEAR-EXPORT-TARGET']);
+    $other = Application::factory()->create(['admission_round_id' => $otherRound->id, 'status' => 'submitted', 'application_code' => 'YEAR-EXPORT-OTHER']);
+    foreach ([$target, $other] as $application) {
+        $wish = AdmissionWish::factory()->create(['application_id' => $application->id]);
+        AdmissionResult::factory()->create(['admission_wish_id' => $wish->id]);
+    }
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
+
+    $response = $this->get(route('admin.reports.download', ['format' => $format, 'yearFilter' => '2026']))->assertOk();
+    if ($format === 'xlsx') {
+        $files = admissionWorkbookFiles($response->streamedContent());
+        expect($files['xl/worksheets/sheet1.xml'])->toContain('Năm tuyển sinh', '2026');
+        foreach ([2, 3, 4] as $sheet) {
+            expect($files['xl/worksheets/sheet'.$sheet.'.xml'])->toContain($target->application_code)->not->toContain($other->application_code);
+        }
+    } else {
+        expect(admissionPdfText($response->streamedContent()))->toContain('Năm tuyển sinh', '2026', $target->application_code)->not->toContain($other->application_code);
+    }
+    $this->getJson(route('admin.reports.download', ['format' => $format, 'yearFilter' => '2026', 'roundFilter' => $otherRound->id]))
+        ->assertUnprocessable()->assertJsonValidationErrors('filters.roundFilter');
+    $this->getJson(route('admin.reports.download', ['format' => $format, 'yearFilter' => '1999']))
+        ->assertUnprocessable()->assertJsonValidationErrors('filters.yearFilter');
+    $this->actingAs(User::factory()->create(['role' => 'staff']));
+    $this->get(route('admin.reports.download', ['format' => $format, 'yearFilter' => '2026']))->assertForbidden();
+})->with(['xlsx', 'pdf']);
+
+test('admin round switching keeps KPIs charts queue table and downloaded reports consistent', function (string $format) {
+    $this->freezeTime();
+    $profile = CandidateProfile::factory()->create();
+    $roundTwo = AdmissionRound::factory()->create(['name' => 'Đợt 2', 'status' => 'published']);
+    $roundThree = AdmissionRound::factory()->create(['name' => 'Đợt 3', 'status' => 'published']);
+    $first = Application::factory()->create(['candidate_profile_id' => $profile->id, 'admission_round_id' => $roundTwo->id,
+        'application_code' => 'ROUND-TWO-APPLICATION', 'status' => 'submitted', 'submitted_at' => now()->subDays(2)]);
+    $second = Application::factory()->create(['candidate_profile_id' => $profile->id, 'admission_round_id' => $roundThree->id,
+        'application_code' => 'ROUND-THREE-APPLICATION', 'status' => 'needs_revision', 'submitted_at' => now()->subDay()]);
+    $draft = Application::factory()->create(['admission_round_id' => $roundThree->id, 'status' => 'draft', 'application_code' => 'EXCLUDED-DRAFT']);
+    $firstWish = AdmissionWish::factory()->create(['application_id' => $first->id]);
+    $secondWishes = collect([
+        AdmissionWish::factory()->create(['application_id' => $second->id]),
+        AdmissionWish::factory()->create(['application_id' => $second->id, 'priority' => 2]),
+    ]);
+    AdmissionResult::factory()->create(['admission_wish_id' => $firstWish->id, 'decision' => 'admitted', 'published_at' => now()]);
+    foreach ($secondWishes as $wish) {
+        AdmissionResult::factory()->create(['admission_wish_id' => $wish->id, 'decision' => 'not_admitted', 'published_at' => now()]);
+    }
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
+    $component = Livewire::test(Dashboard::class);
+    $steps = [
+        ['', 2, 3, 3, 1, 1, 1, [$first->id, $second->id]],
+        [(string) $roundTwo->id, 1, 1, 1, 1, 0, 0, [$first->id]],
+        [(string) $roundThree->id, 1, 2, 2, 0, 1, 1, [$second->id]],
+        ['', 2, 3, 3, 1, 1, 1, [$first->id, $second->id]],
+        [(string) $roundTwo->id, 1, 1, 1, 1, 0, 0, [$first->id]],
+        ['clear', 2, 3, 3, 1, 1, 1, [$first->id, $second->id]],
+    ];
+
+    foreach ($steps as [$round, $applications, $wishes, $results, $pending, $revision, $drafts, $ids]) {
+        $this->travel(1)->minutes();
+        if ($round === 'clear') {
+            $component->call('clearFilters')->assertSet('roundFilter', '');
+            $round = '';
+        } else {
+            $component->set('roundFilter', $round);
+        }
+        $component->assertViewHas('filters', fn ($filters) => $filters->roundFilter === $round)
+            ->assertViewHas('records', fn ($records) => $records->modelKeys() === $ids && $records->currentPage() === 1)
+            ->assertViewHas('pending', fn ($rows) => $rows->modelKeys() === ($pending === 1 ? [$first->id] : []))
+            ->assertDontSee($draft->application_code);
+        $summary = $component->viewData('summary');
+        expect($summary['metrics'])->toMatchArray([
+            'Hồ sơ đã nộp' => $applications, 'Thí sinh có hồ sơ' => 1, 'Nguyện vọng' => $wishes,
+            'Kết quả xét tuyển' => $results, 'Kết quả đã công bố' => $results,
+            'Chờ bắt đầu xét duyệt' => $pending, 'Cần bổ sung' => $revision,
+            'Bản nháp chưa nộp (thống kê riêng)' => $drafts,
+        ]);
+        expect(array_sum(array_column($summary['statuses'], 'count')))->toBe($applications);
+        expect(array_column($summary['statuses'], 'count', 'label'))->toMatchArray(['Đã nộp' => $pending, 'Cần bổ sung' => $revision]);
+        foreach ($summary['charts'] as $rows) {
+            expect(array_sum(array_column($rows, 'count')))->toBe($wishes);
+        }
+        $visibleWishes = $round === (string) $roundTwo->id ? collect([$firstWish])
+            : ($round === (string) $roundThree->id ? $secondWishes : collect([$firstWish, ...$secondWishes]));
+        expect(array_column($summary['charts']['Nguyện vọng theo ngành'], 'label'))->toEqualCanonicalizing(
+            $visibleWishes->map(fn ($wish): string => $wish->admissionProgram->major->name.' ('.$wish->admissionProgram->major->code.')')->all()
+        );
+        expect(array_column($summary['charts']['Nguyện vọng theo phương thức'], 'label'))->toEqualCanonicalizing(
+            $visibleWishes->map(fn ($wish): string => $wish->admissionProgram->admissionMethod->name.' ('.$wish->admissionProgram->admissionMethod->code.')')->all()
+        );
+        $component->assertSee('Tỷ lệ trên '.$applications.' hồ sơ đã nộp')->assertSee('Tỷ lệ trên '.$wishes.' nguyện vọng');
+        $document = new DOMDocument;
+        @$document->loadHTML('<?xml encoding="UTF-8">'.$component->html());
+        $xpath = new DOMXPath($document);
+        foreach (['Hồ sơ đã nộp' => $applications, 'Thí sinh có hồ sơ' => 1, 'Chờ xử lý' => $pending, 'Cần bổ sung' => $revision] as $label => $count) {
+            $value = $xpath->query('//article[h2 or div/h2][.//h2[text()="'.$label.'"]]/p[1]')->item(0);
+            expect(trim($value->textContent))->toBe((string) $count);
+        }
+        $link = $xpath->query('//a[contains(@href, "/reports/'.$format.'?")]')->item(0);
+        expect($link)->toBeInstanceOf(DOMElement::class);
+        $url = $link->getAttribute('href');
+        parse_str(parse_url($url, PHP_URL_QUERY), $parameters);
+        expect($parameters)->toBe(['roundFilter' => $round, 'statusFilter' => '', 'search' => '']);
+        $content = $this->get($url)->assertOk()->streamedContent();
+        if ($format === 'xlsx') {
+            $files = admissionWorkbookFiles($content);
+            $report = implode("\n", array_map(fn (int $sheet): string => $files['xl/worksheets/sheet'.$sheet.'.xml'], [2, 3, 4]));
+            preg_match('/Hồ sơ đã nộp<\/t>.*?<v>(\d+)<\/v>/s', $files['xl/worksheets/sheet1.xml'], $exportMetric);
+            expect((int) $exportMetric[1])->toBe($applications);
+        } else {
+            $report = admissionPdfText($content);
+        }
+        foreach ([$first, $second] as $application) {
+            if (in_array($application->id, $ids, true)) {
+                expect($report)->toContain($application->application_code);
+            } else {
+                expect($report)->not->toContain($application->application_code);
+            }
+        }
+        expect($report)->not->toContain('EXCLUDED-DRAFT');
+        $component->call('setPage', 2);
+    }
+})->with(['xlsx', 'pdf']);
 
 test('exports deny guests candidates inactive accounts and unverified reviewers', function (string $account, string $format) {
     if ($account !== 'guest') {

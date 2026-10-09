@@ -20,6 +20,9 @@ class Dashboard extends ReviewPage
     public string $roundFilter = '';
 
     #[Url]
+    public string $yearFilter = '';
+
+    #[Url]
     public string $statusFilter = '';
 
     #[Url]
@@ -27,7 +30,10 @@ class Dashboard extends ReviewPage
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['roundFilter', 'statusFilter', 'search'], true)) {
+        if ($property === 'yearFilter') {
+            $this->reset('roundFilter');
+        }
+        if (in_array($property, ['roundFilter', 'statusFilter', 'search', 'yearFilter'], true)) {
             $this->resetPage();
             $this->resetValidation();
         }
@@ -35,7 +41,7 @@ class Dashboard extends ReviewPage
 
     public function clearFilters(): void
     {
-        $this->reset('roundFilter', 'statusFilter', 'search');
+        $this->reset('roundFilter', 'statusFilter', 'search', 'yearFilter');
         $this->resetPage();
         $this->resetValidation();
     }
@@ -43,12 +49,13 @@ class Dashboard extends ReviewPage
     public function render(AdmissionStatistics $statistics): View
     {
         $actor = AdmissionReviewSnapshot::reviewer();
+        abort_unless($this->yearFilter === '' || $actor->isAdmin(), 403);
         $filters = null;
         $summary = null;
         $records = null;
         $pending = collect();
         try {
-            $filters = AdmissionReportFilters::from(['roundFilter' => $this->roundFilter, 'statusFilter' => $this->statusFilter, 'search' => $this->search]);
+            $filters = AdmissionReportFilters::from(['roundFilter' => $this->roundFilter, 'statusFilter' => $this->statusFilter, 'search' => $this->search, 'yearFilter' => $this->yearFilter]);
             $summary = $statistics->build($actor, $filters);
             $records = $statistics->applications($actor, $filters)->with(['candidateProfile.user', 'admissionRound'])
                 ->orderBy('submitted_at')->orderBy('id')->paginate(15);
@@ -60,7 +67,9 @@ class Dashboard extends ReviewPage
 
         return view('livewire.admin.dashboard', [
             'actor' => $actor, 'summary' => $summary, 'records' => $records, 'pending' => $pending,
-            'filters' => $filters, 'rounds' => AdmissionRound::query()->orderByDesc('year')->orderBy('id')->get(),
+            'filters' => $filters, 'rounds' => AdmissionRound::query()->when($actor->isAdmin() && $this->yearFilter !== '', fn ($query) => $query->where('year', $this->yearFilter))
+                ->orderByDesc('year')->orderBy('id')->get(),
+            'years' => $actor->isAdmin() ? AdmissionRound::query()->distinct()->orderByDesc('year')->pluck('year') : collect(),
             'statuses' => AdmissionReportFilters::statuses(),
         ]);
     }

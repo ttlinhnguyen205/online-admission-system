@@ -20,20 +20,26 @@
         <div class="mb-5 flex items-center gap-2 text-sm font-semibold">
             <flux:icon.adjustments-horizontal variant="mini" class="size-5 text-zinc-500" aria-hidden="true" /> Bộ lọc thống kê
         </div>
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <flux:select label="Đợt tuyển sinh" wire:model.live="roundFilter">
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <flux:select label="Năm tuyển sinh" wire:model.change.live="yearFilter">
+                <option value="">Tất cả năm</option>
+                @foreach ($years as $year)
+                    <option wire:key="admin-year-{{ $year }}" value="{{ $year }}">{{ $year }}</option>
+                @endforeach
+            </flux:select>
+            <flux:select label="Đợt tuyển sinh" wire:key="admin-dashboard-rounds-{{ $yearFilter }}" wire:model.change.live="roundFilter">
                 <option value="">Tất cả đợt</option>
                 @foreach ($rounds as $round)
                     <option wire:key="admin-round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->name }} ({{ $round->code }})</option>
                 @endforeach
             </flux:select>
-            <flux:select label="Trạng thái hồ sơ" wire:model.live="statusFilter">
+            <flux:select label="Trạng thái hồ sơ" wire:model.change.live="statusFilter">
                 <option value="">Tất cả hồ sơ đã nộp</option>
                 @foreach ($statuses as $status)
                     <option wire:key="admin-status-{{ $status->value }}" value="{{ $status->value }}">{{ App\Support\CandidateStatusLabels::application($status) }}</option>
                 @endforeach
             </flux:select>
-            <div class="sm:col-span-2">
+            <div class="sm:col-span-2 xl:col-span-3">
                 <flux:input label="Tìm kiếm" placeholder="Mã hồ sơ, mã thí sinh, họ tên hoặc email" icon="magnifying-glass" wire:model.live.debounce.400ms="search" maxlength="100" />
             </div>
         </div>
