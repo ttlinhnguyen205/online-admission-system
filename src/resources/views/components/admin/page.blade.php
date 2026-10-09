@@ -1,6 +1,6 @@
-@props(['title', 'description', 'resourceModel', 'singular'])
+@props(['title', 'description', 'resourceModel', 'singular', 'burgundy' => false])
 
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
+<section class="mx-auto flex w-full max-w-7xl flex-col gap-6" @if ($burgundy) style="--color-accent: #9D2036; --color-accent-content: #9D2036; --color-accent-foreground: #fff" @endif>
     <flux:breadcrumbs>
         <flux:breadcrumbs.item :href="route('admin.home')" wire:navigate>{{ __('Configuration') }}</flux:breadcrumbs.item>
         <flux:breadcrumbs.item>{{ $title }}</flux:breadcrumbs.item>

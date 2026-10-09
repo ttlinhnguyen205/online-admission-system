@@ -69,7 +69,7 @@ test('duplicate program combinations fail cleanly on create and update', functio
     $page = Livewire::test(AdmissionPrograms::class)->call('create')
         ->set('form.admission_round_id', $record->admission_round_id)->set('form.major_id', $record->major_id)
         ->set('form.admission_method_id', $record->admission_method_id)->call('save')
-        ->assertHasErrors('form.admission_method_id')->assertSee('A program already exists for this round, major and admission method.');
+        ->assertHasErrors('form.admission_method_id')->assertSee('Đã có chương trình cho đợt, ngành và phương thức này.');
     $page->call('edit', $other->id)->set('form.admission_round_id', $record->admission_round_id)
         ->set('form.major_id', $record->major_id)->set('form.admission_method_id', $record->admission_method_id)
         ->call('save')->assertHasErrors('form.admission_method_id');
@@ -85,7 +85,7 @@ test('program relationships cannot be reassigned after wishes exist even from a 
     $wish = AdmissionWish::factory()->for($record, 'admissionProgram')->create();
     $replacement = $model::factory()->create();
     $page->set('form.'.$field, $replacement->id)->call('save')->assertHasErrors('form.'.$field)
-        ->assertSee('The round, major and method cannot change once this program has wishes or candidate offerings.');
+        ->assertSee('Không thể đổi đợt, ngành hoặc phương thức khi chương trình đã có nguyện vọng hoặc ngành mở xét tuyển.');
     $this->assertDatabaseHas('admission_programs', ['id' => $record->id, $field => $record->getAttribute($field)]);
     $this->assertModelExists($wish);
     $page->call('edit', $record->id)->assertSet('relationshipsLocked', true)->set('form.quota', 0)->call('save')->assertHasNoErrors();

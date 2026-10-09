@@ -3,6 +3,7 @@
     :description="__('Manage admission methods and optional subject-weight configuration.')"
     :singular="__('method')"
     :resource-model="$resourceModel"
+    burgundy
 >
     <x-slot:filters>
         <flux:select wire:model.live="statusFilter" :label="__('Availability')">

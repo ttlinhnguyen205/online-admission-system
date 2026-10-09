@@ -2,7 +2,7 @@
     :title="__('Majors')"
     :description="__('Maintain the university major catalog and default tuition.')"
     :singular="__('major')"
-    :resource-model="$resourceModel">
+    :resource-model="$resourceModel" burgundy>
     <x-slot:filters>
         <flux:select wire:model.live="statusFilter" :label="__('Availability')">
             <option value="">{{ __('All statuses') }}</option>
@@ -29,7 +29,7 @@
                 </flux:table.cell>
 
                 <flux:table.cell>
-                    {{ $record->default_tuition_fee === null ? __('Not specified') : number_format((float) $record->default_tuition_fee, 2) }}
+                    {{ $record->default_tuition_fee === null ? __('Not specified') : number_format((float) $record->default_tuition_fee, (float) $record->default_tuition_fee === floor((float) $record->default_tuition_fee) ? 0 : 2, ',', '.').' VND' }}
                 </flux:table.cell>
 
                 <flux:table.cell>
@@ -103,7 +103,7 @@
 
         <flux:input
             wire:model="form.default_tuition_fee"
-            :label="__('Default tuition fee')"
+            :label="__('Default tuition fee').' (VND)'"
             type="number"
             min="0"
             max="9999999999999.99"

@@ -21,14 +21,14 @@ class DeleteAdmissionConfiguration
             $current = $record->newQuery()->whereKey($record->getKey())->lockForUpdate()->firstOrFail();
             Gate::authorize('update', $current);
             if (Gate::denies('delete', $current)) {
-                throw ValidationException::withMessages(['deletion' => 'This record is in use by admission records and cannot be deleted.']);
+                throw ValidationException::withMessages(['deletion' => __('This record is in use by admission records and cannot be deleted.')]);
             }
             Gate::authorize('delete', $current);
             try {
                 /** @throws QueryException */
                 $deleted = $current->delete();
                 if ($deleted !== true) {
-                    throw ValidationException::withMessages(['deletion' => 'This record could not be deleted.']);
+                    throw ValidationException::withMessages(['deletion' => __('This record could not be deleted.')]);
                 }
             } catch (QueryException $exception) {
                 $error = $exception->errorInfo;
@@ -44,7 +44,7 @@ class DeleteAdmissionConfiguration
                 if (! str_starts_with($exception->getSql(), $deletePrefix) || ! $foreignKeyFailure) {
                     throw $exception;
                 }
-                throw ValidationException::withMessages(['deletion' => 'This record is in use by admission records and cannot be deleted.']);
+                throw ValidationException::withMessages(['deletion' => __('This record is in use by admission records and cannot be deleted.')]);
             }
         });
     }

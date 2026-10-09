@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 
-#[Title('Admission Methods')]
+#[Title('Phương thức xét tuyển')]
 class AdmissionMethods extends ConfigurationPage
 {
     #[Locked]
@@ -118,7 +118,7 @@ class AdmissionMethods extends ConfigurationPage
         $attributes = array_intersect_key($validated, array_flip(['code', 'name', 'description', 'is_active']));
         if ($record !== null && $this->supportedRows($record->getAttribute('score_config')) === null) {
             if ($validated['weights'] !== []) {
-                throw ValidationException::withMessages(['form.weights' => 'This existing configuration is unsupported and must be preserved.']);
+                throw ValidationException::withMessages(['form.weights' => __('This existing configuration is unsupported and must be preserved.')]);
             }
 
             return $attributes;
@@ -137,7 +137,7 @@ class AdmissionMethods extends ConfigurationPage
         $record = $this->recordId === null ? null : AdmissionMethod::query()->findOrFail($this->recordId);
         Gate::authorize($record === null ? 'create' : 'update', $record ?? AdmissionMethod::class);
         if ($record !== null && $this->supportedRows($record->score_config) === null) {
-            throw ValidationException::withMessages(['form.weights' => 'This existing configuration is unsupported and must be preserved.']);
+            throw ValidationException::withMessages(['form.weights' => __('This existing configuration is unsupported and must be preserved.')]);
         }
         $this->validateOnly('form.weights', ['form.weights' => ['present', 'array', 'list', 'max:29']]);
         $this->form['weights'][] = ['subject' => '', 'weight' => '1'];

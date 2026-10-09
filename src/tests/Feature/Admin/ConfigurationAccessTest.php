@@ -169,7 +169,7 @@ test('a code collision after validation becomes a validation message', function 
     });
     try {
         Livewire::test(Majors::class)->call('create')->set('form.code', 'RACE')->set('form.name', 'New major')
-            ->call('save')->assertHasErrors('form.code')->assertSee('This code is already in use.');
+            ->call('save')->assertHasErrors('form.code')->assertSee('Mã này đã được sử dụng.');
     } finally {
         Event::forget('eloquent.creating: '.Major::class);
     }
@@ -180,7 +180,7 @@ test('a cancelled deletion does not report success', function () {
     $record = Major::factory()->create();
     Event::listen('eloquent.deleting: '.Major::class, fn () => false);
     try {
-        Livewire::test(Majors::class)->call('confirmDeletion', $record->id)->call('delete')->assertHasErrors('deletion')->assertSee('This record could not be deleted.');
+        Livewire::test(Majors::class)->call('confirmDeletion', $record->id)->call('delete')->assertHasErrors('deletion')->assertSee('Không thể xóa dữ liệu này.');
         $this->assertModelExists($record);
     } finally {
         Event::forget('eloquent.deleting: '.Major::class);

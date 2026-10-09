@@ -15,7 +15,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 
-#[Title('Admission Programs')]
+#[Title('Chương trình tuyển sinh')]
 class AdmissionPrograms extends ConfigurationPage
 {
     #[Url]
@@ -80,7 +80,7 @@ class AdmissionPrograms extends ConfigurationPage
         foreach ($parents as $field => $model) {
             $parent = $model::query()->lockForUpdate()->find($validated[$field]);
             if ($parent === null) {
-                throw ValidationException::withMessages(['form.'.$field => 'The selected record no longer exists.']);
+                throw ValidationException::withMessages(['form.'.$field => __('The selected record no longer exists.')]);
             }
             Gate::authorize('view', $parent);
         }
@@ -88,7 +88,7 @@ class AdmissionPrograms extends ConfigurationPage
         if ($record instanceof AdmissionProgram && ($record->wishes()->exists() || $record->candidateMajorOfferings()->exists())) {
             foreach (array_keys($parents) as $field) {
                 if ((int) $validated[$field] !== (int) $record->getAttribute($field)) {
-                    throw ValidationException::withMessages(['form.'.$field => 'The round, major and method cannot change once this program has wishes or candidate offerings.']);
+                    throw ValidationException::withMessages(['form.'.$field => __('The round, major and method cannot change once this program has wishes or candidate offerings.')]);
                 }
             }
         }
@@ -110,7 +110,7 @@ class AdmissionPrograms extends ConfigurationPage
 
     protected function uniqueErrorMessage(): string
     {
-        return 'A program already exists for this round, major and admission method.';
+        return __('A program already exists for this round, major and admission method.');
     }
 
     /** @return Builder<AdmissionProgram> */

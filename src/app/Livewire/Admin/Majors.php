@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 
-#[Title('Majors')]
+#[Title('Ngành đào tạo')]
 class Majors extends ConfigurationPage
 {
     protected function modelClass(): string

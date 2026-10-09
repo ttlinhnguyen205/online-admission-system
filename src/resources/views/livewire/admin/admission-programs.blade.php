@@ -2,7 +2,7 @@
     :title="__('Admission Programs')"
     :description="__('Connect a round, major and admission method with seats, score thresholds and tuition.')"
     :singular="__('program')"
-    :resource-model="$resourceModel">
+    :resource-model="$resourceModel" burgundy>
     <x-slot:filters>
         <flux:select wire:model.live="roundFilter" :label="__('Round')">
             <option value="">{{ __('All rounds') }}</option>
@@ -64,11 +64,11 @@
                 <flux:table.cell>{{ number_format($record->quota) }}</flux:table.cell>
 
                 <flux:table.cell>
-                    {{ $record->minimum_score ?? __('Not specified') }}
+                    {{ $record->minimum_score === null ? __('Not specified') : number_format((float) $record->minimum_score, 3, ',', '.').' '.__('points') }}
                 </flux:table.cell>
 
                 <flux:table.cell>
-                    {{ $record->tuition_fee === null ? __('Not specified') : number_format((float) $record->tuition_fee, 2) }}
+                    {{ $record->tuition_fee === null ? __('Not specified') : number_format((float) $record->tuition_fee, (float) $record->tuition_fee === floor((float) $record->tuition_fee) ? 0 : 2, ',', '.').' VND' }}
                 </flux:table.cell>
 
                 <flux:table.cell>
@@ -127,6 +127,7 @@
     </flux:table>
 
     <x-slot:editor>
+        <div class="sm:col-span-2"><flux:callout>{{ __('Score thresholds use the calculated score of the selected method: weighted methods use the sum of subject scores multiplied by weights, while scalar methods use the original score. No automatic normalization is applied. Previous cutoff scores are for reference only. Confirm the approved scale before entering a threshold.') }}</flux:callout></div>
         @if ($this->relationshipsLocked)
         <div class="sm:col-span-2">
             <flux:callout>
@@ -216,7 +217,7 @@
 
         <flux:input
             wire:model="form.tuition_fee"
-            :label="__('Tuition fee')"
+            :label="__('Tuition fee').' (VND)'"
             type="number"
             min="0"
             max="9999999999999.99"

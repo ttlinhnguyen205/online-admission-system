@@ -12,10 +12,14 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 
-#[Title('Candidate Major Offerings')]
+#[Title('Ngành mở xét tuyển')]
 class CandidateMajorOfferings extends ConfigurationPage
 {
+    #[Url]
+    public string $roundFilter = '';
+
     #[Locked]
     public bool $relationshipsLocked = false;
 
@@ -63,7 +67,7 @@ class CandidateMajorOfferings extends ConfigurationPage
         if ($record instanceof CandidateMajorOffering && $record->wishes()->exists()) {
             foreach (['admission_round_id', 'major_id', 'admission_program_id'] as $field) {
                 if ((int) ($validated[$field] ?? 0) !== (int) $record->getAttribute($field)) {
-                    throw ValidationException::withMessages(['form.'.$field => 'This offering has wishes. Its round, major and compatibility program cannot change. Existing wishes retain their pinned program.']);
+                    throw ValidationException::withMessages(['form.'.$field => __('This offering has wishes. Its round, major and compatibility program cannot change. Existing wishes retain their pinned program.')]);
                 }
             }
         }
@@ -74,7 +78,7 @@ class CandidateMajorOfferings extends ConfigurationPage
             || (isset($validated['admission_program_id']) && ($program === null
                 || $program->admission_round_id !== (int) $validated['admission_round_id']
                 || $program->major_id !== (int) $validated['major_id']))) {
-            throw ValidationException::withMessages(['form.admission_program_id' => 'Choose an explicit compatibility program belonging to both this round and this major.']);
+            throw ValidationException::withMessages(['form.admission_program_id' => __('Choose an explicit compatibility program belonging to both this round and this major.')]);
         }
         AdmissionRound::query()->lockForUpdate()->findOrFail($validated['admission_round_id']);
         Major::query()->lockForUpdate()->findOrFail($validated['major_id']);
@@ -95,30 +99,59 @@ class CandidateMajorOfferings extends ConfigurationPage
 
     protected function uniqueErrorMessage(): string
     {
-        return 'This major already has a candidate offering in this round.';
+        return __('This major already has a candidate offering in this round.');
     }
 
     public function updatedFormAdmissionRoundId(): void
     {
-        $this->form['admission_program_id'] = null;
+        $this->resetIncompatibleProgram();
     }
 
     public function updatedFormMajorId(): void
     {
-        $this->form['admission_program_id'] = null;
+        $this->resetIncompatibleProgram();
+    }
+
+    private function resetIncompatibleProgram(): void
+    {
+        foreach (['admission_round_id', 'major_id', 'admission_program_id'] as $field) {
+            if (! is_scalar($this->form[$field] ?? null)) {
+                $this->form['admission_program_id'] = null;
+
+                return;
+            }
+        }
+        if (! AdmissionProgram::query()->whereKey($this->form['admission_program_id'])
+            ->where('admission_round_id', $this->form['admission_round_id'])
+            ->where('major_id', $this->form['major_id'])->exists()) {
+            $this->form['admission_program_id'] = null;
+        }
     }
 
     /** @return Builder<CandidateMajorOffering> */
     protected function recordsQuery(): Builder
     {
+        $this->validateOnly('roundFilter', ['roundFilter' => ['nullable', 'integer', 'min:1', Rule::exists(AdmissionRound::class, 'id')]]);
         $this->validateOnly('statusFilter', ['statusFilter' => ['nullable', Rule::in(['enabled', 'disabled'])]]);
 
-        return CandidateMajorOffering::query()->with(['admissionRound', 'major', 'admissionProgram.admissionMethod'])
+        return CandidateMajorOffering::query()->with(['admissionRound', 'major', 'admissionProgram.major', 'admissionProgram.admissionMethod'])
             ->where(fn (Builder $query) => $query
                 ->whereHas('major', fn (Builder $major) => $major->whereLike('name', '%'.$this->search.'%')->orWhereLike('code', '%'.$this->search.'%'))
                 ->orWhereHas('admissionRound', fn (Builder $round) => $round->whereLike('name', '%'.$this->search.'%')->orWhereLike('code', '%'.$this->search.'%')))
             ->when($this->statusFilter !== '', fn (Builder $query) => $query->where('is_selectable', $this->statusFilter === 'enabled'))
+            ->when($this->roundFilter !== '', fn (Builder $query) => $query->where('admission_round_id', $this->roundFilter))
             ->orderByDesc('id');
+    }
+
+    public function updatedRoundFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function clearFilters(): void
+    {
+        parent::clearFilters();
+        $this->reset('roundFilter');
     }
 
     protected function viewData(): array

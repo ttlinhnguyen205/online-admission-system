@@ -8,6 +8,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -137,7 +138,7 @@ abstract class ConfigurationPage extends Component
 
     protected function uniqueErrorMessage(): string
     {
-        return 'This code is already in use.';
+        return __('This code is already in use.');
     }
 
     protected function normalizeForm(): void
@@ -179,10 +180,10 @@ abstract class ConfigurationPage extends Component
         Gate::authorize('update', $record);
         $this->resetValidation();
         $this->deleteId = (int) $record->getKey();
-        $this->deleteLabel = (string) ($record->getAttribute('name') ?? 'Program #'.$record->getKey());
+        $this->deleteLabel = (string) ($record->getAttribute('name') ?? __('Configuration').' #'.$record->getKey());
         $this->showDeletion = true;
         if (Gate::denies('delete', $record)) {
-            $this->addError('deletion', 'This record is in use by admission records and cannot be deleted.');
+            $this->addError('deletion', __('This record is in use by admission records and cannot be deleted.'));
         }
     }
 
@@ -210,6 +211,7 @@ abstract class ConfigurationPage extends Component
     {
         $this->reset('search', 'statusFilter');
         $this->resetPage();
+        $this->resetValidation();
     }
 
     /** @return array<string, mixed> */
@@ -221,10 +223,16 @@ abstract class ConfigurationPage extends Component
     public function render(): View
     {
         Gate::authorize('viewAny', $this->modelClass());
-        $this->validateOnly('search', ['search' => ['string', 'max:100']]);
+        try {
+            $this->validateOnly('search', ['search' => ['string', 'max:100']]);
+            $records = $this->recordsQuery()->paginate(15);
+        } catch (ValidationException $exception) {
+            $this->setErrorBag($exception->validator->errors());
+            $records = new LengthAwarePaginator([], 0, 15);
+        }
 
         return view($this->viewName(), [
-            'records' => $this->recordsQuery()->paginate(15),
+            'records' => $records,
             'resourceModel' => $this->modelClass(),
             ...$this->viewData(),
         ]);

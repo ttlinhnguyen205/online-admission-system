@@ -49,7 +49,7 @@ test('admission_rounds preserve records when dependencies exist including after 
     $record = AdmissionRound::factory()->create();
     $page = Livewire::test(AdmissionRounds::class)->call('confirmDeletion', $record->id)->assertHasNoErrors();
     AdmissionProgram::factory()->for($record, 'admissionRound')->create();
-    $page->call('delete')->assertHasErrors('deletion')->assertSee('This record is in use by admission records and cannot be deleted.');
+    $page->call('delete')->assertHasErrors('deletion')->assertSee('Dữ liệu này đang được hồ sơ hoặc cấu hình tuyển sinh sử dụng, không thể xóa.');
     $this->assertModelExists($record);
     $this->assertDatabaseCount('admission_programs', 1);
 });
