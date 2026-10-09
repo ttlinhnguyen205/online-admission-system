@@ -9,6 +9,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
@@ -45,6 +46,8 @@ test('restricted accounts can log in and log out without a redirect loop', funct
 })->with([UserStatus::Inactive, UserStatus::Locked]);
 
 test('restricted accounts retain profile and security recovery paths', function (UserStatus $status) {
+    Http::preventStrayRequests();
+    Http::fake(['https://api.pwnedpasswords.com/range/6052A' => Http::response('', 200)]);
     $user = User::factory()->create(['status' => $status]);
 
     $this->actingAs($user)->get(route('profile.edit'))->assertOk();
@@ -63,6 +66,7 @@ test('restricted accounts retain profile and security recovery paths', function 
     expect($user->fresh()->role)->toBe(UserRole::Candidate);
     expect($user->fresh()->name)->toBe('Updated Name');
     expect(Hash::check('StrongPass123!', $user->fresh()->password))->toBeTrue();
+    Http::assertSentCount(1);
 })->with([UserStatus::Inactive, UserStatus::Locked]);
 
 test('restricted unverified accounts can verify their email', function (UserStatus $status) {
@@ -83,6 +87,8 @@ test('restricted unverified accounts can verify their email', function (UserStat
 })->with([UserStatus::Inactive, UserStatus::Locked]);
 
 test('restricted accounts can reset passwords while logged out', function (UserStatus $status) {
+    Http::preventStrayRequests();
+    Http::fake(['https://api.pwnedpasswords.com/range/6052A' => Http::response('', 200)]);
     Notification::fake();
     $user = User::factory()->create(['status' => $status]);
     $this->get(route('password.request'))->assertOk();
@@ -97,6 +103,7 @@ test('restricted accounts can reset passwords while logged out', function (UserS
 
     expect(Hash::check('StrongPass123!', $user->fresh()->password))->toBeTrue();
     expect($user->fresh()->status)->toBe($status);
+    Http::assertSentCount(1);
 })->with([UserStatus::Inactive, UserStatus::Locked]);
 
 test('restricted accounts can complete a two factor challenge and manage two factor security', function (UserStatus $status) {

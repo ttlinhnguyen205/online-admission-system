@@ -47,7 +47,7 @@ test('candidate without a profile can use counseling without exposing credential
         ->assertDontSee('test-placeholder-not-a-real-key');
     Livewire::test(AdmissionCounseling::class)
         ->set('consent', true)->set('question', 'Ngành nào đang mở?')->call('send')
-        ->assertHasNoErrors()->assertSee('Chưa tìm thấy thông tin phù hợp');
+        ->assertHasNoErrors()->assertSee('Hiện không có đợt tuyển sinh nào đang nhận hồ sơ');
     Http::assertNothingSent();
 });
 

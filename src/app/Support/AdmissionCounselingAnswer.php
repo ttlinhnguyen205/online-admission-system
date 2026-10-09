@@ -7,7 +7,7 @@ use Illuminate\Validation\Rule;
 
 class AdmissionCounselingAnswer
 {
-    public const INTENTS = ['majors', 'rounds', 'availability', 'description', 'methods', 'programs', 'tuition', 'clarify', 'unsupported', 'results'];
+    public const INTENTS = ['majors', 'rounds', 'published_majors', 'published_rounds', 'deadline', 'availability', 'description', 'methods', 'programs', 'tuition', 'clarify', 'unsupported', 'results'];
 
     /** @return array<string, mixed> */
     public static function schema(): array
@@ -63,9 +63,14 @@ class AdmissionCounselingAnswer
         }
         $selected = array_map(fn (string $reference): array => $facts[$reference], $plan['sources']);
         foreach ($selected as $fact) {
-            if (($intent === 'rounds' ? 'round' : 'offering') !== $fact['kind']) {
+            if ((in_array($intent, ['rounds', 'published_rounds', 'deadline'], true) ? 'round' : 'offering') !== $fact['kind']) {
                 throw new AdmissionCounselingFailure('invalid');
             }
+        }
+        if (in_array($intent, ['rounds', 'majors', 'availability'], true)) {
+            $selected = array_values(array_filter($selected, fn (array $fact): bool => $fact['available']));
+        } elseif (in_array($intent, ['published_rounds', 'published_majors'], true)) {
+            $selected = array_values(array_filter($selected, fn (array $fact): bool => ! $fact['available']));
         }
         $route = null;
         $choices = [];
@@ -85,15 +90,26 @@ class AdmissionCounselingAnswer
                 $choices[] = $fact['name'].' ('.$fact['code'].')'.(isset($fact['round_code']) ? ' — '.$fact['round_code'] : '');
             }
         } elseif ($selected === []) {
-            $body = $context['truncated']
+            $body = in_array($intent, ['rounds', 'majors', 'availability', 'deadline'], true) && ! $context['has_open_rounds']
+                ? 'Hiện không có đợt tuyển sinh nào đang nhận hồ sơ. Bạn có thể hỏi về ngành và đợt đã công bố trước đây; các thông tin đó không cho phép đăng ký hiện tại.'
+                : ($context['truncated']
                 ? 'Danh mục vượt giới hạn một câu trả lời. Hãy nêu rõ mã ngành hoặc đợt tuyển sinh để tra cứu.'
-                : 'Chưa tìm thấy thông tin phù hợp trong danh mục hiện đang mở và được phép công bố. Điều này không có nghĩa trường không đào tạo ngành đó. Hãy kiểm tra lại tên ngành hoặc thời điểm đăng ký.';
+                : match ($intent) {
+                    'rounds' => 'Chưa tìm thấy đợt đang nhận hồ sơ phù hợp. Hãy nêu rõ tên hoặc mã đợt.',
+                    'majors', 'availability' => 'Chưa tìm thấy ngành phù hợp đang nhận đăng ký và đáp ứng kiểm tra khả dụng. Hãy kiểm tra tên hoặc mã ngành.',
+                    'published_majors', 'published_rounds' => 'Chưa có thông tin đã công bố trước đây phù hợp được phép hiển thị. Điều này không có nghĩa trường không đào tạo ngành đó.',
+                    'tuition' => 'Chưa có học phí phù hợp được phê duyệt công bố với đơn vị tính xác minh. Hãy nêu rõ tên hoặc mã ngành; dữ liệu demo không phải học phí chính thức.',
+                    'deadline' => 'Chưa tìm thấy hạn đăng ký phù hợp. Hãy nêu rõ tên hoặc mã đợt tuyển sinh.',
+                    default => 'Chưa tìm thấy thông tin phù hợp được phép công bố. Hãy nêu rõ tên hoặc mã ngành, đợt tuyển sinh.',
+                });
         } else {
-            $lines = ['Thông tin trong danh mục hiện đang nhận đăng ký:'];
+            $lines = ['Thông tin tuyển sinh được phép công bố:'];
             $answerTruncated = false;
             foreach ($selected as $fact) {
                 $label = $fact['name'].' ('.$fact['code'].')';
                 $details = [($fact['demo'] ? '[DỮ LIỆU DEMO — không phải thông báo chính thức] ' : '').$label];
+                $details[] = $fact['available'] ? 'Hiện đang nhận đăng ký.'
+                    : ($fact['expired'] ? 'Đợt đã hết hạn — không còn nhận hồ sơ.' : 'Thông tin đã công bố — hiện không nhận hồ sơ.');
                 if ($fact['kind'] === 'offering') {
                     $details[] = 'Đợt: '.$fact['round'].' ('.$fact['round_code'].').';
                 }
@@ -113,12 +129,12 @@ class AdmissionCounselingAnswer
                 $focus[] = $label.(isset($fact['round_code']) ? ' — '.$fact['round'].' ('.$fact['round_code'].')' : '');
                 array_push($lines, ...$details);
             }
-            $lines[] = 'Khả dụng tại thời điểm tra cứu; không phải cam kết trúng tuyển hoặc số chỗ còn lại. Hồ sơ vẫn phải đáp ứng kiểm tra khi nộp.';
+            $lines[] = 'Trạng thái tại thời điểm tra cứu; không phải cam kết trúng tuyển hoặc số chỗ còn lại. Hồ sơ vẫn phải đáp ứng kiểm tra khi nộp.';
             if ($context['truncated'] || $answerTruncated) {
                 $lines[] = 'Đây là một phần danh mục. Hãy nêu rõ ngành hoặc đợt để thu hẹp kết quả.';
             }
             $body = implode("\n\n", $lines);
-            $route = 'candidate.applications.index';
+            $route = array_any($selected, fn (array $fact): bool => $fact['available']) ? 'candidate.applications.index' : null;
         }
 
         return ['body' => $body, 'route' => $route, 'choices' => $choices, 'focus' => array_values(array_unique($focus)), 'checked_at' => $context['checked_at']];

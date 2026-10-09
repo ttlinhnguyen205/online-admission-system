@@ -82,7 +82,8 @@ class AnswerAdmissionQuestion
             $this->answers->render($plan, $context);
             Gate::forUser($user->fresh())->authorize('use-admission-counseling');
             $fresh = $this->context->build($retrievalQuestion);
-            if ($context['facts'] !== $fresh['facts'] || $context['truncated'] !== $fresh['truncated']) {
+            if ($context['facts'] !== $fresh['facts'] || $context['truncated'] !== $fresh['truncated']
+                || $context['has_open_rounds'] !== $fresh['has_open_rounds']) {
                 throw new AdmissionCounselingFailure('changed');
             }
             $answer = $this->answers->render($plan, $fresh);

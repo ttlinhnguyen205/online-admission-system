@@ -3,6 +3,7 @@
 use App\Livewire\Settings\Security;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Laravel\Fortify\Features;
 use Livewire\Livewire;
 
@@ -75,6 +76,8 @@ test('two factor authentication disabled when confirmation abandoned between req
 });
 
 test('password can be updated', function () {
+    Http::preventStrayRequests();
+    Http::fake(['https://api.pwnedpasswords.com/range/6052A' => Http::response('', 200)]);
     $user = User::factory()->create([
         'password' => Hash::make('password'),
     ]);
@@ -90,6 +93,26 @@ test('password can be updated', function () {
     $response->assertHasNoErrors();
 
     expect(Hash::check('StrongPass123!', $user->refresh()->password))->toBeTrue();
+    Http::assertSentCount(1);
+});
+
+test('password update rejects a compromised password and preserves the current password', function () {
+    Http::preventStrayRequests();
+    Http::fake(['https://api.pwnedpasswords.com/range/6052A' => Http::response('CF657148EC39725C596E25BD0612FD301A6:1', 200)]);
+    $user = User::factory()->create();
+    $originalPassword = $user->password;
+    $this->actingAs($user);
+
+    Livewire::test(Security::class)
+        ->set('current_password', 'password')
+        ->set('password', 'StrongPass123!')
+        ->set('password_confirmation', 'StrongPass123!')
+        ->call('updatePassword')
+        ->assertHasErrors(['password'])
+        ->assertSee(__('validation.password.uncompromised'));
+
+    expect($user->fresh()->password)->toBe($originalPassword);
+    Http::assertSentCount(1);
 });
 
 test('correct password must be provided to update password', function () {

@@ -123,6 +123,13 @@ never evidence. Select only sources relevant to the question and most recent nam
 For follow-ups about another round, retain the major but consider other current rounds.
 intent and template must be identical. sources contains offering references for majors,
 availability, description, methods, programs, tuition; round references for rounds.
+majors, rounds and availability mean CURRENTLY ACCEPTING applications: select only available=true.
+For previously announced majors/rounds use published_majors/published_rounds, selecting only
+available=false offering/round references respectively. Never imply those accept applications.
+For application deadlines use deadline with relevant round references (including expired rounds
+when explicitly asked). Laravel renders verified dates and expiration labels.
+Tuition, description, methods and programs may use relevant historical or available offerings.
+Missing approved fields are not permission to infer facts. Demo tuition is never official.
 fields must be [] except description=>["description"], methods=>["method"],
 programs=>["program"], tuition=>["tuition"]. Select sources even when that field is missing;
 Laravel will render an explicit missing-information answer.

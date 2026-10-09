@@ -6,21 +6,27 @@ use App\Enums\AdmissionRoundStatus;
 use App\Models\AdmissionRound;
 use App\Models\CandidateMajorOffering;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class BuildAdmissionCounselingContext
 {
-    /** @return array{facts: list<array<string, mixed>>, truncated: bool, checked_at: string, timezone: string} */
+    /** @return array{facts: list<array<string, mixed>>, truncated: bool, has_open_rounds: bool, checked_at: string, timezone: string} */
     public function build(string $question): array
     {
         $maximum = max(1, min(500, (int) config('admission_chatbot.max_catalog_records')));
         $now = now(config('app.timezone'));
-        $rounds = AdmissionRound::query()->where('status', AdmissionRoundStatus::Open)
-            ->where('start_date', '<=', $now)->where('end_date', '>=', $now)
+        $hasOpenRounds = AdmissionRound::query()->where('status', AdmissionRoundStatus::Open)
+            ->whereColumn('end_date', '>', 'start_date')
+            ->where('start_date', '<=', $now)->where('end_date', '>=', $now)->exists();
+        $rounds = AdmissionRound::query()->whereColumn('end_date', '>', 'start_date')
+            ->where('start_date', '<=', $now)
+            ->where(fn (Builder $query) => $query->where('status', AdmissionRoundStatus::Open)
+                ->orWhere('status', AdmissionRoundStatus::Published))
             ->orderBy('id')->limit($maximum + 1)->get();
         $truncated = $rounds->count() > $maximum;
-        $rounds = $rounds->take($maximum)->filter(fn (AdmissionRound $round): bool => CandidateApplications::roundIsOpen($round));
+        $rounds = $rounds->take($maximum);
         $offerings = CandidateMajorOffering::query()->whereIn('admission_round_id', $rounds->modelKeys())
             ->where('is_selectable', true)->with(['major', 'admissionProgram.major', 'admissionProgram.admissionMethod'])
             ->orderBy('id')->limit($maximum + 1)->get();
@@ -32,13 +38,17 @@ class BuildAdmissionCounselingContext
                 'name' => $round->name, 'code' => $round->code,
                 'start' => $this->date($round, 'start_date'),
                 'end' => $this->date($round, 'end_date'),
-                'available' => true, 'demo' => $this->demo($round->code),
+                'available' => CandidateApplications::roundIsOpen($round),
+                'expired' => CarbonImmutable::parse($round->getRawOriginal('end_date'), config('app.timezone'))->lt($now), 'demo' => $this->demo($round->code),
             ];
         }
         foreach ($offerings->take($maximum) as $offering) {
             $round = $rounds->find($offering->admission_round_id);
             $program = $offering->admissionProgram;
-            if ($round === null || ! CandidateMajorOfferings::available($offering, $program, $round)) {
+            if ($round === null || $program === null || $offering->major === null
+                || (CandidateApplications::roundIsOpen($round)
+                    ? ! CandidateMajorOfferings::available($offering, $program, $round)
+                    : ! $this->publishedOffering($offering, $round))) {
                 continue;
             }
             $major = $offering->major;
@@ -49,7 +59,8 @@ class BuildAdmissionCounselingContext
                 'round' => $round->name, 'round_code' => $round->code,
                 'start' => $this->date($round, 'start_date'),
                 'end' => $this->date($round, 'end_date'),
-                'available' => true,
+                'available' => CandidateApplications::roundIsOpen($round),
+                'expired' => CarbonImmutable::parse($round->getRawOriginal('end_date'), config('app.timezone'))->lt($now),
                 'demo' => $this->demo($round->code) || $this->demo($major->code) || $this->demo($method->code),
             ];
             if ($this->approved($major, 'description') && is_string($major->description) && $major->description !== '') {
@@ -91,7 +102,19 @@ class BuildAdmissionCounselingContext
             $truncated = true;
         }
 
-        return ['facts' => $facts, 'truncated' => $truncated, 'checked_at' => $now->format('d/m/Y H:i:s'), 'timezone' => (string) config('app.timezone')];
+        return ['facts' => $facts, 'truncated' => $truncated, 'has_open_rounds' => $hasOpenRounds, 'checked_at' => $now->format('d/m/Y H:i:s'), 'timezone' => (string) config('app.timezone')];
+    }
+
+    /** Historical browsing retains catalog checks, but does not grant registration eligibility. */
+    private function publishedOffering(CandidateMajorOffering $offering, AdmissionRound $round): bool
+    {
+        $program = $offering->admissionProgram;
+
+        return $program !== null && $offering->is_selectable
+            && (int) $program->admission_round_id === (int) $round->id
+            && (int) $offering->major_id === (int) $program->major_id
+            && $program->status === 'active' && $program->quota > 0
+            && $program->major?->is_active && $program->admissionMethod?->is_active;
     }
 
     /** @param array<string, mixed> $metadata */
