@@ -32,6 +32,6 @@ class CandidateMajorOfferingPolicy
 
     public function delete(User $user, CandidateMajorOffering $offering): bool
     {
-        return $this->viewAny($user) && ! $offering->wishes()->exists();
+        return $this->viewAny($user) && ! $offering->wishes()->exists() && ! $offering->quotaVersions()->exists();
     }
 }

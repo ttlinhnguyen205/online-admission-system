@@ -40,7 +40,7 @@ class StaffApplicationReview
                 'status' => ApplicationStatus::NeedsRevision,
                 'reviewed_by' => Auth::id(),
                 'reviewed_at' => now(config('app.timezone')),
-                'revision_reason' => $reason
+                'revision_reason' => $reason,
             ], 'application.revision_requested');
             $application->candidateProfile()->firstOrFail()->user()->firstOrFail()->notify(new ApplicationRevisionRequested($application->getKey(), $reason));
         });
@@ -57,7 +57,7 @@ class StaffApplicationReview
                 'status' => ApplicationStatus::Verified,
                 'reviewed_by' => Auth::id(),
                 'reviewed_at' => now(config('app.timezone')),
-                'revision_reason' => null
+                'revision_reason' => null,
             ], 'application.verified');
         });
     }
@@ -102,7 +102,7 @@ class StaffApplicationReview
                 'status' => DocumentStatus::Verified,
                 'verified_by' => Auth::id(),
                 'verified_at' => now(config('app.timezone')),
-                'rejection_reason' => null
+                'rejection_reason' => null,
             ], 'document.verified');
         });
     }
@@ -122,7 +122,7 @@ class StaffApplicationReview
                 'status' => DocumentStatus::Rejected,
                 'verified_by' => null,
                 'verified_at' => null,
-                'rejection_reason' => $reason
+                'rejection_reason' => $reason,
             ], 'document.rejected');
         });
     }
@@ -148,12 +148,15 @@ class StaffApplicationReview
     private function mutate(int $id, string $expected, ApplicationStatus $state, \Closure $operation): void
     {
         DB::transaction(function () use ($id, $expected, $state, $operation): void {
+            if (Application::query()->whereKey($id)->value('registration_mode') === 'native') {
+                AdmissionCatalogLock::acquire();
+            }
             $application = $this->snapshots->load($id, true);
             Gate::authorize('review', $application);
             if ($application->getAttribute('status') !== $state) {
                 throw ValidationException::withMessages(['review' => __('The application is no longer in the required review state. Reload before continuing.')]);
             }
-            if ($application->wishes->contains(fn($wish): bool => $wish->result !== null)) {
+            if ($application->wishes->contains(fn ($wish): bool => $wish->result !== null)) {
                 throw ValidationException::withMessages(['review' => __('Admission results already exist. Review mutations are blocked for this historical application.')]);
             }
             if (! hash_equals($this->snapshots->fingerprint($application), $expected)) {
@@ -170,8 +173,8 @@ class StaffApplicationReview
             $form[$field] = trim($form[$field]);
         }
         $validated = Validator::make(['form' => $form], [
-            'form' => ['required', 'array:' . $field],
-            'form.' . $field => ['required', 'string', 'max:5000'],
+            'form' => ['required', 'array:'.$field],
+            'form.'.$field => ['required', 'string', 'max:5000'],
         ])->validate();
 
         return $validated['form'][$field];

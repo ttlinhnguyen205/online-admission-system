@@ -1,6 +1,19 @@
 <section class="mx-auto flex w-full max-w-5xl flex-col gap-6">
     <flux:heading size="xl" level="1">{{ __('Kết quả xét tuyển') }}</flux:heading>
     <flux:error name="engine" />
+    @if ($nativeResults)
+        @foreach ($nativeResults as $entry)
+            <article wire:key="native-result-{{ $entry->id }}">
+                <flux:heading>{{ $entry->version->admissionRound->name }} · Native V{{ $entry->version->version }}</flux:heading>
+                <flux:text>{{ $entry->decision === 'admitted' ? 'Trúng tuyển' : 'Không trúng tuyển' }}</flux:text>
+                @if ($entry->decision === 'admitted')
+                    <flux:text>NV{{ $entry->getAttribute('payload')['priority'] }} · {{ $entry->getAttribute('payload')['major_name'] }} · Điểm: {{ $entry->score }}</flux:text>
+                @endif
+                <flux:text>{{ $entry->reason }} · Công bố: {{ $entry->version->published_at->format('d/m/Y H:i:s') }}</flux:text>
+            </article>
+        @endforeach
+        {{ $nativeResults->links() }}
+    @endif
     @forelse ($results as $result)
         <article wire:key="result-{{ $result->id }}" class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
             <flux:heading size="lg">{{ __('Đợt tuyển sinh') }}: {{ $result->admissionWish->application->admissionRound->name }}</flux:heading>
@@ -18,7 +31,9 @@
             @endif
         </article>
     @empty
-        <flux:text>{{ __('Chưa có kết quả xét tuyển nào được công bố cho bạn.') }}</flux:text>
+        @if (!$nativeResults || $nativeResults->isEmpty())
+            <flux:text>{{ __('Chưa có kết quả xét tuyển nào được công bố cho bạn.') }}</flux:text>
+        @endif
     @endforelse
     {{ $results->links() }}
     <div role="status" wire:loading.delay>{{ __('Đang tải...') }}</div>

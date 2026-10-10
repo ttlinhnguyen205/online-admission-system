@@ -7,11 +7,14 @@ use App\Enums\ApplicationStatus;
 use App\Models\AdmissionResult;
 use App\Models\AdmissionWish;
 use App\Models\Application;
+use App\Models\NativeAdmissionWish;
+use App\Models\NativeResultEntry;
 use App\Models\User;
 use App\Support\AdmissionReportFilters;
 use App\Support\CandidateStatusLabels;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 
 class AdmissionStatistics
 {
@@ -68,6 +71,12 @@ class AdmissionStatistics
         return $query;
     }
 
+    /** @return Builder<NativeResultEntry> */
+    public function nativeResults(User $user, AdmissionReportFilters $filters): Builder
+    {
+        return NativeResultEntry::query()->published()->whereIn('application_id', $this->applications($user, $filters)->select('applications.id'));
+    }
+
     /** @return array{metrics: array<string, int>, statuses: list<array{label: string, count: int}>, charts: array<string, list<array{label: string, count: int}>>} */
     public function build(User $user, AdmissionReportFilters $filters): array
     {
@@ -90,6 +99,19 @@ class AdmissionStatistics
             'Hoàn tất xét tuyển' => (int) ($counts[ApplicationStatus::Completed->value] ?? 0),
             'Đã có lần xét duyệt' => (clone $applications)->whereNotNull('reviewed_at')->count(),
         ];
+        $nativeApplications = (clone $applications)->where('registration_mode', 'native');
+        $nativeCount = (clone $nativeApplications)->count();
+        if ($nativeCount > 0) {
+            $metrics['Hồ sơ Native đã nộp'] = $nativeCount;
+            $metrics['Nguyện vọng Native (theo ngành)'] = NativeAdmissionWish::query()
+                ->whereIn('application_id', $nativeApplications->select('applications.id'))->count();
+            if (Schema::hasTable('native_result_entries')) {
+                $nativeResults = $this->nativeResults($actor, $filters);
+                $metrics['Kết quả Native đã công bố'] = (clone $nativeResults)->count();
+                $metrics['Trúng tuyển Native đã công bố'] = (clone $nativeResults)->where('decision', 'admitted')->count();
+                $metrics['Không trúng tuyển Native đã công bố'] = (clone $nativeResults)->where('decision', 'not_admitted')->count();
+            }
+        }
         foreach (AdmissionDecision::cases() as $decision) {
             $metrics[CandidateStatusLabels::result($decision)] = (clone $results)->where('decision', $decision)->count();
         }

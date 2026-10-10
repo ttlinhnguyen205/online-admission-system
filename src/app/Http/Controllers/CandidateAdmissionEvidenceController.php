@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\AdmissionReviewSnapshot;
 use App\Actions\CandidateFiles;
+use App\Models\CandidateExamResult;
+use App\Models\CandidateTranscript;
 use App\Models\CandidateTranscriptEvidence;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +19,22 @@ class CandidateAdmissionEvidenceController extends Controller
     public function __invoke(Request $request, string $type, int $record): StreamedResponse
     {
         $user = $request->user();
-        abort_unless($user instanceof User && $user->isCandidate(), 403);
+        abort_unless($user instanceof User, 403);
+        if (! $user->isCandidate()) {
+            AdmissionReviewSnapshot::reviewer();
+            $model = match ($type) {
+                'exam-results' => CandidateExamResult::query()->where('exam_type', 'thpt')->findOrFail($record),
+                'transcripts' => CandidateTranscript::query()->findOrFail($record),
+                'transcript-images' => CandidateTranscriptEvidence::query()->with('transcript')->findOrFail($record),
+                default => abort(403),
+            };
+            $source = $model instanceof CandidateTranscriptEvidence ? $model->transcript : $model;
+            $application = $source->candidateProfile->applications()->where('registration_mode', 'native')->whereNotNull('submitted_at')->firstOrFail();
+            Gate::authorize('view', $application);
+            $prefix = ($type === 'exam-results' ? 'candidate-exam-results/' : 'candidate-transcripts/').$application->candidate_profile_id.'/';
+
+            return $this->response($model, $prefix, $type === 'transcript-images' ? 'path' : 'evidence_path');
+        }
         $profile = $user->candidateProfile()->firstOrFail();
         if ($type === 'transcript-images') {
             $image = CandidateTranscriptEvidence::query()

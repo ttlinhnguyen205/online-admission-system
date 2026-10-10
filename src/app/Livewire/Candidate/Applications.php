@@ -52,7 +52,7 @@ class Applications extends CandidatePage
                 ->where('start_date', '<=', now(config('app.timezone')))->where('end_date', '>=', now(config('app.timezone')))
                 ->whereDoesntHave('applications', fn ($query) => $query->whereBelongsTo($profile))
                 ->orderBy('start_date')->orderBy('id')->get()
-                ->filter(fn (AdmissionRound $round): bool => CandidateApplications::roundIsOpen($round));
+                ->filter(fn (AdmissionRound $round): bool => CandidateApplications::registrationIsOpen($round));
         }
 
         return view('livewire.candidate.applications', compact('profile', 'records', 'rounds'));

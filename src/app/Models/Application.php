@@ -9,10 +9,32 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
-#[Fillable(['application_code', 'candidate_profile_id', 'admission_round_id', 'status', 'submitted_at', 'reviewed_by', 'reviewed_at', 'revision_reason'])]
+#[Fillable(['application_code', 'candidate_profile_id', 'admission_round_id', 'status', 'submitted_at', 'reviewed_by', 'reviewed_at', 'revision_reason', 'registration_mode'])]
 class Application extends Model
 {
+    protected static function booted(): void
+    {
+        static::updating(function (self $application): void {
+            if ($application->isDirty('registration_mode')) {
+                throw ValidationException::withMessages(['submission' => 'Không tự chuyển chế độ hồ sơ legacy/native.']);
+            }
+        });
+    }
+
+    /** @return HasMany<NativeAdmissionWish, $this> */
+    public function nativeWishes(): HasMany
+    {
+        return $this->hasMany(NativeAdmissionWish::class);
+    }
+
+    /** @return HasMany<ApplicationSubmissionSnapshot, $this> */
+    public function submissionSnapshots(): HasMany
+    {
+        return $this->hasMany(ApplicationSubmissionSnapshot::class);
+    }
+
     /** @use HasFactory<ApplicationFactory> */
     use HasFactory;
 

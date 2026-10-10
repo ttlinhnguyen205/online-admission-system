@@ -49,8 +49,8 @@ class AdmissionReviewSnapshot
             abort_unless($actor instanceof User && $actor->isActive() && $actor->canReviewAdmissions() && $actor->hasVerifiedEmail(), 403);
             Auth::setUser($actor);
         }
-        $profile = CandidateProfile::query()->whereKey($hint->getAttribute('candidate_profile_id'))->when($lock, fn($q) => $q->lockForUpdate())->first();
-        $application = Application::query()->whereKey($id)->when($lock, fn($q) => $q->lockForUpdate())->firstOrFail();
+        $profile = CandidateProfile::query()->whereKey($hint->getAttribute('candidate_profile_id'))->when($lock, fn ($q) => $q->lockForUpdate())->first();
+        $application = Application::query()->whereKey($id)->when($lock, fn ($q) => $q->lockForUpdate())->firstOrFail();
         Gate::authorize('view', $application);
         if (
             $application->getAttribute('candidate_profile_id') !== $hint->getAttribute('candidate_profile_id')
@@ -62,15 +62,15 @@ class AdmissionReviewSnapshot
         if ($profile !== null) {
             $profile->setRelation('user', $lock ? $users->get($profile->getAttribute('user_id')) : $profile->user()->first());
         }
-        $documents = $application->documents()->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get();
-        $scores = $profile?->scores()->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get();
+        $documents = $application->documents()->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get();
+        $scores = $profile?->scores()->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get();
         $profile?->setRelation('scores', $scores);
-        $wishes = $application->wishes()->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get();
-        $programs = AdmissionProgram::query()->whereKey($wishes->pluck('admission_program_id'))->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get()->keyBy('id');
-        $round = AdmissionRound::query()->whereKey($application->getAttribute('admission_round_id'))->when($lock, fn($q) => $q->lockForUpdate())->first();
-        $majors = Major::query()->whereKey($programs->pluck('major_id'))->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get()->keyBy('id');
-        $methods = AdmissionMethod::query()->whereKey($programs->pluck('admission_method_id'))->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get()->keyBy('id');
-        $results = AdmissionResult::query()->whereIn('admission_wish_id', $wishes->modelKeys())->orderBy('id')->when($lock, fn($q) => $q->lockForUpdate())->get()->keyBy('admission_wish_id');
+        $wishes = $application->wishes()->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get();
+        $programs = AdmissionProgram::query()->whereKey($wishes->pluck('admission_program_id'))->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('id');
+        $round = AdmissionRound::query()->whereKey($application->getAttribute('admission_round_id'))->when($lock, fn ($q) => $q->lockForUpdate())->first();
+        $majors = Major::query()->whereKey($programs->pluck('major_id'))->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('id');
+        $methods = AdmissionMethod::query()->whereKey($programs->pluck('admission_method_id'))->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('id');
+        $results = AdmissionResult::query()->whereIn('admission_wish_id', $wishes->modelKeys())->orderBy('id')->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('admission_wish_id');
         foreach ($programs as $program) {
             $program->setRelation('major', $majors->get($program->getAttribute('major_id')));
             $program->setRelation('admissionMethod', $methods->get($program->getAttribute('admission_method_id')));
@@ -93,7 +93,7 @@ class AdmissionReviewSnapshot
                 'application.verified',
             ])
             ->orderByDesc('id')
-            ->when($lock, fn($q) => $q->lockForUpdate())
+            ->when($lock, fn ($q) => $q->lockForUpdate())
             ->first());
 
         return $application;
@@ -109,9 +109,9 @@ class AdmissionReviewSnapshot
             'profile' => $this->fields($profile, ['id', 'user_id', 'candidate_code', 'date_of_birth', 'gender', 'citizen_id', 'phone', 'address', 'province_code', 'high_school_code', 'high_school_name', 'graduation_year', 'priority_area', 'priority_object', 'photo_path', 'profile_status']),
             'user' => $this->fields($profile?->user, ['id', 'name', 'email']),
             'round' => $this->fields($application->admissionRound, ['id']),
-            'documents' => $application->documents->map(fn($d) => $this->fields($d, ['id', 'application_id', 'document_type', 'original_name', 'file_path', 'mime_type', 'file_size', 'status', 'verified_by', 'verified_at', 'rejection_reason']))->all(),
-            'scores' => $profile?->scores->map(fn($s) => $this->fields($s, ['id', 'candidate_profile_id', 'score_type', 'subject_code', 'subject_name', 'score', 'exam_year', 'evidence_path', 'verified', 'verified_by']))->all(),
-            'wishes' => $application->wishes->map(fn($w) => [
+            'documents' => $application->documents->map(fn ($d) => $this->fields($d, ['id', 'application_id', 'document_type', 'original_name', 'file_path', 'mime_type', 'file_size', 'status', 'verified_by', 'verified_at', 'rejection_reason']))->all(),
+            'scores' => $profile?->scores->map(fn ($s) => $this->fields($s, ['id', 'candidate_profile_id', 'score_type', 'subject_code', 'subject_name', 'score', 'exam_year', 'evidence_path', 'verified', 'verified_by']))->all(),
+            'wishes' => $application->wishes->map(fn ($w) => [
                 $this->fields($w, ['id', 'application_id', 'admission_program_id', 'priority']),
                 $this->fields($w->admissionProgram, ['id', 'admission_round_id', 'major_id', 'admission_method_id']),
                 $w->admissionProgram?->major?->getKey(),
@@ -119,6 +119,12 @@ class AdmissionReviewSnapshot
                 $w->result?->getKey(),
             ])->all(),
         ];
+
+        if ($application->registration_mode === 'native') {
+            $data['native_snapshots'] = $application->submissionSnapshots()->with('entries.bindings')->orderBy('submission_version')->get()->toArray();
+            $data['native_exam_sources'] = $profile?->examResults()->with('subjectScores')->orderBy('id')->get()->toArray();
+            $data['native_transcript_sources'] = $profile?->transcripts()->with(['scores', 'evidenceImages'])->orderBy('id')->get()->toArray();
+        }
 
         return hash_hmac('sha256', json_encode($data, JSON_THROW_ON_ERROR), (string) config('app.key'));
     }
@@ -183,12 +189,15 @@ class AdmissionReviewSnapshot
             $errors['photo'] = __('The required private profile photo is unavailable.');
         }
         $wishes = $application->wishes;
-        if ($wishes->isEmpty()) {
+        if ($application->registration_mode === 'native') {
+            $errors = [...$errors, ...$this->nativeChecklist($application)];
+        }
+        if ($application->registration_mode !== 'native' && $wishes->isEmpty()) {
             $errors['wishes'] = __('At least one wish is required.');
-        } elseif (
+        } elseif ($application->registration_mode !== 'native' && (
             $wishes->sortBy('priority')->pluck('priority')->values()->all() !== range(1, $wishes->count())
             || $wishes->pluck('admission_program_id')->unique()->count() !== $wishes->count()
-        ) {
+        )) {
             $errors['wishes'] = __('Wish priorities must be contiguous and programs must not repeat.');
         }
         foreach ($wishes as $wish) {
@@ -211,8 +220,51 @@ class AdmissionReviewSnapshot
                 $errors['files'] = __('One or more private document files are unavailable.');
             }
         }
-        if ($profile?->scores->contains(fn($score): bool => ! $score->getAttribute('verified'))) {
+        if ($application->registration_mode !== 'native' && $profile?->scores->contains(fn ($score): bool => ! $score->getAttribute('verified'))) {
             $errors['scores'] = __('Every existing profile score must be verified.');
+        }
+
+        return $errors;
+    }
+
+    /** @return array<string, string> */
+    private function nativeChecklist(Application $application): array
+    {
+        $errors = [];
+        $snapshot = $application->submissionSnapshots()->orderByDesc('submission_version')->with('entries.bindings')->first();
+        if ($snapshot === null || $snapshot->sealed_at === null || $snapshot->registration_mode !== 'native'
+            || ! hash_equals($snapshot->content_hash, NativeWishRegistration::hash($snapshot->getAttribute('manifest')))
+            || $snapshot->getAttribute('manifest') !== $snapshot->entries->sortBy('priority')->pluck('payload')->values()->all()) {
+            return ['submission' => 'Snapshot Native thiếu hoặc không toàn vẹn.'];
+        }
+        $entries = $snapshot->entries->sortBy('priority');
+        if ($entries->isEmpty() || $entries->pluck('priority')->values()->all() !== range(1, $entries->count())
+            || $entries->pluck('major_id')->unique()->count() !== $entries->count() || $application->wishes->isNotEmpty()) {
+            $errors['wishes'] = 'Nguyện vọng Native không hợp lệ hoặc trộn dữ liệu legacy.';
+        }
+        $scoring = new NativeAdmissionScoring(new EvaluationTemplateRegistry);
+        foreach ($entries as $entry) {
+            if ($entry->application_id !== $application->id || $entry->admission_round_id !== $application->admission_round_id
+                || ! hash_equals($entry->content_hash, NativeWishRegistration::hash($entry->getAttribute('payload')))
+                || $entry->bindings->isEmpty() || $entry->getAttribute('payload')['methods'] !== $entry->bindings->sortBy('id')->pluck('catalog_reference')->values()->all()) {
+                $errors['wishes'] = 'Entry hoặc method bindings Native không toàn vẹn.';
+
+                continue;
+            }
+            foreach ($entry->bindings as $binding) {
+                $ref = $binding->getAttribute('catalog_reference');
+                if (! hash_equals($binding->binding_hash, NativeWishRegistration::hash($ref)) || $binding->admission_round_id !== $entry->admission_round_id
+                    || $binding->major_id !== $entry->major_id || $ref['rule_id'] !== $binding->evaluation_rule_version_id
+                    || $ref['program_id'] !== $binding->admission_program_id || $ref['method_id'] !== $binding->admission_method_id) {
+                    $errors['wishes'] = 'Pinned binding Native không toàn vẹn.';
+
+                    continue;
+                }
+                $evaluation = $scoring->evaluate($binding, $application->candidate_profile_id);
+                if (! in_array($evaluation['status'], ['eligible', 'ineligible'], true)) {
+                    $errors['sources'] = 'Nguồn điểm Native chưa hợp lệ: '.implode(' ', $evaluation['reasons']);
+                }
+            }
         }
 
         return $errors;

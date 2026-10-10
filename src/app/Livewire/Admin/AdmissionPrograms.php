@@ -2,16 +2,20 @@
 
 namespace App\Livewire\Admin;
 
+use App\Actions\NativeRegistrationReadiness;
 use App\Models\AdmissionMethod;
 use App\Models\AdmissionProgram;
 use App\Models\AdmissionRound;
+use App\Models\EvaluationRuleVersion;
 use App\Models\Major;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 
@@ -29,6 +33,24 @@ class AdmissionPrograms extends ConfigurationPage
 
     #[Locked]
     public bool $relationshipsLocked = false;
+
+    #[Locked]
+    public ?int $ruleProgramId = null;
+
+    public bool $showRules = false;
+
+    public function manageRules(?int $id = null): void
+    {
+        Gate::authorize('viewAny', EvaluationRuleVersion::class);
+        if ($id !== null) {
+            Gate::authorize('update', AdmissionProgram::query()->findOrFail($id));
+        }
+        $this->ruleProgramId = $id;
+        $this->showRules = true;
+    }
+
+    #[On('evaluation-rules-changed')]
+    public function refreshRules(): void {}
 
     protected function modelClass(): string
     {
@@ -54,7 +76,7 @@ class AdmissionPrograms extends ConfigurationPage
 
     protected function recordForm(Model $record): array
     {
-        $this->relationshipsLocked = $record instanceof AdmissionProgram && ($record->wishes()->exists() || $record->candidateMajorOfferings()->exists());
+        $this->relationshipsLocked = $record instanceof AdmissionProgram && ($record->wishes()->exists() || $record->candidateMajorOfferings()->exists() || $record->quotaMethodLimits()->exists());
 
         return parent::recordForm($record);
     }
@@ -85,7 +107,7 @@ class AdmissionPrograms extends ConfigurationPage
             Gate::authorize('view', $parent);
         }
 
-        if ($record instanceof AdmissionProgram && ($record->wishes()->exists() || $record->candidateMajorOfferings()->exists())) {
+        if ($record instanceof AdmissionProgram && ($record->wishes()->exists() || $record->candidateMajorOfferings()->exists() || $record->quotaMethodLimits()->exists())) {
             foreach (array_keys($parents) as $field) {
                 if ((int) $validated[$field] !== (int) $record->getAttribute($field)) {
                     throw ValidationException::withMessages(['form.'.$field => __('The round, major and method cannot change once this program has wishes or candidate offerings.')]);
@@ -121,7 +143,7 @@ class AdmissionPrograms extends ConfigurationPage
         }
         $this->validateOnly('statusFilter', ['statusFilter' => ['nullable', Rule::in(['active', 'inactive'])]]);
 
-        return AdmissionProgram::query()->with(['admissionRound', 'major', 'admissionMethod'])->withCount('wishes')
+        return AdmissionProgram::query()->with(['admissionRound', 'major', 'admissionMethod', 'evaluationRule'])->withCount('wishes')
             ->where(function (Builder $query): void {
                 foreach (['admissionRound', 'major', 'admissionMethod'] as $relation) {
                     $query->orWhereHas($relation, function (Builder $related): void {
@@ -152,6 +174,19 @@ class AdmissionPrograms extends ConfigurationPage
     public function updatedRoundFilter(): void
     {
         $this->resetPage();
+    }
+
+    /** @param LengthAwarePaginator<int, Model> $records */
+    protected function recordData(LengthAwarePaginator $records): array
+    {
+        $readiness = app(NativeRegistrationReadiness::class);
+        $statuses = [];
+        foreach ($records as $record) {
+            assert($record instanceof AdmissionProgram);
+            $statuses[$record->id] = $readiness->programReady($record);
+        }
+
+        return ['ruleReadiness' => $statuses];
     }
 
     public function updatedMajorFilter(): void

@@ -2,12 +2,15 @@
 
 namespace App\Livewire\Admin;
 
+use App\Actions\NativeRegistrationReadiness;
 use App\Models\AdmissionProgram;
 use App\Models\AdmissionRound;
 use App\Models\CandidateMajorOffering;
 use App\Models\Major;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
@@ -22,6 +25,15 @@ class CandidateMajorOfferings extends ConfigurationPage
 
     #[Locked]
     public bool $relationshipsLocked = false;
+
+    #[Locked]
+    public ?int $quotaOfferingId = null;
+
+    public function manageQuota(int $id): void
+    {
+        Gate::authorize('update', CandidateMajorOffering::query()->findOrFail($id));
+        $this->quotaOfferingId = $id;
+    }
 
     protected function modelClass(): string
     {
@@ -46,7 +58,7 @@ class CandidateMajorOfferings extends ConfigurationPage
 
     protected function recordForm(Model $record): array
     {
-        $this->relationshipsLocked = $record instanceof CandidateMajorOffering && $record->wishes()->exists();
+        $this->relationshipsLocked = $record instanceof CandidateMajorOffering && ($record->wishes()->exists() || $record->quotaVersions()->exists());
 
         return parent::recordForm($record);
     }
@@ -64,7 +76,7 @@ class CandidateMajorOfferings extends ConfigurationPage
 
     protected function attributesForSave(array $validated, ?Model $record): array
     {
-        if ($record instanceof CandidateMajorOffering && $record->wishes()->exists()) {
+        if ($record instanceof CandidateMajorOffering && ($record->wishes()->exists() || $record->quotaVersions()->exists())) {
             foreach (['admission_round_id', 'major_id', 'admission_program_id'] as $field) {
                 if ((int) ($validated[$field] ?? 0) !== (int) $record->getAttribute($field)) {
                     throw ValidationException::withMessages(['form.'.$field => __('This offering has wishes. Its round, major and compatibility program cannot change. Existing wishes retain their pinned program.')]);
@@ -167,5 +179,21 @@ class CandidateMajorOfferings extends ConfigurationPage
                     ->with('admissionMethod')->orderBy('id')->get()
                 : collect(),
         ];
+    }
+
+    protected function recordData(LengthAwarePaginator $records): array
+    {
+        $catalog = AdmissionProgram::query()->with(['admissionMethod', 'evaluationRule'])
+            ->whereIn('admission_round_id', $records->getCollection()->pluck('admission_round_id'))
+            ->whereIn('major_id', $records->getCollection()->pluck('major_id'))
+            ->orderBy('id')->get();
+        $readiness = app(NativeRegistrationReadiness::class);
+        $statuses = [];
+        foreach ($records as $record) {
+            assert($record instanceof CandidateMajorOffering);
+            $statuses[$record->id] = $readiness->check($record, $catalog);
+        }
+
+        return ['catalogPrograms' => $catalog->groupBy(fn (AdmissionProgram $program): string => $program->admission_round_id.'-'.$program->major_id), 'nativeReadiness' => $statuses];
     }
 }

@@ -41,6 +41,9 @@
                 <flux:table.cell>
                     <div class="font-medium">{{ $record->name }}</div>
                     <div class="text-xs text-zinc-500">{{ $record->code }}</div>
+                    @can('manageNativeRegistration', $record)
+                        <div class="mt-3"><flux:button size="sm" wire:click="manageNativeRegistration({{ $record->id }})">Đăng ký nguyện vọng native · {{ $record->nativeRegistrationState() }}</flux:button></div>
+                    @endcan
                 </flux:table.cell>
 
                 <flux:table.cell>
@@ -116,6 +119,12 @@
             @endforelse
         </flux:table.rows>
     </flux:table>
+
+    <flux:modal wire:model="showNativeRegistration" class="w-full md:max-w-4xl">
+        @if ($showNativeRegistration && $nativeRoundId !== null)
+            <livewire:admin.native-round-registration :round-id="$nativeRoundId" :key="'native-round-'.$nativeRoundId" />
+        @endif
+    </flux:modal>
 
     <x-slot:editor>
         <flux:input

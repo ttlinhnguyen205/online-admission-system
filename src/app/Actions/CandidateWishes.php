@@ -32,6 +32,7 @@ class CandidateWishes
                 $application = CandidateApplications::lockApplication(CandidateApplications::lockProfile(), $applicationId);
                 Gate::authorize('create', [AdmissionWish::class, $application]);
                 CandidateApplications::requireEditable($application);
+                abort_unless($application->registration_mode === 'legacy', 403);
                 Gate::authorize('browseForApplication', [AdmissionProgram::class, $application]);
                 $wishes = $application->wishes()->orderBy('id')->lockForUpdate()->get();
                 $offering = CandidateMajorOffering::query()->where('admission_round_id', $application->getAttribute('admission_round_id'))
@@ -79,6 +80,7 @@ class CandidateWishes
             DB::transaction(function () use ($applicationId, $wishId, $expectedOrder): void {
                 $application = CandidateApplications::lockApplication(CandidateApplications::lockProfile(), $applicationId);
                 CandidateApplications::requireEditable($application);
+                abort_unless($application->registration_mode === 'legacy', 403);
                 $wishes = $application->wishes()->orderBy('id')->lockForUpdate()->get();
                 $wish = $wishes->firstWhere('id', $wishId);
                 abort_if($wish === null, 404);
@@ -128,6 +130,7 @@ class CandidateWishes
         DB::transaction(function () use ($applicationId, $order, $expectedOrder): void {
             $application = CandidateApplications::lockApplication(CandidateApplications::lockProfile(), $applicationId);
             CandidateApplications::requireEditable($application);
+            abort_unless($application->registration_mode === 'legacy', 403);
             $wishes = $application->wishes()->orderBy('id')->lockForUpdate()->get();
             $round = $application->admissionRound()->lockForUpdate()->firstOrFail();
             CandidateApplications::requireOpenRound($round);

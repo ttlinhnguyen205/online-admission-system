@@ -7,14 +7,28 @@ use App\Models\AdmissionRound;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 
 #[Title('Admission Rounds')]
 class AdmissionRounds extends ConfigurationPage
 {
+    #[Locked]
+    public ?int $nativeRoundId = null;
+
+    public bool $showNativeRegistration = false;
+
+    public function manageNativeRegistration(int $id): void
+    {
+        Gate::authorize('manageNativeRegistration', AdmissionRound::query()->findOrFail($id));
+        $this->nativeRoundId = $id;
+        $this->showNativeRegistration = true;
+    }
+
     #[Url]
     public string $yearFilter = '';
 

@@ -35,6 +35,7 @@ class CandidateApplications
         for ($attempt = 0; $attempt < 3; $attempt++) {
             try {
                 return DB::transaction(function () use ($validated): Application {
+                    AdmissionCatalogLock::acquire();
                     $profile = self::lockProfile();
                     Gate::authorize('create', [Application::class, $profile]);
                     Gate::authorize('browseForCandidate', [AdmissionRound::class, $profile]);
@@ -42,10 +43,14 @@ class CandidateApplications
                     if ($round === null || ! self::roundIsOpen($round)) {
                         throw ValidationException::withMessages(['form.admission_round_id' => __('Đợt tuyển sinh này hiện không nhận hồ sơ.')]);
                     }
+                    if (! self::registrationIsOpen($round)) {
+                        throw ValidationException::withMessages(['form.admission_round_id' => 'Đợt chưa kích hoạt đăng ký native hoặc đăng ký đã bị khóa.']);
+                    }
                     if ($profile->applications()->whereBelongsTo($round)->exists()) {
                         throw ValidationException::withMessages(['form.admission_round_id' => __('Bạn đã có hồ sơ cho đợt tuyển sinh này. Hãy mở trong danh sách hồ sơ.')]);
                     }
                     $application = $profile->applications()->make([
+                        'registration_mode' => $round->nativeRegistrationState() === 'native_open' ? 'native' : 'legacy',
                         'application_code' => 'APP-'.Str::ulid(),
                         'admission_round_id' => $round->getKey(),
                         'status' => ApplicationStatus::Draft,
@@ -72,9 +77,17 @@ class CandidateApplications
         throw ValidationException::withMessages(['form' => __('Không thể tạo mã hồ sơ. Vui lòng thử lại.')]);
     }
 
-    public function submit(int $applicationId): void
+    public function submit(int $applicationId, ?string $expectedCatalogFingerprint = null): void
     {
+        $application = Application::query()->whereHas('candidateProfile', fn ($query) => $query->where('user_id', Auth::id()))->findOrFail($applicationId);
+        Gate::authorize('view', $application);
+        if ($application->registration_mode === 'native') {
+            app(NativeWishRegistration::class)->submit($applicationId, $expectedCatalogFingerprint);
+
+            return;
+        }
         DB::transaction(function () use ($applicationId): void {
+            AdmissionCatalogLock::acquire();
             $profile = self::lockProfile();
             $application = self::lockApplication($profile, $applicationId);
             Gate::authorize('submit', $application);
@@ -109,6 +122,18 @@ class CandidateApplications
             }
 
             self::requireOpenRound($round);
+            $manifest = $wishes->sortBy('priority')->map(fn ($wish): array => [
+                'wish' => $wish->only(['id', 'candidate_major_offering_id', 'admission_program_id', 'priority']),
+                'program' => $programs->get($wish->admission_program_id)->only(['id', 'admission_round_id', 'major_id', 'admission_method_id', 'quota', 'minimum_score']),
+            ])->values()->all();
+            $previous = $application->submissionSnapshots()->orderByDesc('submission_version')->lockForUpdate()->first();
+            $application->submissionSnapshots()->create([
+                'submission_version' => ($previous->submission_version ?? 0) + 1,
+                'submitted_at' => now(), 'sealed_at' => now(), 'registration_mode' => 'legacy', 'readiness' => 'legacy_only',
+                'catalog_fingerprint' => NativeWishRegistration::hash($manifest),
+                'manifest' => $manifest, 'content_hash' => NativeWishRegistration::hash($manifest),
+                'amendment_metadata' => $previous === null ? null : ['previous_snapshot_id' => $previous->id, 'revision_reason' => $application->revision_reason],
+            ]);
             $application->fill(['status' => ApplicationStatus::Submitted, 'submitted_at' => now(config('app.timezone'))]);
             if (! $application->save()) {
                 throw ValidationException::withMessages(['submission' => __('Không thể nộp hồ sơ xét tuyển.')]);
@@ -142,6 +167,9 @@ class CandidateApplications
     /** Check the locked row as well as policies that may query a repeatable-read snapshot. */
     public static function requireEditable(Application $application): void
     {
+        $round = $application->admissionRound()->firstOrFail();
+        abort_unless($application->registration_mode === 'native'
+            ? NativeWishRegistration::openForRound($round) : $round->nativeRegistrationState() === 'legacy', 403);
         Gate::authorize('update', $application);
         abort_unless(in_array($application->getAttribute('status'), [ApplicationStatus::Draft, ApplicationStatus::NeedsRevision], true), 403);
     }
@@ -157,6 +185,11 @@ class CandidateApplications
         return $round->getAttribute('status') === AdmissionRoundStatus::Open
             && $end->greaterThan($start)
             && $now->betweenIncluded($start, $end);
+    }
+
+    public static function registrationIsOpen(AdmissionRound $round): bool
+    {
+        return self::roundIsOpen($round) && ($round->nativeRegistrationState() === 'legacy' || NativeWishRegistration::openForRound($round));
     }
 
     public static function requireOpenRound(AdmissionRound $round): void

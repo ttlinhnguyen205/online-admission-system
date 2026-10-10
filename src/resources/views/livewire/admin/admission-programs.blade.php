@@ -38,6 +38,9 @@
         </flux:select>
     </x-slot:filters>
 
+    @can('viewAny', App\Models\EvaluationRuleVersion::class)
+        <flux:button wire:click="manageRules">Quản lý quy tắc đánh giá</flux:button>
+    @endcan
     <flux:table :paginate="$records">
         <flux:table.columns>
             <flux:table.column>{{ __('Offering') }}</flux:table.column>
@@ -46,6 +49,7 @@
             <flux:table.column>{{ __('Minimum score') }}</flux:table.column>
             <flux:table.column>{{ __('Tuition') }}</flux:table.column>
             <flux:table.column>{{ __('Status') }}</flux:table.column>
+            <flux:table.column>Rule native</flux:table.column>
             <flux:table.column>{{ __('Actions') }}</flux:table.column>
         </flux:table.columns>
 
@@ -78,7 +82,16 @@
                 </flux:table.cell>
 
                 <flux:table.cell>
+                    <flux:badge :color="$ruleReadiness[$record->id] ? 'green' : 'amber'">{{ $ruleReadiness[$record->id] ? 'Rule hợp lệ' : 'Thiếu rule đã duyệt hợp lệ' }}</flux:badge>
+                    @if ($record->evaluationRule)
+                        <div class="text-xs text-zinc-500 dark:text-zinc-400">#{{ $record->evaluationRule->id }} / v{{ $record->evaluationRule->version }} · {{ ['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$record->evaluationRule->status] ?? $record->evaluationRule->status }}</div>
+                    @endif
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="flex justify-end gap-2">
+                        @can('viewAny', App\Models\EvaluationRuleVersion::class)
+                            <flux:button size="sm" wire:click="manageRules({{ $record->id }})">Cấu hình rule</flux:button>
+                        @endcan
                         <flux:button size="sm" wire:click="details({{ $record->id }})">
                             {{ __('View') }}
                         </flux:button>
@@ -100,7 +113,7 @@
             </flux:table.row>
             @empty
             <flux:table.row>
-                <flux:table.cell colspan="7">
+                <flux:table.cell colspan="8">
                     <div class="py-12 text-center">
                         @if ($this->search !== '' || $this->statusFilter !== '' || $this->roundFilter !== '' || $this->majorFilter !== '' || $this->methodFilter !== '')
                         <flux:heading>
@@ -126,6 +139,11 @@
         </flux:table.rows>
     </flux:table>
 
+    <flux:modal wire:model="showRules" class="w-full md:max-w-5xl">
+        @if ($showRules)
+            <livewire:admin.evaluation-rules :program-id="$ruleProgramId" :key="'evaluation-rules-'.($ruleProgramId ?? 'all')" />
+        @endif
+    </flux:modal>
     <x-slot:editor>
         <div class="sm:col-span-2"><flux:callout>{{ __('Score thresholds use the calculated score of the selected method: weighted methods use the sum of subject scores multiplied by weights, while scalar methods use the original score. No automatic normalization is applied. Previous cutoff scores are for reference only. Confirm the approved scale before entering a threshold.') }}</flux:callout></div>
         @if ($this->relationshipsLocked)

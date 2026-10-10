@@ -12,6 +12,11 @@ class AdmissionRoundPolicy
 {
     use RequiresActiveAccount;
 
+    public function manageNativeRegistration(User $user, AdmissionRound $round): bool
+    {
+        return $user->isAdmin() && $user->hasVerifiedEmail();
+    }
+
     public function publishResults(User $user): bool
     {
         return $user->isAdmin() && $user->hasVerifiedEmail();

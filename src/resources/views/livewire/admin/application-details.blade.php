@@ -10,6 +10,9 @@
         </div>
     </div>
     <flux:error name="review" />
+    @if ($application->registration_mode === 'native')
+        <livewire:admin.native-scoring :application-id="$application->id" :key="'scoring-'.$application->id" />
+    @endif
     <flux:error name="form" />
     @if ($stale)<flux:callout variant="warning">{{ __('The review data changed. Reload and inspect the current information before making a decision.') }}</flux:callout>@endif
     @if ($hasResults)<flux:callout variant="warning">{{ __('Admission results already exist. All review mutations are blocked for this historical application.') }}</flux:callout>@endif

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\CandidateMajorOfferingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,5 +44,18 @@ class CandidateMajorOffering extends Model
     public function wishes(): HasMany
     {
         return $this->hasMany(AdmissionWish::class);
+    }
+
+    /** @return Builder<AdmissionProgram> */
+    public function programs(): Builder
+    {
+        return AdmissionProgram::query()->where('admission_round_id', $this->admission_round_id)
+            ->where('major_id', $this->major_id);
+    }
+
+    /** @return HasMany<AdmissionQuotaVersion, $this> */
+    public function quotaVersions(): HasMany
+    {
+        return $this->hasMany(AdmissionQuotaVersion::class);
     }
 }

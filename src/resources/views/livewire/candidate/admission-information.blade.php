@@ -8,6 +8,9 @@
     @else
     <flux:error name="form" />
     <flux:error name="cleanup" />
+    @if (config('admission_registration.native_registration'))
+        <livewire:candidate.native-exam-scores />
+    @endif
 
     <div data-admission-section="certificates" class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
         <div class="flex flex-wrap items-start justify-between gap-3">
@@ -248,6 +251,10 @@
     <flux:modal wire:model="showTranscriptEditor" class="w-full md:max-w-5xl">
         <form wire:submit="saveTranscript" class="space-y-4">
             <flux:heading>{{ $transcriptId ? __('Chỉnh sửa học bạ') : __('Thêm học bạ') }}</flux:heading>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <flux:input wire:model="transcriptForm.school_name" :label="__('Trường THPT')" />
+                <flux:input wire:model="transcriptForm.graduation_year" type="number" :label="__('Năm tốt nghiệp của nguồn học bạ')" />
+            </div>
             <div class="space-y-3">
                 @foreach ([10, 11, 12] as $grade)
                     <div wire:key="transcript-grade-{{ $grade }}" x-data="{ expanded: {{ $grade === 10 ? 'true' : 'false' }} }" class="border-b border-zinc-200 pb-4 dark:border-zinc-700">

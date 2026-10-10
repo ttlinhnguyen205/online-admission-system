@@ -41,6 +41,13 @@ class AdmissionEngineSnapshot
     public function load(int $id, bool $lock = false): array
     {
         $actor = self::actor();
+        if ($lock) {
+            AdmissionCatalogLock::acquire();
+        }
+        $mode = AdmissionRound::query()->whereKey($id)->when($lock, fn ($query) => $query->lockForUpdate())->firstOrFail();
+        if ($mode->nativeRegistrationState() !== 'legacy') {
+            self::fail('Native rounds cannot be processed or published by the legacy admission engine.');
+        }
         $hints = Application::query()->where('admission_round_id', $id)->orderBy('id')->get();
         $profileHints = CandidateProfile::query()->whereKey($hints->pluck('candidate_profile_id'))->orderBy('id')->get();
         $users = User::query()->whereKey([...$profileHints->pluck('user_id')->all(), $actor->id])->orderBy('id')
@@ -53,6 +60,9 @@ class AdmissionEngineSnapshot
             ->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('id');
         $applications = Application::query()->where('admission_round_id', $id)->orderBy('id')
             ->when($lock, fn ($q) => $q->lockForUpdate())->get()->keyBy('id');
+        if ($applications->contains(fn (Application $application): bool => $application->registration_mode === 'native')) {
+            self::fail('Native registration applications cannot be processed by the legacy admission engine.');
+        }
         if ($applications->map->only(['id', 'candidate_profile_id'])->values()->all() !== $hints->map->only(['id', 'candidate_profile_id'])->values()->all()
             || $profiles->map->only(['id', 'user_id'])->values()->all() !== $profileHints->map->only(['id', 'user_id'])->values()->all()) {
             self::fail('The round cohort changed. Preview again.');

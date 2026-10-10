@@ -9,7 +9,9 @@
     </flux:select>
     <flux:error name="roundSelection" />
     <flux:error name="engine" />
-    @if ($selectedRound)
+    @if ($selectedRound && $selectedRound->nativeRegistrationState() !== 'legacy')
+        <livewire:admin.native-results :round-id="$selectedRound->id" :key="'native-results-'.$selectedRound->id" />
+    @elseif ($selectedRound)
         <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($counts as $label => $count)
                 <div wire:key="count-{{ $loop->index }}" class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700"><dt>{{ __($label) }}</dt><dd class="text-2xl font-semibold">{{ $count }}</dd></div>

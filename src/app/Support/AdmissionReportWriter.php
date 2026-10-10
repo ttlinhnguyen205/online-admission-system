@@ -6,11 +6,14 @@ use App\Actions\AdmissionStatistics;
 use App\Enums\AdmissionDecision;
 use App\Enums\ApplicationStatus;
 use App\Enums\WishStatus;
+use App\Models\ApplicationSubmissionSnapshot;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Dompdf\Dompdf;
 use Dompdf\Options as PdfOptions;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use OpenSpout\Common\Entity\Cell;
 use OpenSpout\Common\Entity\Cell\StringCell;
@@ -32,8 +35,10 @@ class AdmissionReportWriter
         $summary = $this->statistics->build($actor, $filters);
         $maximum = max(1, (int) config('admission_reports.'.$format.'_max_rows'));
         $total = $summary['metrics']['Hồ sơ đã nộp'] + $summary['metrics']['Kết quả xét tuyển'];
+        $total += $summary['metrics']['Kết quả Native đã công bố'] ?? 0;
         if ($format === 'xlsx') {
             $total += $summary['metrics']['Nguyện vọng'];
+            $total += $summary['metrics']['Nguyện vọng Native (theo ngành)'] ?? 0;
         }
         $this->checkLimit($total, $maximum);
         $generatedAt = now()->format('d/m/Y H:i:s').' ('.config('app.timezone').')';
@@ -147,6 +152,21 @@ class AdmissionReportWriter
                 $program->major->code, $program->major->name, $program->admissionMethod->name,
                 $program->major->name.' — '.$program->admissionMethod->name.' — '.$program->admissionRound->code, $status];
         }
+        if (! Schema::hasTable('application_submission_snapshots')) {
+            return;
+        }
+        $snapshots = ApplicationSubmissionSnapshot::query()->whereNotNull('sealed_at')
+            ->whereIn('application_id', $this->statistics->applications($actor, $filters)->where('registration_mode', 'native')->select('applications.id'))
+            ->where('submission_version', DB::table('application_submission_snapshots as latest')->selectRaw('MAX(latest.submission_version)')->whereColumn('latest.application_id', 'application_submission_snapshots.application_id'))
+            ->with(['application.candidateProfile', 'entries']);
+        foreach ($snapshots->lazyById($this->chunkSize()) as $snapshot) {
+            foreach ($snapshot->entries->sortBy('priority') as $entry) {
+                $payload = $entry->getAttribute('payload');
+                yield [$snapshot->application->application_code, $snapshot->application->candidateProfile->candidate_code, $entry->priority,
+                    $payload['major_code'], $payload['major_name'], implode('; ', array_column($payload['methods'], 'method_name')),
+                    'Native snapshot V'.$snapshot->submission_version, 'Đã nộp Native'];
+            }
+        }
     }
 
     /** @return iterable<list<string|int|float|null>> */
@@ -160,6 +180,15 @@ class AdmissionReportWriter
                 $wish->admissionProgram->major->name, $wish->admissionProgram->admissionMethod->name, CandidateStatusLabels::result(AdmissionDecision::from($result->getRawOriginal('decision'))),
                 (float) $result->final_score, $result->rank,
                 $published ? $this->date($result, 'published_at') : 'Chưa công bố', $this->date($result, 'confirmed_at')];
+        }
+        if (! Schema::hasTable('native_result_entries')) {
+            return;
+        }
+        foreach ($this->statistics->nativeResults($actor, $filters)->with(['application.candidateProfile', 'version', 'binding'])->lazyById($this->chunkSize()) as $result) {
+            yield [$result->application->application_code, $result->application->candidateProfile->candidate_code,
+                $result->getAttribute('payload')['major_name'] ?? '—', $result->binding?->getAttribute('catalog_reference')['method_name'] ?? '—',
+                CandidateStatusLabels::result(AdmissionDecision::from($result->decision)), $result->score === null ? null : (float) $result->score,
+                null, $this->date($result->version, 'published_at'), 'Chưa có'];
         }
     }
 

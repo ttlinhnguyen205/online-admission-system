@@ -69,6 +69,20 @@ class ClearCandidates extends Command
         'candidate_admission_claims' => 'verified_by',
     ];
 
+    /** Reviewed references to history/catalog records that cleanup must preserve. */
+    private const PROTECTED_REFERENCES = [
+        'admission_rounds' => ['native_activated_by' => 'users'],
+        'admission_quota_versions' => ['approved_by' => 'users'],
+        'evaluation_rule_versions' => ['approved_by' => 'users'],
+        'native_admission_wishes' => ['application_id' => 'applications'],
+        'application_submission_snapshots' => ['application_id' => 'applications'],
+        'submission_wish_entries' => ['application_id' => 'applications'],
+        'native_method_evaluations' => ['evaluated_by' => 'users'],
+        'native_result_versions' => ['created_by' => 'users', 'approved_by' => 'users', 'published_by' => 'users', 'rejected_by' => 'users'],
+        'native_result_entries' => ['application_id' => 'applications'],
+        'native_allocation_policies' => ['created_by' => 'users', 'approved_by' => 'users'],
+    ];
+
     private const FILE_COLUMNS = [
         'candidate_profiles' => ['photo_path', 'citizen_id_front_path', 'citizen_id_back_path'],
         'candidate_documents' => ['file_path'],
@@ -188,6 +202,16 @@ class ClearCandidates extends Command
             $columns[$table] = 'id';
             $counts[$table] = count($keys[$table]);
         }
+        foreach (self::PROTECTED_REFERENCES as $table => $references) {
+            if (! Schema::hasTable($table)) {
+                continue;
+            }
+            foreach ($references as $column => $parent) {
+                if (Schema::hasColumn($table, $column) && DB::table($table)->whereIn($column, $keys[$parent])->exists()) {
+                    throw new RuntimeException('Protected Native/catalog history references these candidates: '.$table.'.'.$column.'. Cleanup blocked; no sealed data will be deleted.');
+                }
+            }
+        }
         if (DB::table('announcements')->whereIn('created_by', $keys['users'])->exists()) {
             throw new RuntimeException('A candidate authored a shared announcement. Reassign its author explicitly before cleanup; announcements will not be deleted.');
         }
@@ -267,7 +291,12 @@ class ClearCandidates extends Command
                 $special = $parent === 'users' && in_array([$table, $column], [
                     ['activity_logs', 'user_id'], ['announcement_user', 'user_id'], ['announcements', 'created_by'], ['sessions', 'user_id'],
                 ], true);
-                if (count($foreign['columns']) !== 1 || $foreign['foreign_columns'] !== ['id'] || (! $owned && ! $reference && ! $special)) {
+                $protected = (self::PROTECTED_REFERENCES[$table][$column] ?? null) === $parent;
+                if (in_array($table, ['native_admission_wishes', 'submission_wish_entries'], true) && $parent === 'applications'
+                    && $foreign['columns'] === ['application_id', 'admission_round_id'] && $foreign['foreign_columns'] === ['id', 'admission_round_id']) {
+                    continue;
+                }
+                if (count($foreign['columns']) !== 1 || $foreign['foreign_columns'] !== ['id'] || (! $owned && ! $reference && ! $special && ! $protected)) {
                     throw new RuntimeException('Unreviewed foreign key: '.$table.'.'.$column.' -> '.$parent.'. Cleanup blocked.');
                 }
             }

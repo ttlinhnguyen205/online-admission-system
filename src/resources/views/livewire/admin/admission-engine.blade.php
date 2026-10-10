@@ -17,7 +17,19 @@
     <flux:error name="engine" />
     <div role="status" wire:loading.delay>{{ __('Checking and processing admission data…') }}</div>
 
-    @if ($previewData !== [])
+    @if (($previewData['native'] ?? false) === true)
+        <flux:heading>Báo cáo Native — đợt #{{ $previewData['round_id'] }}</flux:heading>
+        <flux:text>{{ $previewData['mode'] }} · {{ $previewData['applications'] }} hồ sơ</flux:text>
+        @foreach ($previewData['counts'] as $status => $count)
+            <flux:text wire:key="native-count-{{ $status }}">{{ $status }}: {{ $count }}</flux:text>
+        @endforeach
+        <flux:callout variant="warning">
+            @foreach ($previewData['blockers'] as $index => $blocker)
+                <p wire:key="native-blocker-{{ $index }}">{{ $blocker }}</p>
+            @endforeach
+        </flux:callout>
+        <flux:button wire:click="exportNative">Xuất báo cáo điểm Native CSV</flux:button>
+    @elseif ($previewData !== [])
         <div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
             <flux:heading size="lg">{{ __('Readiness for round') }} #{{ $previewData['round_id'] }}</flux:heading>
             <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

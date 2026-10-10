@@ -10,6 +10,15 @@
 .env
 .env.backup
 .env.production
+.env.*
+!.env.example
+*.sql
+*.sql.gz
+*.sql.zip
+*.dump
+*.log
+**/backups/
+**/admission-backups/
 .phpactor.json
 .phpunit.result.cache
 Homestead.json

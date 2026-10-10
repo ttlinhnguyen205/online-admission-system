@@ -12,6 +12,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['admission_round_id', 'major_id', 'admission_method_id', 'quota', 'minimum_score', 'previous_cutoff_score', 'tuition_fee', 'status'])]
 class AdmissionProgram extends Model
 {
+    /** @return BelongsTo<EvaluationRuleVersion, $this> */
+    public function evaluationRule(): BelongsTo
+    {
+        return $this->belongsTo(EvaluationRuleVersion::class, 'evaluation_rule_version_id');
+    }
+
+    /** @return HasMany<AdmissionQuotaMethodLimit, $this> */
+    public function quotaMethodLimits(): HasMany
+    {
+        return $this->hasMany(AdmissionQuotaMethodLimit::class);
+    }
+
     /** @use HasFactory<AdmissionProgramFactory> */
     use HasFactory;
 
@@ -22,6 +34,7 @@ class AdmissionProgram extends Model
     {
         return [
             'quota' => 'integer',
+            'evaluation_rule_version_id' => 'integer',
             'minimum_score' => 'decimal:3',
             'previous_cutoff_score' => 'decimal:3',
             'tuition_fee' => 'decimal:2',

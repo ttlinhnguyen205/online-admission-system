@@ -5,11 +5,14 @@ namespace App\Livewire\Candidate;
 use App\Actions\CandidateApplications;
 use App\Actions\CandidateMajorOfferings;
 use App\Actions\CandidateWishes;
+use App\Actions\NativeAdmissionScoring;
 use App\Models\AdmissionProgram;
 use App\Models\Application;
+use App\Models\NativeMethodEvaluation;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -137,6 +140,14 @@ class ApplicationDetails extends CandidatePage
     {
         $profile = $this->profile();
         $application = $this->application();
+        if ($application->registration_mode === 'native') {
+            $snapshot = $application->submissionSnapshots()->orderByDesc('submission_version')->with('entries.bindings')->first();
+            $bindings = $snapshot?->entries->flatMap(fn ($entry) => $entry->bindings->pluck('id')) ?? collect();
+            $evaluationProcessed = $bindings->isNotEmpty() && Schema::hasTable('native_method_evaluations')
+                && NativeMethodEvaluation::query()->whereIn('wish_method_binding_id', $bindings)->where('algorithm_version', NativeAdmissionScoring::ALGORITHM)->count() === $bindings->count();
+
+            return view('livewire.candidate.native-application-details', compact('application', 'evaluationProcessed'));
+        }
         Gate::authorize('browseForApplication', [AdmissionProgram::class, $application]);
         $round = $application->admissionRound()->firstOrFail();
         $wishes = $application->wishes()->with(['admissionProgram.major', 'admissionProgram.admissionMethod', 'candidateMajorOffering'])->withExists('result')->orderBy('priority')->get();

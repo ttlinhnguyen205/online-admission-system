@@ -18,6 +18,7 @@ class DeleteAdmissionConfiguration
     {
         abort_unless(in_array($record::class, [AdmissionRound::class, Major::class, AdmissionMethod::class, AdmissionProgram::class, CandidateMajorOffering::class], true), 404);
         $record->getConnection()->transaction(function () use ($record): void {
+            AdmissionCatalogLock::acquire();
             $current = $record->newQuery()->whereKey($record->getKey())->lockForUpdate()->firstOrFail();
             Gate::authorize('update', $current);
             if (Gate::denies('delete', $current)) {
@@ -46,6 +47,6 @@ class DeleteAdmissionConfiguration
                 }
                 throw ValidationException::withMessages(['deletion' => __('This record is in use by admission records and cannot be deleted.')]);
             }
-        });
+        }, 3);
     }
 }

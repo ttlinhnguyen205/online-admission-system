@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Actions\AdmissionEngineSnapshot;
+use App\Actions\NativeRoundScoringReport;
 use App\Actions\ProcessAdmissionRound;
 use App\Models\AdmissionRound;
 use Flux\Flux;
@@ -11,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 #[Title('Admission engine')]
 class AdmissionEngine extends Component
@@ -41,20 +43,24 @@ class AdmissionEngine extends Component
         AdmissionEngineSnapshot::actor();
     }
 
-    public function preview(ProcessAdmissionRound $engine): void
+    public function preview(ProcessAdmissionRound $engine, NativeRoundScoringReport $native): void
     {
         AdmissionEngineSnapshot::actor();
         $this->resetValidation();
         $this->reset('previewData', 'summary', 'confirmed', 'showConfirmation', 'roundId');
         $this->validate(['roundSelection' => ['required', 'integer', 'min:1']]);
         $this->roundId = (int) $this->roundSelection;
-        $this->previewData = $engine->preview($this->roundId);
+        $round = AdmissionRound::query()->findOrFail($this->roundId);
+        $this->previewData = $round->nativeRegistrationState() === 'legacy' ? $engine->preview($this->roundId) : $native->build($this->roundId);
         $this->summary = $this->previewData['summary'] ?? [];
     }
 
     public function confirm(): void
     {
         AdmissionEngineSnapshot::actor();
+        if (($this->previewData['native'] ?? false) === true) {
+            AdmissionEngineSnapshot::fail('Phân bổ Native bị chặn: chưa có chính sách được phê duyệt.');
+        }
         abort_unless($this->roundId !== null && $this->previewData !== [] && ! $this->previewData['completed'], 403);
         if ($this->previewData['blockers'] !== []) {
             AdmissionEngineSnapshot::fail('Resolve the readiness blockers before processing.');
@@ -66,6 +72,9 @@ class AdmissionEngine extends Component
     public function process(ProcessAdmissionRound $engine): void
     {
         AdmissionEngineSnapshot::actor();
+        if (($this->previewData['native'] ?? false) === true) {
+            AdmissionEngineSnapshot::fail('Phân bổ Native bị chặn: chưa có chính sách được phê duyệt.');
+        }
         abort_unless($this->confirmed && $this->roundId !== null && $this->previewData !== [], 403);
         if ($this->form !== [] || $this->roundSelection !== (string) $this->roundId) {
             AdmissionEngineSnapshot::fail('This decision accepts no result fields or replacement round. Preview again.');
@@ -80,6 +89,25 @@ class AdmissionEngine extends Component
         $this->showConfirmation = false;
         $this->previewData = $engine->preview($this->roundId);
         Flux::toast(variant: 'success', text: __('Admission decisions saved. Results remain unpublished.'));
+    }
+
+    public function exportNative(NativeRoundScoringReport $native): StreamedResponse
+    {
+        AdmissionEngineSnapshot::actor();
+        abort_unless($this->roundId !== null, 403);
+        $report = $native->build($this->roundId);
+
+        return response()->streamDownload(function () use ($report): void {
+            $stream = fopen('php://output', 'w');
+            if ($stream === false) {
+                return;
+            }
+            fputcsv($stream, ['application_id', 'snapshot_version', 'priority', 'major_id', 'method_id', 'rule_id', 'binding_id', 'status', 'score'], ',', '"', '');
+            foreach ($report['rows'] as $row) {
+                fputcsv($stream, array_values($row), ',', '"', '');
+            }
+            fclose($stream);
+        }, 'native-scoring-round-'.$this->roundId.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store']);
     }
 
     public function render(): View

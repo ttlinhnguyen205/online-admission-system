@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Actions\AdmissionCatalogLock;
 use App\Actions\DeleteAdmissionConfiguration;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
@@ -112,6 +113,7 @@ abstract class ConfigurationPage extends Component
         $model = $this->modelClass();
         try {
             (new $model)->getConnection()->transaction(function () use ($model): void {
+                AdmissionCatalogLock::acquire();
                 $record = $this->recordId === null ? null : $model::query()->lockForUpdate()->findOrFail($this->recordId);
                 Gate::authorize($record === null ? 'create' : 'update', $record ?? $model);
                 $this->normalizeForm();
@@ -122,7 +124,7 @@ abstract class ConfigurationPage extends Component
                 } else {
                     $record->update($attributes);
                 }
-            });
+            }, 3);
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages([$this->uniqueErrorField() => $this->uniqueErrorMessage()]);
         }
@@ -234,7 +236,16 @@ abstract class ConfigurationPage extends Component
         return view($this->viewName(), [
             'records' => $records,
             'resourceModel' => $this->modelClass(),
+            ...$this->recordData($records),
             ...$this->viewData(),
         ]);
+    }
+
+    /** @param LengthAwarePaginator<int, Model> $records
+     * @return array<string, mixed>
+     */
+    protected function recordData(LengthAwarePaginator $records): array
+    {
+        return [];
     }
 }
