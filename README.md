@@ -1,48 +1,17 @@
 # Online Admission System
 
-**Hệ thống tuyển sinh trực tuyến — Đồ án đại học**
+**Hệ thống tuyển sinh trực tuyến**
 
 Ứng dụng quản lý tuyển sinh từ đăng ký tài khoản, tiếp nhận và xác minh hồ sơ đến tính điểm, phân bổ chỉ tiêu, phê duyệt và công bố kết quả. Dự án sử dụng Laravel, Livewire và cơ sở dữ liệu quan hệ; hỗ trợ luồng tuyển sinh legacy và luồng Native có phiên bản quy tắc, snapshot hồ sơ và kết quả độc lập.
 
-Tài liệu này đặt tại **root repository**. Mã nguồn Laravel nằm trong `src/`; các lệnh dưới đây chạy tại thư mục đó, trừ khi có ghi chú khác.
-
-## 1. Mục tiêu và phạm vi
-
+## Mục tiêu và phạm vi
 - Số hóa hồ sơ, điểm, minh chứng và nguyện vọng của thí sinh.
 - Phân tách trách nhiệm thí sinh, cán bộ tuyển sinh và quản trị viên.
 - Quản lý catalog tuyển sinh, quy tắc chấm điểm và chỉ tiêu có phiên bản.
 - Thực hiện luồng Native nhiều nguyện vọng, nhiều phương thức, kiểm tra điều kiện và công bố có kiểm soát.
 - Cung cấp thống kê, thông báo và báo cáo phục vụ quản lý, nghiệm thu đồ án.
 
-Đây là hệ thống mô phỏng nghiệp vụ với những chính sách được cấu hình và phê duyệt trong ứng dụng. **Không tuyên bố thuật toán tương đương hệ thống lọc ảo chính thức của Bộ GD&ĐT**, cũng không mặc định dữ liệu demo là chính sách tuyển sinh chính thức.
-
-## 2. Công nghệ và phiên bản
-
-Ràng buộc phiên bản được đọc từ `src/composer.json` và `src/package.json`. Cột phiên bản cài đặt được đối chiếu với dependencies hiện có khi cập nhật tài liệu; ký hiệu `^` và `~` là ràng buộc, không phải phiên bản cố định.
-
-| Công nghệ | Ràng buộc trong manifest | Phiên bản cài đặt đã đối chiếu |
-|---|---|---|
-| PHP | `^8.3` | 8.5.10 CLI |
-| Laravel | `^13.17` | 13.31.0 |
-| Livewire | `^4.1` | 4.4.4 |
-| Flux UI | `^2.13.1` | 2.19.0 |
-| Laravel Fortify | `^1.37.2` | 1.39.0 |
-| Tailwind CSS | `^4.0.7` | 4.3.3 |
-| Vite | `^8.0.0` | 8.3.0 |
-| Vite Plus | `0.3.0` | Manifest cố định 0.3.0 |
-| Laravel Vite Plugin | `^3.1` | Dùng bản khóa trong `package-lock.json` |
-| Pest | `^5.1` | 5.1.4 |
-| Larastan | `^3.9` | 3.12.0 |
-| Laravel Pint | `^1.27` | 1.32.1 |
-| OpenSpout | `~4.32` | 4.32.0 |
-| Dompdf | `~3.1` | 3.1.6 |
-
-Môi trường nghiệm thu sử dụng **MariaDB** thông qua connection `mysql` và Node.js **24.17.0**. Phiên bản MariaDB/Node.js không được khai báo như dependency PHP trong `composer.json`. Bộ kiểm thử mặc định dùng SQLite trong bộ nhớ; kiểm thử concurrency có bài nghiệm thu MariaDB riêng.
-
-Giữ `composer.lock` và `package-lock.json` để tái lập dependencies. Không dùng `composer update` thay cho cài đặt từ lock file khi chuẩn bị nghiệm thu.
-
-## 3. Kiến trúc hệ thống
-
+## Kiến trúc hệ thống
 Ứng dụng Laravel dạng monolith, giao diện Blade/Livewire; trạng thái tương tác và xử lý nghiệp vụ nằm phía server.
 
 ```text
@@ -66,7 +35,7 @@ Trình duyệt: Candidate / Staff / Admin
 - **Tính nhất quán:** transactions, catalog locking, content hash, fingerprint và kiểm tra stale bảo vệ thao tác quản trị và kết quả phụ thuộc dữ liệu đầu vào. Activity logs ghi dấu các thao tác nghiệp vụ.
 - **Minh chứng:** disk `candidate-private` lưu tại `storage/app/candidate-private`, tải qua controller có kiểm tra quyền. Không công khai thư mục này qua storage symlink.
 
-## 4. Vai trò và quyền hạn
+## Vai trò và quyền hạn
 
 | Vai trò | Quyền hạn chính đã triển khai |
 |---|---|
@@ -103,7 +72,7 @@ Candidate không được đọc hồ sơ người khác hoặc kết quả chư
 - Dashboard/thống kê hồ sơ, nguyện vọng, chỉ tiêu và kết quả; xuất XLSX/PDF, cùng báo cáo scoring Native dạng CSV. Giới hạn xuất hiện tại: XLSX 100.000 dòng, PDF 1.000 dòng.
 - Tư vấn tuyển sinh có tích hợp Gemini tùy chọn, mặc định tắt; cần cấu hình provider/API key riêng và không thay thế quyết định xét tuyển.
 
-## 6. Quy trình end-to-end
+## Quy trình end-to-end
 
 | Bước | Người thực hiện | Xử lý chính |
 |---|---|---|
@@ -120,7 +89,7 @@ Candidate không được đọc hồ sơ người khác hoặc kết quả chư
 
 Trang **Chương trình tuyển sinh** tích hợp quản lý rules; trang quản lý đợt có đăng ký Native; chi tiết hồ sơ có scoring; trang **Kết quả** tích hợp policy, allocation và phiên bản kết quả Native. Trang engine legacy không được dùng để xử lý đợt Native.
 
-## 7. Nguyên tắc Native Admission Engine
+## Nguyên tắc Native Admission Engine
 
 Thuật toán hiện tại là **Deferred Acceptance phía thí sinh**, định danh `student-da-matroid-v1`, trong phạm vi mô hình và chính sách được hỗ trợ.
 
@@ -136,153 +105,6 @@ Thuật toán hiện tại là **Deferred Acceptance phía thí sinh**, định 
 
 Unit/property tests kiểm tra substitutability, IRC, LAD, ổn định và các bất biến trên những thị trường kiểm thử, bao gồm nhiều bindings/nguyện vọng, Q/q và xung đột thứ hạng. Đây không phải khẳng định tính đúng đắn cho mọi chính sách tuyển sinh ngoài mô hình hiện tại.
 
-## 8. Cấu trúc thư mục
-
-```text
-online-admission-system/
-├── README.md
-└── src/                         # Laravel root
-    ├── app/
-    │   ├── Actions/             # Nghiệp vụ, scoring, allocation, kết quả
-    │   ├── Console/Commands/    # Công cụ Artisan
-    │   ├── Enums/               # Vai trò và trạng thái
-    │   ├── Http/                # Controllers và middleware
-    │   ├── Livewire/            # Candidate, Admin và Settings
-    │   ├── Models/              # Eloquent models
-    │   ├── Notifications/       # Thông báo nghiệp vụ
-    │   ├── Policies/            # Phân quyền
-    │   └── Support/             # Báo cáo, tư vấn, tiện ích
-    ├── bootstrap/
-    ├── config/                  # Native registration, engine, reports...
-    ├── database/                # Migrations, factories, seeders
-    ├── public/                  # Web document root
-    ├── resources/               # Blade, CSS và JavaScript
-    ├── routes/                  # Web, admin, candidate, settings
-    ├── storage/                 # Minh chứng riêng tư, cache và logs
-    ├── tests/                   # Feature, Unit và Fixtures
-    ├── .env.example
-    ├── composer.json / composer.lock
-    ├── package.json / package-lock.json
-    ├── phpunit.xml
-    └── phpstan.neon
-```
-
-## 9. Cài đặt trên Windows/XAMPP
-
-### Chuẩn bị
-
-Sử dụng Git, Composer, Node.js/npm, MariaDB và PHP tương thích toàn bộ lock file. Môi trường đã đối chiếu dùng PHP 8.5.10 và Node.js 24.17.0; không mặc định PHP đi kèm mọi bản XAMPP đáp ứng dependency hiện tại. Kiểm tra PHP CLI và PHP phục vụ web cùng đáp ứng yêu cầu.
-
-Khởi động dịch vụ MariaDB trong XAMPP. Tạo một database UTF-8 riêng cho cài mới và cấp quyền phù hợp cho tài khoản kết nối. Không nhập dump chứa thông tin thí sinh thật vào môi trường chia sẻ đồ án.
-
-### Dependencies và môi trường
-
-Ví dụ khi repository nằm tại `C:\xampp\htdocs\online-admission-system`:
-
-```powershell
-Set-Location C:\xampp\htdocs\online-admission-system\src
-php -v
-node -v
-composer install
-composer check-platform-reqs
-npm ci
-```
-
-Nếu chưa có `.env`, sao chép `.env.example` rồi chỉnh cấu hình local như mục 10. **Không ghi đè `.env` đã tồn tại.** Với cài mới, tạo application key:
-
-```powershell
-Copy-Item .env.example .env
-php artisan key:generate --no-interaction
-php artisan config:clear --no-interaction
-```
-
-Chỉ trên **database mới, rỗng và dành riêng cho dự án**, kiểm tra rồi áp dụng migrations:
-
-```powershell
-php artisan migrate:status --no-interaction
-php artisan migrate --no-interaction
-npm run build
-```
-
-Với database có dữ liệu, làm theo hướng dẫn cập nhật an toàn ở mục 10; không chạy các lệnh migration trên theo thói quen. `composer run setup` có bước migrate tự động nên không dùng làm bước cập nhật database đang sử dụng.
-
-### Chạy ứng dụng
-
-```powershell
-php artisan serve --host=127.0.0.1 --port=8000
-```
-
-Mở địa chỉ do Artisan hiển thị; cấu hình `APP_URL` khớp địa chỉ truy cập. Khi phát triển frontend, mở terminal thứ hai tại `src/` và chạy `npm run dev`; khi dùng assets đã build thì không cần terminal Vite. Nếu dùng database queue, chạy worker ở terminal riêng:
-
-```powershell
-php artisan queue:work --no-interaction
-```
-
-Nếu chạy qua Apache/XAMPP thay cho Artisan, đặt DocumentRoot của virtual host vào **`src/public`**, không vào root repository hoặc `src/`, và cấu hình PHP tương thích dependencies. Không cho truy cập `.env`, storage riêng tư hay database backup qua web.
-
-## 10. Cấu hình, dữ liệu thử nghiệm và kiểm thử
-
-### `.env.example`
-
-File mẫu hiện mặc định SQLite; để dùng MariaDB local, đổi connection sang `mysql` và cung cấp database/tài khoản đã chuẩn bị. Ví dụ sau có placeholder, cần thay trước khi chạy:
-
-```dotenv
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost:8000
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=<database_local_cua_ban>
-DB_USERNAME=<tai_khoan_database>
-DB_PASSWORD=<mat_khau_database>
-
-SESSION_DRIVER=database
-CACHE_STORE=database
-QUEUE_CONNECTION=database
-FILESYSTEM_DISK=local
-MAIL_MAILER=log
-
-ADMISSION_NATIVE_REGISTRATION=false
-ADMISSION_CHATBOT_ENABLED=false
-```
-
-`ADMISSION_NATIVE_REGISTRATION` được đọc trong `config/admission_registration.php`, mặc định **false** dù file mẫu chưa có dòng này. Bật global flag không tự mở bất kỳ đợt nào; Admin vẫn phải kiểm tra và chuyển trạng thái theo đợt. Không sửa allowlist để vượt validator. Múi giờ ứng dụng hiện là `Asia/Ho_Chi_Minh`, ngôn ngữ `vi` trong `config/app.php`.
-
-Mailer `log` phù hợp local: email xác minh/đặt lại mật khẩu được ghi log thay vì gửi thật. Nếu cần gửi email, cấu hình mailer riêng. Không đưa API keys, application key, log chứa liên kết xác thực hoặc dữ liệu hồ sơ vào Git.
-
-### Migrations với database đã có dữ liệu
-
-Backup bên ngoài repository và xác minh khả năng phục hồi trước khi cập nhật. Đọc migration status, schema thực tế và dependencies; pending không mặc nhiên đồng nghĩa có thể chạy an toàn. Hai migrations Native kết quả/policy là:
-
-- `2026_10_10_215742_create_native_result_version_tables.php`
-- `2026_10_10_232009_create_native_allocation_policies_table.php`
-
-Chỉ khi đã kiểm tra và được phép cập nhật, dùng `php artisan migrate --path=database/migrations/<ten_file_da_kiem_tra>.php --no-interaction` cho từng migration theo thứ tự dependencies. Không dùng blanket migrate, `migrate:fresh`, rollback hoặc seeder để sửa database đang có hồ sơ sealed. Các migration cũ về verification/precision/constraints cần xem xét riêng; không coi README là xác nhận trạng thái của một database khác.
-
-### Tài khoản và catalog thử nghiệm
-
-`CandidateSeeder` thực sự khai báo tài khoản **`candidate@example.com` / `password`**, vai trò Candidate và email đã xác minh. Chỉ tạo trên database demo riêng bằng lệnh sau khi chủ động chấp nhận dữ liệu mẫu:
-
-```powershell
-php artisan db:seed --class=CandidateSeeder --no-interaction
-```
-
-Seeder này dùng `updateOrCreate`, có thể ghi đè tài khoản/hồ sơ cùng định danh khi chạy lại. Không dùng trên database có dữ liệu cần bảo toàn. Người dùng cũng có thể tự đăng ký Candidate trên giao diện.
-
-Không có tài khoản Admin/Staff cố định được khai báo trong seeders hiện tại; cần dùng tài khoản được người quản lý môi trường cấp đúng role. Các test tạo tài khoản riêng bằng factories/fixtures, không phải tài khoản đăng nhập chung của ứng dụng.
-
-`DatabaseSeeder` gọi cả `CandidateSeeder` và `AdmissionDemoSeeder`. Catalog demo của seeder có ngày cố định năm 2026 và có thể cập nhật lại records khi chạy lại; không tự tạo policy/rules Native đầy đủ hoặc bảo đảm đợt còn trong thời gian đăng ký.
-
-Công cụ chuẩn bị demo đa phương thức có chế độ mặc định chỉ đọc:
-
-```powershell
-php artisan admission:prepare-native-multi-demo --help
-php artisan admission:prepare-native-multi-demo --dry-run
-```
-
-Command dự kiến chuẩn bị catalog `DEMO-2026-NATIVE-MULTI`, method học bạ `DEMO-HB-EQ1` hệ số 1–1–1, hai programs và một offering; round vẫn Draft/legacy. `--apply` yêu cầu xác nhận mã đợt, database development, backup và Admin hợp lệ. Command không tự approve rule học bạ, mở Native hoặc tạo/nộp hồ sơ Candidate. Không dùng nó để sửa dữ liệu sealed hoặc thay thế quy trình phê duyệt chính sách.
 
 ### Tests và quality checks
 
@@ -308,7 +130,7 @@ php vendor/bin/pest tests/Unit/NativeMariaDbAcceptanceTest.php --compact
 
 Bài nghiệm thu MariaDB ghi fixtures và thực hiện transactions thật, không được chạy trên `online_admission` đang sử dụng. SQLite không chứng minh được row locking/concurrency MariaDB. Kết quả tests phải lấy từ output lần chạy tương ứng; không suy ra PASS chỉ vì có file test hoặc từ số lượng tests của một phiên bản source khác.
 
-## 11. Giới hạn nghiệp vụ và phạm vi mô phỏng
+## . Giới hạn nghiệp vụ và phạm vi mô phỏng
 
 - Native chỉ hỗ trợ chấm điểm hai template THPT/học bạ nêu trên; APTITUDE_SCORE và CERTIFICATE_CONDITION còn unsupported. Có màn hình nhập dữ liệu/chứng chỉ không đồng nghĩa đã có công thức xét tuyển Native cho chúng.
 - Không tự đổi DGNL legacy thành HSA/V-ACT/TSA, quy đổi chứng chỉ, cộng điểm ưu tiên hoặc áp dụng công thức học bạ legacy tiếng Anh hệ số 2 cho template Native hệ số 1.
