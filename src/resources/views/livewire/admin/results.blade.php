@@ -14,7 +14,7 @@
     @elseif ($selectedRound)
         <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($counts as $label => $count)
-                <div wire:key="count-{{ $loop->index }}" class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700"><dt>{{ __($label) }}</dt><dd class="text-2xl font-semibold">{{ $count }}</dd></div>
+                <div wire:key="count-{{ $loop->index }}" class="admission-panel p-4"><dt>{{ __($label) }}</dt><dd class="text-2xl font-semibold">{{ $count }}</dd></div>
             @endforeach
         </dl>
         @if ($selectedRound->status->value === 'published')
@@ -24,9 +24,9 @@
         @else
             <flux:text>{{ __('Only a processing round with a completed admission-engine run can be published.') }}</flux:text>
         @endif
-        <div class="overflow-x-auto">
+        <div class="admission-panel overflow-x-auto">
             <table class="w-full text-left text-sm">
-                <thead><tr>@foreach (['Application', 'Priority', 'Major / method', 'Final score', 'Rank', 'Decision', 'Published', 'Confirmed'] as $label)<th class="p-3">{{ __($label) }}</th>@endforeach</tr></thead>
+                <thead class="bg-admission-canvas text-xs text-slate-500 dark:bg-zinc-800 dark:text-slate-300"><tr>@foreach (['Application', 'Priority', 'Major / method', 'Final score', 'Rank', 'Decision', 'Published', 'Confirmed'] as $label)<th class="p-3">{{ __($label) }}</th>@endforeach</tr></thead>
                 <tbody>
                     @forelse ($results as $result)
                         <tr wire:key="result-{{ $result->id }}" class="border-t border-zinc-200 dark:border-zinc-700">

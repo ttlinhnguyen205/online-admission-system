@@ -9,7 +9,7 @@
             <flux:button :href="route('candidate.applications.documents.index', $application->id)" wire:navigate>{{ __('Tài liệu hồ sơ') }}</flux:button>
         </div>
     </div>
-    <div class="flex flex-col gap-3 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div class="flex flex-col gap-3 admission-panel p-5">
         <div class="flex flex-wrap gap-3">
             <flux:badge>{{ App\Support\CandidateStatusLabels::application($application->status) }}</flux:badge>
             <flux:badge>{{ __('Đợt tuyển sinh') }}: {{ App\Support\CandidateStatusLabels::round($round->status) }}</flux:badge>
@@ -34,7 +34,7 @@
     <div role="status" wire:loading.delay>{{ __('Đang cập nhật hồ sơ...') }}</div>
     <div class="flex flex-col gap-3">
         @forelse ($wishes as $wish)
-            <article wire:key="wish-{{ $wish->id }}" class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700 sm:flex-row sm:justify-between">
+            <article wire:key="wish-{{ $wish->id }}" class="flex flex-col gap-4 admission-panel p-5 sm:flex-row sm:justify-between">
                 <div class="min-w-0 space-y-2">
                     <flux:text>{{ __('Nguyện vọng :priority', ['priority' => $wish->priority]) }}</flux:text>
                     <flux:heading>{{ $wish->admissionProgram->major->name }}</flux:heading>
@@ -53,7 +53,7 @@
         @endforelse
     </div>
     @if ($editable)
-        <form wire:submit="addWish" class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+        <form wire:submit="addWish" class="flex flex-col gap-4 admission-panel p-5">
             <flux:heading>{{ __('Thêm nguyện vọng xét tuyển') }}</flux:heading>
             <flux:error name="form" />
             <flux:select wire:model="form.candidate_major_offering_id" :label="__('Ngành xét tuyển')" required>
@@ -67,7 +67,7 @@
             <div><flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="addWish">{{ __('Thêm nguyện vọng cuối danh sách') }}</flux:button></div>
         </form>
     @endif
-    <div class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div class="flex flex-col gap-4 admission-panel p-5">
         <flux:heading>{{ __('Điều kiện nộp hồ sơ') }}</flux:heading>
         <flux:error name="profile" />
         <flux:error name="submission" />

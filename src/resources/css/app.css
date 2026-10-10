@@ -11,28 +11,35 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-zinc-50: #fafafa;
-    --color-zinc-100: #f5f5f5;
-    --color-zinc-200: #e5e5e5;
-    --color-zinc-300: #d4d4d4;
-    --color-zinc-400: #a3a3a3;
-    --color-zinc-500: #737373;
-    --color-zinc-600: #525252;
-    --color-zinc-700: #404040;
-    --color-zinc-800: #262626;
-    --color-zinc-900: #171717;
-    --color-zinc-950: #0a0a0a;
+    --color-admission-navy: #202632;
+    --color-admission-blue: #ae2037;
+    --color-admission-orange: #ae2037;
+    --color-admission-yellow: #f4b942;
+    --color-admission-canvas: #f4f6fa;
+    --color-admission-soft: #f9e9ed;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    --color-zinc-50: #f8f9fb;
+    --color-zinc-100: #f1f3f6;
+    --color-zinc-200: #e5e8ee;
+    --color-zinc-300: #cbd5e1;
+    --color-zinc-400: #94a3b8;
+    --color-zinc-500: #64748b;
+    --color-zinc-600: #475569;
+    --color-zinc-700: #334155;
+    --color-zinc-800: #1e293b;
+    --color-zinc-900: #202632;
+    --color-zinc-950: #12151d;
+
+    --color-accent: var(--color-admission-orange);
+    --color-accent-content: var(--color-admission-blue);
     --color-accent-foreground: var(--color-white);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: var(--color-admission-orange);
+        --color-accent-content: #fda4af;
+        --color-accent-foreground: var(--color-white);
     }
 }
 
@@ -58,9 +65,137 @@
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+    @apply outline-hidden ring-2 ring-accent-content ring-offset-2 ring-offset-white dark:ring-offset-zinc-900;
 }
 
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
+@layer components {
+    .admission-panel {
+        @apply rounded-xl border border-zinc-200/80 bg-white shadow-xs dark:border-zinc-700 dark:bg-zinc-900;
+    }
+}
+
+.admission-shell [data-flux-heading] {
+    @apply font-bold text-admission-navy dark:text-zinc-50;
+}
+
+.admission-shell h1[data-flux-heading] {
+    @apply text-2xl font-bold tracking-tight;
+}
+
+.admission-shell [data-flux-button] {
+    @apply font-semibold;
+}
+
+.admission-navigation [data-flux-sidebar-item] {
+    @apply h-10 rounded-md text-zinc-700 transition-colors hover:bg-admission-soft hover:text-admission-blue dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-rose-200;
+}
+
+.admission-navigation [data-flux-sidebar-item][data-current] {
+    @apply border-transparent bg-admission-soft font-semibold text-admission-blue dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200;
+    box-shadow: inset 3px 0 0 var(--color-admission-orange);
+}
+
+.admission-shell [data-flux-table] thead {
+    @apply bg-admission-canvas dark:bg-zinc-800;
+}
+
+.admission-shell [data-flux-table] [data-flux-column] {
+    @apply px-3 text-xs font-semibold text-zinc-600 dark:text-zinc-300;
+}
+
+.admission-shell [data-flux-table] [data-flux-cell] {
+    @apply px-3;
+}
+
+.admission-auth {
+    --color-accent: #243970;
+    --color-accent-content: #153c85;
+    --color-accent-foreground: #fff;
+    font-family: Arial, ui-sans-serif, system-ui, sans-serif;
+    color: #153c85;
+    color-scheme: light;
+}
+
+.admission-auth [data-flux-input] input {
+    @apply h-11 rounded-md border-[#a5bdf9] bg-[#e9f0ff] text-base text-slate-950 shadow-none placeholder:text-[#66738b];
+}
+
+.admission-auth [data-flux-input] [data-flux-icon] {
+    @apply size-5 text-[#153c85];
+}
+
+.admission-auth [data-flux-input] input[data-invalid] {
+    @apply border-red-600;
+}
+
+.admission-auth [data-flux-input] input:focus {
+    @apply ring-2 ring-[#5678db] ring-offset-2 ring-offset-[#d1dcf7];
+}
+
+.admission-auth [data-flux-checkbox] {
+    @apply border-[#a5bdf9] bg-[#e9f0ff] data-checked:border-[#243970] data-checked:bg-[#243970];
+}
+
+.admission-auth [data-flux-label] {
+    @apply text-sm text-[#153c85];
+}
+
+.admission-auth .auth-link {
+    @apply rounded text-[#153c85] transition hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#153c85];
+}
+
+.admission-auth .auth-primary {
+    @apply h-11 rounded-md border-0 bg-[#243970] text-base font-bold uppercase text-white shadow-none hover:bg-[#1b2c58];
+}
+
+.admission-auth .auth-secondary {
+    @apply h-11 rounded-md border-0 bg-[#004487] text-sm font-bold text-white shadow-none hover:bg-[#00366c];
+}
+
+.portal-shell {
+    font-family: var(--font-sans);
+}
+
+.portal-shell [x-cloak] {
+    display: none !important;
+}
+
+@layer components {
+    .portal-nav-link {
+        @apply flex min-h-10 items-center gap-3 rounded-md px-3 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-admission-soft hover:text-admission-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-admission-blue dark:text-zinc-300 dark:hover:bg-rose-400/10 dark:hover:text-rose-200;
+    }
+
+    .portal-news-panel {
+        @apply rounded-xl border border-zinc-200/80 bg-white shadow-xs dark:border-zinc-700 dark:bg-zinc-900;
+    }
+}
+
+.admission-navigation {
+    scrollbar-width: thin;
+}
+
+.admission-navigation [data-flux-sidebar-group-heading] {
+    @apply text-[10px] font-semibold uppercase tracking-wide text-zinc-500;
+}
+
+.admission-brand {
+    background: linear-gradient(120deg, #bb253f, #941c31);
+}
+
+.admission-brand [data-flux-sidebar-brand] > div:last-child {
+    @apply text-sm font-bold text-white;
+}
+
+.portal-shell .portal-nav-link[aria-current="page"],
+.portal-shell .portal-nav-link[aria-current="location"] {
+    @apply bg-admission-soft font-semibold text-admission-blue dark:bg-rose-400/10 dark:text-rose-200;
+    box-shadow: inset 4px 0 0 var(--color-admission-blue);
+}
+
+.admission-shell [data-flux-table-row] {
+    @apply hover:bg-zinc-50/80 dark:hover:bg-zinc-800/60;
+}
+
+.admission-shell [x-cloak] {
+    display: none !important;
+}

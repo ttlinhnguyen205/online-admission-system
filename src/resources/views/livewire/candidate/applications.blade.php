@@ -15,7 +15,7 @@
             <flux:callout>{{ __('Hiện không có đợt tuyển sinh mới. Đợt tuyển sinh phải đang mở trong thời hạn nhận hồ sơ và bạn chưa có hồ sơ trong đợt đó.') }}</flux:callout>
         @endif
         <div role="status" wire:loading.delay>{{ __('Đang cập nhật hồ sơ...') }}</div>
-        <div class="overflow-x-auto rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+        <div class="overflow-x-auto admission-panel p-4">
             <flux:table :paginate="$records">
                 <flux:table.columns>
                     <flux:table.column>{{ __('Mã hồ sơ') }}</flux:table.column>

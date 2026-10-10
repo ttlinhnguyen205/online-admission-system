@@ -58,8 +58,8 @@
             wire:key="{{ $path }}"
             href="{{ route('admin.'.$path.'.index') }}"
             wire:navigate
-            class="group flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-400 focus-visible:outline-2 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-500">
-            <span class="text-sm font-semibold text-zinc-400">
+            class="admission-panel group flex flex-col items-start gap-4 p-6 transition hover:border-rose-200 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-admission-blue">
+            <span class="flex size-10 items-center justify-center rounded-lg bg-admission-soft text-sm font-bold text-admission-blue dark:bg-rose-400/10 dark:text-rose-200">
                 {{ $step }}
             </span>
 
@@ -71,7 +71,7 @@
                 {{ __($description) }}
             </flux:text>
 
-            <span class="text-sm font-medium underline underline-offset-4">
+            <span class="mt-auto text-sm font-semibold text-admission-blue group-hover:underline dark:text-rose-200">
                 {{ __($openLabel) }}
             </span>
         </a>

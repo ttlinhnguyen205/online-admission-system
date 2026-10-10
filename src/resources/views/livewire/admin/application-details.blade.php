@@ -17,7 +17,7 @@
     @if ($stale)<flux:callout variant="warning">{{ __('The review data changed. Reload and inspect the current information before making a decision.') }}</flux:callout>@endif
     @if ($hasResults)<flux:callout variant="warning">{{ __('Admission results already exist. All review mutations are blocked for this historical application.') }}</flux:callout>@endif
     <div role="status" wire:loading.delay>{{ __('Updating review...') }}</div>
-    <div class="space-y-3 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div class="space-y-3 admission-panel p-5">
         <div class="flex flex-wrap gap-3">
             <flux:badge>{{ __(ucwords(str_replace('_', ' ', $application->status->value))) }}</flux:badge>@if ($application->status === App\Enums\ApplicationStatus::Verified)<flux:badge color="green">{{ __('Review complete') }}</flux:badge>@endif
         </div>
@@ -32,7 +32,7 @@
         @if (! $windowOpen)<flux:callout>{{ __('Advisory: this round is outside its open candidate submission window. Staff review can continue. A revision request will not grant a deadline exception for candidate resubmission.') }}</flux:callout>@endif
     </div>
 
-    <div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div class="space-y-4 admission-panel p-5">
         <flux:heading size="lg">{{ __('Candidate profile — read only') }}</flux:heading>
         @if ($profile)
         <div class="flex flex-wrap gap-5">
@@ -116,7 +116,7 @@
         @else<flux:callout variant="warning">{{ __('Candidate profile unavailable.') }}</flux:callout>@endif
     </div>
 
-    <div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div class="space-y-4 admission-panel p-5">
         <flux:heading size="lg">{{ __('Điểm xét tuyển') }}</flux:heading>
         <flux:text>{{ __('Điểm thuộc hồ sơ thí sinh và được dùng chung cho các hồ sơ đăng ký. Sau khi xác minh, thí sinh không thể sửa hoặc xóa điểm.') }}</flux:text>
         <div class="overflow-x-auto">
@@ -150,7 +150,7 @@
         </div>
     </div>
 
-    <div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div class="space-y-4 admission-panel p-5">
         <flux:heading size="lg">{{ __('Application documents') }}</flux:heading>
         @forelse ($application->documents as $document)
         <article wire:key="document-{{ $document->id }}" class="space-y-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
@@ -169,7 +169,7 @@
         @empty<flux:text>{{ __('No documents uploaded. No document count or type is required in this phase.') }}</flux:text>@endforelse
     </div>
 
-    <div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div class="space-y-4 admission-panel p-5">
         <flux:heading size="lg">{{ __('Ranked admission wishes') }}</flux:heading>
         @forelse ($application->wishes->sortBy('priority') as $wish)
         <article wire:key="wish-{{ $wish->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
@@ -184,7 +184,7 @@
         <flux:text>{{ __('Current catalog availability is advisory after submission. Review does not determine admission eligibility or allocate places.') }}</flux:text>
     </div>
 
-    <div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <div class="space-y-4 admission-panel p-5">
         <flux:heading size="lg">{{ __('Application verification checklist') }}</flux:heading>
         @if ($checklist === [])<flux:callout variant="success">{{ __('The current records meet the review checklist. All requirements will be checked again when you confirm.') }}</flux:callout>@else
         <ul class="list-inside list-disc space-y-2 text-sm">@foreach ($checklist as $key => $message)<li wire:key="check-{{ $key }}">{{ $message }}</li>@endforeach</ul>
@@ -211,7 +211,7 @@
         </div>
     </div>
 
-    <details class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+    <details class="admission-panel p-5">
         <summary class="cursor-pointer font-medium">{{ __('Recent application review history') }}</summary>
         <div class="mt-4 space-y-3">
             @forelse ($history as $entry)<div wire:key="history-{{ $entry->id }}" class="text-sm">
