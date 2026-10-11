@@ -12,22 +12,6 @@
         default => 'Cổng tuyển sinh trực tuyến',
     };
     $portalWeekdays = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-    $portalCards = auth()->user()?->isCandidate() ? [
-        ['candidate.profile.edit', 'user-circle', 'HỒ SƠ', 'Hồ sơ cá nhân', 'bg-blue-600', null, null],
-        ['candidate.admission-information.index', 'book-open', 'TUYỂN SINH', 'Thông tin xét tuyển', 'bg-amber-500', null, null],
-        ['candidate.applications.index', 'clipboard-document-list', 'ĐĂNG KÝ', 'Đăng ký nguyện vọng', 'bg-emerald-500', null, null],
-        ['candidate.results.index', 'academic-cap', 'KẾT QUẢ', 'Kết quả xét tuyển', 'bg-red-500', null, null],
-    ] : (auth()->check() ? [
-        ['admin.applications.index', 'clipboard-document-list', 'HỒ SƠ', 'Duyệt hồ sơ', 'bg-blue-600', 'viewAny', App\Models\Application::class],
-        ['admin.home', 'cog-6-tooth', 'CẤU HÌNH', 'Cấu hình tuyển sinh', 'bg-amber-500', 'viewAny', App\Models\AdmissionRound::class],
-        ['admin.admission-engine', 'academic-cap', 'XÉT TUYỂN', 'Công cụ xét tuyển', 'bg-emerald-500', 'process', App\Models\AdmissionRound::class],
-        ['admin.results.index', 'document-text', 'KẾT QUẢ', 'Công bố kết quả', 'bg-red-500', 'publishResults', App\Models\AdmissionRound::class],
-    ] : [
-        ['register', 'clipboard-document-list', 'ĐĂNG KÝ', 'Tạo tài khoản', 'bg-blue-600', null, null],
-        ['login', 'user-circle', 'HỒ SƠ', 'Tra cứu hồ sơ', 'bg-amber-500', null, null],
-        ['login', 'academic-cap', 'KẾT QUẢ', 'Kết quả xét tuyển', 'bg-emerald-500', null, null],
-        ['login', 'bell', 'THÔNG TIN', 'Thông báo tuyển sinh', 'bg-red-500', null, null],
-    ]);
 @endphp
 
 <section {{ $attributes->class('flex flex-col gap-5') }}>
@@ -43,22 +27,6 @@
         <span class="hidden size-14 shrink-0 items-center justify-center rounded-xl bg-admission-soft sm:flex dark:bg-rose-400/10">
             <flux:icon.academic-cap class="size-8 text-admission-blue dark:text-rose-200" />
         </span>
-    </div>
-
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        @foreach ($portalCards as [$destination, $icon, $category, $label, $color, $ability, $model])
-            @if ($ability === null || Illuminate\Support\Facades\Gate::allows($ability, $model))
-                <a href="{{ route($destination) }}" wire:navigate data-portal-search="{{ __($category).' '.__($label) }}" x-show="matches($el.dataset.portalSearch)" class="portal-news-panel group flex min-h-24 items-center gap-4 px-5 py-4 transition hover:border-rose-200 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-admission-blue">
-                    <span class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-admission-soft text-admission-blue dark:bg-rose-400/10 dark:text-rose-200">
-                        <flux:icon :name="$icon" class="size-6" />
-                    </span>
-                    <span class="min-w-0">
-                        <span class="block text-xs text-slate-500">{{ __($category) }}</span>
-                        <span class="mt-1 block text-sm font-semibold leading-5 text-zinc-800 dark:text-zinc-100">{{ __($label) }}</span>
-                    </span>
-                </a>
-            @endif
-        @endforeach
     </div>
 
     @foreach ([
