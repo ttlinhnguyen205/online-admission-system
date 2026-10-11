@@ -42,7 +42,7 @@
             </div>
 
             <div class="ms-auto flex shrink-0 items-center gap-3 sm:gap-6">
-                <a href="{{ auth()->user()?->isCandidate() ? route('candidate.notifications.index') : route('news') }}" class="rounded p-2 text-admission-blue transition hover:bg-admission-soft" aria-label="{{ __('Thông báo') }}">
+                <a href="{{ auth()->check() ? (auth()->user()->isCandidate() ? route('candidate.notifications.index') : route('notifications.index')) : route('login') }}" wire:navigate class="rounded p-2 text-admission-blue transition hover:bg-admission-soft" aria-label="{{ __('Thông báo') }}" @if (request()->routeIs('notifications.index', 'candidate.notifications.index')) aria-current="page" @endif>
                     <flux:icon.bell class="size-6" />
                 </a>
 

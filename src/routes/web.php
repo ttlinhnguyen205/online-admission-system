@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Notifications;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -8,6 +9,7 @@ Route::view('huong-dan-dang-ky', 'welcome', ['page' => 'guidance', 'title' => 'H
 
 Route::middleware(['auth', 'active', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::livewire('notifications', Notifications::class)->name('notifications.index');
 });
 
 require __DIR__.'/settings.php';
