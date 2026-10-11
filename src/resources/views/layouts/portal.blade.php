@@ -42,7 +42,7 @@
             </div>
 
             <div class="ms-auto flex shrink-0 items-center gap-3 sm:gap-6">
-                <a href="{{ auth()->user()?->isCandidate() ? route('candidate.notifications.index') : route('home').'#portal-news' }}" class="rounded p-2 text-admission-blue transition hover:bg-admission-soft" aria-label="{{ __('Thông báo') }}">
+                <a href="{{ auth()->user()?->isCandidate() ? route('candidate.notifications.index') : route('news') }}" class="rounded p-2 text-admission-blue transition hover:bg-admission-soft" aria-label="{{ __('Thông báo') }}">
                     <flux:icon.bell class="size-6" />
                 </a>
 
@@ -89,7 +89,7 @@
                     <flux:icon.home class="size-5" />
                     <span>{{ __('Trang chủ') }}</span>
                 </a>
-                <a href="{{ route('home').'#portal-news' }}" x-on:click="menuOpen = false; search = ''; activeSection = '#portal-news'" x-bind:aria-current="isHomePage && activeSection === '#portal-news' ? 'location' : null" class="portal-nav-link">
+                <a href="{{ route('news') }}" wire:navigate x-on:click="menuOpen = false" @if (request()->routeIs('news')) aria-current="page" @endif class="portal-nav-link">
                     <flux:icon.newspaper class="size-5" />
                     <span>{{ __('Tin tức') }}</span>
                 </a>
@@ -174,7 +174,7 @@
                     </a>
                 @endguest
 
-                <a href="{{ route('home').'#portal-guidance' }}" x-on:click="menuOpen = false; search = ''; activeSection = '#portal-guidance'" x-bind:aria-current="isHomePage && activeSection === '#portal-guidance' ? 'location' : null" class="portal-nav-link">
+                <a href="{{ route('registration-guidance') }}" wire:navigate x-on:click="menuOpen = false" @if (request()->routeIs('registration-guidance')) aria-current="page" @endif class="portal-nav-link">
                     <flux:icon.book-open class="size-5" />
                     <span>{{ __('Hướng dẫn đăng ký') }}</span>
                 </a>

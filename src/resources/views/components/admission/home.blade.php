@@ -1,3 +1,5 @@
+@props(['page' => 'home'])
+
 @php
     $portalNow = now(config('app.timezone'));
     $portalGreeting = match (true) {
@@ -29,6 +31,7 @@
         </span>
     </div>
 
+    @if ($page !== 'guidance')
     @foreach ([
         ['portal-news', 'TIN NHÀ TRƯỜNG'],
         ['portal-admissions', 'TIN TUYỂN SINH'],
@@ -44,7 +47,9 @@
             </div>
         </section>
     @endforeach
+    @endif
 
+    @if ($page !== 'news')
     <section id="portal-guidance" data-portal-search="{{ __('Hướng dẫn đăng ký hồ sơ nguyện vọng hỗ trợ') }}" x-show="matches($el.dataset.portalSearch)" class="portal-news-panel scroll-mt-20 overflow-hidden" aria-labelledby="portal-guidance-title">
         <div class="flex items-center gap-3 border-b border-zinc-100 px-5 py-4 dark:border-zinc-700">
             <span class="h-4 w-1 rounded-full bg-admission-blue" aria-hidden="true"></span>
@@ -59,4 +64,5 @@
             @endforeach
         </ol>
     </section>
+    @endif
 </section>
