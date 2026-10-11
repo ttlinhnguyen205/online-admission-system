@@ -63,16 +63,16 @@ test('admin selects previews confirms and processes with a safe unpublished summ
     engineApplication($program);
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
-    $this->get(route('admin.admission-engine'))->assertOk()->assertSee('Preview readiness');
+    $this->get(route('admin.admission-engine'))->assertOk()->assertSee('Kiểm tra điều kiện xét tuyển');
     $component = Livewire::test(AdmissionEngine::class)
         ->set('roundSelection', (string) $program->admission_round_id)
         ->call('preview')->assertHasNoErrors()
         ->assertSet('previewData.verified', 1)->assertSet('previewData.wishes', 1)
-        ->assertSee('Ready for confirmation')->assertSee('DEMO-DGNL')->assertSee('Scalar')
+        ->assertSee('Đã đủ điều kiện xác nhận xét tuyển')->assertSee('DEMO-DGNL')->assertSee('Điểm đơn')
         ->call('confirm')->assertSet('showConfirmation', true)
         ->call('process')->assertHasNoErrors()
         ->assertSet('previewData.completed', true)->assertSet('showConfirmation', false)
-        ->assertSee('Saved admission summary')->assertSee('Results remain unpublished and unconfirmed');
+        ->assertSee('Tổng hợp kết quả xét tuyển đã lưu')->assertSee('Kết quả chưa được công bố và chưa được thí sinh xác nhận');
 
     expect($component->get('summary')['admitted'])->toBe(1);
     $this->assertDatabaseCount('admission_results', 1);
@@ -87,7 +87,7 @@ test('preview displays unresolved counts and prevents confirmation', function ()
 
     Livewire::test(AdmissionEngine::class)->set('roundSelection', (string) $program->admission_round_id)
         ->call('preview')->assertSet('previewData.submitted', 1)
-        ->assertSee('Unresolved submitted applications: 1.')->assertSee('Processing blocked')
+        ->assertSee('Hồ sơ ở trạng thái Đã nộp chưa được xử lý: 1.')->assertSee('Chưa thể xét tuyển')
         ->call('confirm')->assertHasErrors('engine');
 
     $this->assertDatabaseCount('admission_results', 0);
@@ -99,7 +99,7 @@ test('unsupported methods and historical states are visible in readiness', funct
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
     Livewire::test(AdmissionEngine::class)->set('roundSelection', (string) $program->admission_round_id)
-        ->call('preview')->assertSee('Unsupported')->assertSee('Unsupported calculation contract')
+        ->call('preview')->assertSee('Chưa được hỗ trợ')->assertSee('Cách tính điểm chưa được hỗ trợ')
         ->assertSet('previewData.existing_results', 0);
 });
 
@@ -139,7 +139,7 @@ test('stale Livewire preview cannot process changed input until previewed and co
     $component = Livewire::test(AdmissionEngine::class)->set('roundSelection', (string) $program->admission_round_id)->call('preview')->call('confirm');
     $program->update(['quota' => 0]);
 
-    $component->call('process')->assertHasErrors('engine')->assertSee('inputs changed');
+    $component->call('process')->assertHasErrors('engine')->assertSee('Dữ liệu xét tuyển đã thay đổi');
 
     $this->assertDatabaseCount('admission_results', 0);
     $component->call('preview')->call('confirm')->call('process')->assertHasNoErrors()->assertSet('summary.admitted', 0);
@@ -226,7 +226,7 @@ test('a completed engine page reads existing results without a second completion
 
     Livewire::test(AdmissionEngine::class)->set('roundSelection', (string) $program->admission_round_id)
         ->call('preview')->assertSet('previewData.completed', true)->assertSet('previewData.existing_results', 1)
-        ->assertSee('completed immutable run')->assertSee('Saved admission summary')
+        ->assertSee('Đợt này đã hoàn tất xét tuyển')->assertSee('Tổng hợp kết quả xét tuyển đã lưu')
         ->call('confirm')->assertForbidden();
 
     $this->assertDatabaseCount('admission_results', 1);

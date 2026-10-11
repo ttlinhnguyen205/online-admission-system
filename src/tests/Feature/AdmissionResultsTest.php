@@ -43,7 +43,7 @@ test('admin reviews publishes and retries immutable results with one notificatio
 
     $this->get(route('admin.results.index'))->assertOk();
     Livewire::test(AdminResults::class)->set('roundSelection', (string) $program->admission_round_id)
-        ->assertSee($application->application_code)->assertSee('8.125')->call('publish')->assertHasNoErrors()->assertSee('Already published');
+        ->assertSee($application->application_code)->assertSee('8.125')->call('publish')->assertHasNoErrors()->assertSee('Kết quả đã được công bố');
 
     expect($program->admissionRound->fresh()->status->value)->toBe('published');
     expect(AdmissionResult::all()->pluck('published_at')->map->format('Y-m-d H:i:s')->unique()->all())->toBe([now()->format('Y-m-d H:i:s')]);

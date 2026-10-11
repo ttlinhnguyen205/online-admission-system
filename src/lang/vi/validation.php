@@ -82,6 +82,7 @@ return [
         'form.weights.*.subject' => 'mã môn học',
         'form.weights.*.weight' => 'trọng số',
         'roundFilter' => 'đợt tuyển sinh',
+        'roundSelection' => 'đợt tuyển sinh',
         'majorFilter' => 'ngành đào tạo',
         'methodFilter' => 'phương thức xét tuyển',
         'statusFilter' => 'trạng thái',

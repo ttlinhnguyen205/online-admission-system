@@ -14,7 +14,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-#[Title('Admission engine')]
+#[Title('Công cụ xét tuyển')]
 class AdmissionEngine extends Component
 {
     public string $roundSelection = '';

@@ -63,7 +63,7 @@ test('new runs require explicit closed state regardless of deadlines', function 
     $this->assertDatabaseCount('activity_logs', 0);
 })->with(['draft', 'open', 'processing', 'published']);
 
-test('unresolved application states block the entire round and report counts', function (string $state) {
+test('unresolved application states block the entire round and report counts', function (string $state, string $label) {
     $program = engineProgram();
     engineApplication($program);
     Application::factory()->count(2)->create(['admission_round_id' => $program->admission_round_id, 'status' => $state]);
@@ -73,18 +73,18 @@ test('unresolved application states block the entire round and report counts', f
     $preview = $engine->preview($program->admission_round_id);
 
     expect($preview[$state])->toBe(2);
-    expect($preview['blockers'])->toContain('Unresolved '.$state.' applications: 2.');
+    expect($preview['blockers'])->toContain('Hồ sơ ở trạng thái '.$label.' chưa được xử lý: 2.');
     expect(fn () => $engine->process($program->admission_round_id, $preview['fingerprint']))->toThrow(ValidationException::class);
     $this->assertDatabaseCount('admission_results', 0);
     $this->assertDatabaseCount('activity_logs', 0);
-})->with(['submitted', 'under_review', 'needs_revision']);
+})->with([['submitted', 'Đã nộp'], ['under_review', 'Đang xét duyệt'], ['needs_revision', 'Cần bổ sung']]);
 
 test('zero verified applications cannot start processing', function () {
     $program = engineProgram();
     Application::factory()->create(['admission_round_id' => $program->admission_round_id, 'status' => 'draft']);
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
-    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'No verified applications');
+    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Chưa có hồ sơ đã xác minh');
 
     $this->assertDatabaseCount('activity_logs', 0);
 });
@@ -143,10 +143,10 @@ test('structural corruption blocks without repairs or partial writes', function 
     $this->assertDatabaseHas('admission_rounds', ['id' => $program->admission_round_id, 'status' => 'closed']);
     expect($application->wishes()->orderBy('priority')->pluck('priority')->all())->toBe([1, 2]);
 })->with([
-    ['no wishes', 'nonempty'], ['gap', 'contiguous'], ['invalid priority', 'contiguous'],
-    ['duplicate priority', 'unique'], ['duplicate program', 'unique'],
-    ['missing profile', 'relationships'], ['wrong application round', 'relationships'],
-    ['missing program', 'relationship'], ['missing major', 'relationship'], ['missing method', 'relationship'], ['cross round program', 'cross-round'],
+    ['no wishes', 'cần có nguyện vọng'], ['gap', 'liên tục'], ['invalid priority', 'liên tục'],
+    ['duplicate priority', 'không trùng lặp'], ['duplicate program', 'không trùng lặp'],
+    ['missing profile', 'liên kết thông tin'], ['wrong application round', 'liên kết thông tin'],
+    ['missing program', 'Thiếu liên kết'], ['missing major', 'Thiếu liên kết'], ['missing method', 'Thiếu liên kết'], ['cross round program', 'không thuộc cùng đợt'],
 ]);
 
 test('a persisted cross round wish blocks final processing', function () {
@@ -156,7 +156,7 @@ test('a persisted cross round wish blocks final processing', function () {
     $application->wishes()->sole()->update(['admission_program_id' => $foreign->id]);
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
-    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'cross-round');
+    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'không thuộc cùng đợt');
 
     $this->assertDatabaseCount('admission_results', 0);
 });
@@ -202,7 +202,7 @@ test('tie blockers detected in preview prevent every write', function () {
 
     $preview = $engine->preview($program->admission_round_id);
 
-    expect(implode(' ', $preview['blockers']))->toContain('Equal-score tie at quota boundary');
+    expect(implode(' ', $preview['blockers']))->toContain('có thí sinh bằng điểm tại ranh giới chỉ tiêu');
     expect(fn () => $engine->process($program->admission_round_id, $preview['fingerprint']))->toThrow(ValidationException::class);
     $this->assertDatabaseCount('admission_results', 0);
     $this->assertDatabaseCount('activity_logs', 0);
@@ -242,7 +242,7 @@ test('partial results without completed history block replacement', function () 
     $before = $result->fresh()->getAttributes();
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
-    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Existing decisions cannot be replaced');
+    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Không thể thay thế kết quả hiện có');
 
     expect($result->fresh()->getAttributes())->toBe($before);
     $this->assertDatabaseCount('activity_logs', 0);
@@ -285,7 +285,7 @@ test('stale previews reject changed processing inputs and a fresh preview uses c
         'cohort' => engineApplication($program, '9.000'),
     };
 
-    expect(fn () => $engine->process($program->admission_round_id, $preview['fingerprint']))->toThrow(ValidationException::class, 'inputs changed');
+    expect(fn () => $engine->process($program->admission_round_id, $preview['fingerprint']))->toThrow(ValidationException::class, 'Dữ liệu xét tuyển đã thay đổi');
 
     $this->assertDatabaseCount('admission_results', 0);
     $this->assertDatabaseCount('activity_logs', 0);
@@ -369,7 +369,7 @@ test('a changed valid weight configuration requires a fresh preview then uses cu
     $preview = $engine->preview($program->admission_round_id);
     $program->admissionMethod->update(['score_config' => ['weights' => ['MATH' => 2, 'PHYSICS' => 1, 'CHEMISTRY' => 1]]]);
 
-    expect(fn () => $engine->process($program->admission_round_id, $preview['fingerprint']))->toThrow(ValidationException::class, 'inputs changed');
+    expect(fn () => $engine->process($program->admission_round_id, $preview['fingerprint']))->toThrow(ValidationException::class, 'Dữ liệu xét tuyển đã thay đổi');
 
     $this->assertDatabaseCount('admission_results', 0);
     engineRun($program);

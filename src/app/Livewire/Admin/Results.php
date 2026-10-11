@@ -13,7 +13,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Title('Admission results')]
+#[Title('Công bố kết quả')]
 class Results extends Component
 {
     use WithPagination;

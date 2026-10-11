@@ -8,7 +8,7 @@
         <flux:select wire:model="roundSelection" :label="__('Admission round')" class="min-w-64">
             <option value="">{{ __('Select a round') }}</option>
             @foreach ($rounds as $round)
-                <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} · {{ $round->name }} ({{ $round->status->value }})</option>
+                <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} · {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status) }})</option>
             @endforeach
         </flux:select>
         <flux:button type="submit" variant="primary" wire:loading.attr="disabled">{{ __('Preview readiness') }}</flux:button>
@@ -34,7 +34,7 @@
             <flux:heading size="lg">{{ __('Readiness for round') }} #{{ $previewData['round_id'] }}</flux:heading>
             <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach (['round_status' => 'Round status', 'verified' => 'Verified applications ready', 'drafts' => 'Excluded drafts', 'submitted' => 'Submitted awaiting review', 'under_review' => 'Under review', 'needs_revision' => 'Needs revision', 'wishes' => 'Participating wishes ready', 'existing_results' => 'Existing results', 'existing_events' => 'Existing engine events'] as $field => $label)
-                    <div wire:key="readiness-{{ $field }}"><dt class="text-sm text-zinc-500">{{ __($label) }}</dt><dd>{{ $previewData[$field] }}</dd></div>
+                    <div wire:key="readiness-{{ $field }}"><dt class="text-sm text-zinc-500">{{ __($label) }}</dt><dd>{{ $field === 'round_status' ? App\Support\CandidateStatusLabels::round(App\Enums\AdmissionRoundStatus::from($previewData[$field])) : $previewData[$field] }}</dd></div>
                 @endforeach
             </dl>
             <flux:text>{{ __('Drafts are excluded. Submitted, under-review, and needs-revision applications must be resolved first. Dates do not automatically close a round.') }}</flux:text>
@@ -74,7 +74,7 @@
                 <flux:heading>{{ __('Processing blocked') }}</flux:heading>
                 <ul class="mt-2 list-inside list-disc space-y-2">
                     @foreach ($previewData['blockers'] as $index => $blocker)
-                        <li wire:key="blocker-{{ $index }}">{{ $blocker }}</li>
+                        <li wire:key="blocker-{{ $index }}">{{ __($blocker) }}</li>
                     @endforeach
                 </ul>
             </flux:callout>

@@ -7,6 +7,7 @@ use App\Enums\AdmissionRoundStatus;
 use App\Enums\ApplicationStatus;
 use App\Enums\WishStatus;
 use App\Models\AdmissionResult;
+use App\Support\CandidateStatusLabels;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -149,7 +150,7 @@ class ProcessAdmissionRound
         }
         foreach (['submitted', 'under_review', 'needs_revision'] as $state) {
             if ($preview[$state] > 0) {
-                $blockers[] = 'Unresolved '.$state.' applications: '.$preview[$state].'.';
+                $blockers[] = __('Unresolved :status applications: :count.', ['status' => CandidateStatusLabels::application(ApplicationStatus::from($state)), 'count' => $preview[$state]]);
             }
         }
         if ($verified->isEmpty()) {
@@ -166,13 +167,13 @@ class ProcessAdmissionRound
         foreach ($verified as $application) {
             $profileId = $application->getAttribute('candidate_profile_id');
             if (! $data['profiles']->has($profileId) || isset($seenProfiles[$profileId]) || $application->getAttribute('admission_round_id') !== $round->getKey()) {
-                $blockers[] = 'Application #'.$application->getKey().' has inconsistent profile or round relationships.';
+                $blockers[] = __('Application #:id has inconsistent profile or round relationships.', ['id' => $application->getKey()]);
             }
             $seenProfiles[$profileId] = true;
             $own = $byApplication->get($application->getKey(), collect());
             if ($own->isEmpty() || $own->sortBy('priority')->pluck('priority')->values()->all() !== range(1, $own->count())
                 || $own->pluck('admission_program_id')->unique()->count() !== $own->count()) {
-                $blockers[] = 'Application #'.$application->getKey().' requires nonempty, unique, contiguous wishes.';
+                $blockers[] = __('Application #:id requires nonempty, unique, contiguous wishes.', ['id' => $application->getKey()]);
             }
         }
         $quotas = $calculated = [];
@@ -208,14 +209,18 @@ class ProcessAdmissionRound
                     'score' => $score, 'eligible' => $minimum === null || $score >= CalculateAdmissionWishScore::decimal($minimum)];
                 $quotas[$program->getKey()] = $quota;
             } catch (\DomainException $exception) {
-                $blockers[] = 'Wish #'.$wish->getKey().': '.$exception->getMessage();
+                $blockers[] = __('Wish #:id: :reason', ['id' => $wish->getKey(), 'reason' => __($exception->getMessage())]);
             }
         }
         if ($blockers === []) {
             try {
                 $allocation = $this->allocator->allocate($decisions, $quotas);
             } catch (\DomainException $exception) {
-                $blockers[] = $exception->getMessage();
+                if (preg_match('/^Equal-score tie at quota boundary requires an approved tie-break policy\. Program #(\d+)\.$/', $exception->getMessage(), $matches) === 1) {
+                    $blockers[] = __('Equal-score tie at quota boundary requires an approved tie-break policy. Program #:id.', ['id' => $matches[1]]);
+                } else {
+                    $blockers[] = __($exception->getMessage());
+                }
             }
         }
 
