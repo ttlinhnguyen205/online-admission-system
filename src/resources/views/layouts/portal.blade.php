@@ -27,11 +27,7 @@
     >
         <header class="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-4 border-b border-zinc-200 bg-white px-4 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 lg:ps-0">
             <a href="{{ route('home') }}" wire:navigate class="admission-brand -ms-4 flex h-16 shrink-0 items-center gap-3 px-4 text-white lg:ms-0 lg:w-60 lg:px-6" aria-label="{{ __('Trang chủ tuyển sinh') }}">
-                <span class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-white/30"><flux:icon.academic-cap class="size-7" /></span>
-                <span class="hidden min-w-0 lg:block">
-                    <span class="block truncate text-base font-bold">{{ config('app.name') }}</span>
-                    <span class="block text-[10px] uppercase tracking-widest text-rose-100">{{ __('Tuyển sinh') }}</span>
-                </span>
+                <img src="{{ asset('Logo.png') }}" alt="UNICAMP — Since 1990" width="448" height="137" class="h-auto w-28 object-contain brightness-0 invert sm:w-36 lg:w-full" />
             </a>
 
             <button type="button" class="flex shrink-0 items-center gap-2 rounded p-1 text-sm font-semibold text-admission-blue hover:bg-admission-soft focus-visible:outline-2 focus-visible:outline-admission-blue" x-on:click="window.innerWidth >= 1024 ? desktopCollapsed = !desktopCollapsed : menuOpen = !menuOpen" x-bind:aria-expanded="window.innerWidth >= 1024 ? !desktopCollapsed : menuOpen" aria-controls="portal-navigation">
