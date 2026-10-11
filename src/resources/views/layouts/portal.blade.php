@@ -174,10 +174,12 @@
                     </a>
                 @endguest
 
-                <a href="{{ route('registration-guidance') }}" wire:navigate x-on:click="menuOpen = false" @if (request()->routeIs('registration-guidance')) aria-current="page" @endif class="portal-nav-link">
-                    <flux:icon.book-open class="size-5" />
-                    <span>{{ __('Hướng dẫn đăng ký') }}</span>
-                </a>
+                @unless (auth()->user()?->isAdmin())
+                    <a href="{{ route('registration-guidance') }}" wire:navigate x-on:click="menuOpen = false" @if (request()->routeIs('registration-guidance')) aria-current="page" @endif class="portal-nav-link">
+                        <flux:icon.book-open class="size-5" />
+                        <span>{{ __('Hướng dẫn đăng ký') }}</span>
+                    </a>
+                @endunless
             </nav>
         </aside>
 

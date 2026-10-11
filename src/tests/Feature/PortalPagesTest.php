@@ -1,5 +1,24 @@
 <?php
 
+use App\Enums\UserRole;
+use App\Models\User;
+
+test('admin navigation omits registration guidance', function () {
+    $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+    $response = $this->get(route('news'));
+
+    $response->assertDontSee('href="'.route('registration-guidance').'"', false);
+});
+
+test('candidate navigation retains registration guidance', function () {
+    $this->actingAs(User::factory()->create());
+
+    $response = $this->get(route('news'));
+
+    $response->assertSee('href="'.route('registration-guidance').'"', false);
+});
+
 test('news page contains school and admission news without registration guidance', function () {
     $response = $this->get(route('news'));
 
