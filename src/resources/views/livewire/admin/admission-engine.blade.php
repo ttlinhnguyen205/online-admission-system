@@ -56,7 +56,7 @@
                             <flux:table.row :key="'program-'.$program['id']">
                                 <flux:table.cell>#{{ $program['id'] }}</flux:table.cell>
                                 <flux:table.cell>{{ $program['method'] }}</flux:table.cell>
-                                <flux:table.cell><flux:badge :color="$program['type'] === 'unsupported' ? 'red' : 'green'">{{ __(ucfirst($program['type'])) }}</flux:badge></flux:table.cell>
+                                <flux:table.cell><flux:badge :color="$program['type'] === 'unsupported' ? 'rose' : 'rose'">{{ __(ucfirst($program['type'])) }}</flux:badge></flux:table.cell>
                                 <flux:table.cell>{{ $program['quota'] }}</flux:table.cell>
                                 <flux:table.cell>{{ $program['minimum_score'] ?? __('No threshold') }}</flux:table.cell>
                             </flux:table.row>

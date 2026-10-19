@@ -1,10 +1,10 @@
 @php
-    $statusColors = ['Đã nộp' => 'sky', 'Đang xét duyệt' => 'amber', 'Cần bổ sung' => 'orange', 'Đã xác minh' => 'emerald', 'Không hợp lệ' => 'rose', 'Đang xét tuyển' => 'violet', 'Hoàn tất xét tuyển' => 'teal'];
+    $statusColors = ['Đã nộp' => 'rose', 'Đang xét duyệt' => 'rose', 'Cần bổ sung' => 'rose', 'Đã xác minh' => 'rose', 'Không hợp lệ' => 'rose', 'Đang xét tuyển' => 'rose', 'Hoàn tất xét tuyển' => 'rose'];
 @endphp
 <section class="mx-auto flex w-full max-w-7xl flex-col gap-6 text-zinc-900 dark:text-zinc-100 sm:gap-8">
     <header class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <p class="mb-2 flex items-center gap-2 text-xs font-semibold tracking-widest text-indigo-600 uppercase dark:text-indigo-400">
+            <p class="mb-2 flex items-center gap-2 text-xs font-semibold tracking-widest text-rose-600 uppercase dark:text-rose-400">
                 <flux:icon.academic-cap variant="mini" class="size-4" aria-hidden="true" /> Quản trị tuyển sinh
             </p>
             <flux:heading size="xl" level="1" class="tracking-tight">Tổng quan tuyển sinh</flux:heading>
@@ -67,10 +67,10 @@
         @php
             $metrics = $summary['metrics'];
             $primary = [
-                ['label' => 'Hồ sơ đã nộp', 'count' => $metrics['Hồ sơ đã nộp'], 'icon' => 'document-text', 'hint' => 'Không bao gồm bản nháp', 'tone' => 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300'],
-                ['label' => 'Thí sinh có hồ sơ', 'count' => $metrics['Thí sinh có hồ sơ'], 'icon' => 'users', 'hint' => 'Thí sinh duy nhất trong bộ lọc', 'tone' => 'bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-300'],
-                ['label' => 'Chờ xử lý', 'count' => $metrics['Chờ bắt đầu xét duyệt'] + $metrics['Đang xét duyệt'], 'icon' => 'clock', 'hint' => 'Đã nộp và đang xét duyệt', 'tone' => 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'],
-                ['label' => 'Cần bổ sung', 'count' => $metrics['Cần bổ sung'], 'icon' => 'exclamation-circle', 'hint' => 'Hồ sơ cần thí sinh bổ sung', 'tone' => 'bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300'],
+                ['label' => 'Hồ sơ đã nộp', 'count' => $metrics['Hồ sơ đã nộp'], 'icon' => 'document-text', 'hint' => 'Không bao gồm bản nháp', 'tone' => 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'],
+                ['label' => 'Thí sinh có hồ sơ', 'count' => $metrics['Thí sinh có hồ sơ'], 'icon' => 'users', 'hint' => 'Thí sinh duy nhất trong bộ lọc', 'tone' => 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'],
+                ['label' => 'Chờ xử lý', 'count' => $metrics['Chờ bắt đầu xét duyệt'] + $metrics['Đang xét duyệt'], 'icon' => 'clock', 'hint' => 'Đã nộp và đang xét duyệt', 'tone' => 'bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'],
+                ['label' => 'Cần bổ sung', 'count' => $metrics['Cần bổ sung'], 'icon' => 'exclamation-circle', 'hint' => 'Hồ sơ cần thí sinh bổ sung', 'tone' => 'bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'],
             ];
         @endphp
         <div aria-label="Chỉ số chính" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" wire:loading.class="opacity-60">
@@ -87,7 +87,7 @@
         </div>
 
         <details wire:key="admin-statistics-details" class="group rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl p-5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500 sm:p-6">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl p-5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose-500 sm:p-6">
                 <div><h2 class="font-semibold">Thống kê chi tiết</h2><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Nguyện vọng, tiến độ xét duyệt và kết quả tuyển sinh</p></div>
                 <flux:icon.chevron-down class="size-5 shrink-0 text-zinc-500 transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
@@ -115,17 +115,17 @@
             </div>
         </section>
 
-        <section aria-label="Hàng đợi xét duyệt" class="overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm dark:border-amber-500/30 dark:bg-zinc-900">
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-amber-100 bg-amber-50/60 px-5 py-4 dark:border-amber-500/20 dark:bg-amber-500/5 sm:px-6">
+        <section aria-label="Hàng đợi xét duyệt" class="overflow-hidden rounded-2xl border border-rose-200 bg-white shadow-sm dark:border-rose-500/30 dark:bg-zinc-900">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rose-100 bg-rose-50/60 px-5 py-4 dark:border-rose-500/20 dark:bg-rose-500/5 sm:px-6">
                 <div><flux:heading level="2">Hồ sơ cần xử lý — nộp sớm nhất</flux:heading><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Ưu tiên tối đa 5 hồ sơ đã nộp hoặc đang xét duyệt theo bộ lọc.</p></div>
-                <flux:icon.clock class="size-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <flux:icon.clock class="size-5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
             </div>
             <ul class="divide-y divide-zinc-100 dark:divide-zinc-800">
                 @forelse ($pending as $application)
                     @php($label = App\Support\CandidateStatusLabels::application($application->status))
                     <li wire:key="admin-pending-{{ $application->id }}" class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                        <div class="min-w-0"><a href="{{ route('admin.applications.show', $application->id) }}" wire:navigate class="font-semibold text-indigo-700 underline-offset-4 hover:underline dark:text-indigo-300">{{ $application->application_code }}</a><p class="mt-1 break-words text-xs text-zinc-500 dark:text-zinc-400">{{ $application->admissionRound->name }}</p></div>
-                        <div class="flex items-center gap-3"><flux:badge size="sm" :color="$statusColors[$label] ?? 'zinc'">{{ $label }}</flux:badge><a href="{{ route('admin.applications.show', $application->id) }}" wire:navigate class="rounded p-1 text-zinc-400 hover:text-indigo-600 focus-visible:outline-2 focus-visible:outline-indigo-500" aria-label="Xét duyệt hồ sơ {{ $application->application_code }}"><flux:icon.arrow-right class="size-4" aria-hidden="true" /></a></div>
+                        <div class="min-w-0"><a href="{{ route('admin.applications.show', $application->id) }}" wire:navigate class="font-semibold text-rose-700 underline-offset-4 hover:underline dark:text-rose-300">{{ $application->application_code }}</a><p class="mt-1 break-words text-xs text-zinc-500 dark:text-zinc-400">{{ $application->admissionRound->name }}</p></div>
+                        <div class="flex items-center gap-3"><flux:badge size="sm" :color="$statusColors[$label] ?? 'zinc'">{{ $label }}</flux:badge><a href="{{ route('admin.applications.show', $application->id) }}" wire:navigate class="rounded p-1 text-zinc-400 hover:text-rose-600 focus-visible:outline-2 focus-visible:outline-rose-500" aria-label="Xét duyệt hồ sơ {{ $application->application_code }}"><flux:icon.arrow-right class="size-4" aria-hidden="true" /></a></div>
                     </li>
                 @empty
                     <li class="px-5 py-6 text-sm text-zinc-500 dark:text-zinc-400 sm:px-6">Không có hồ sơ chờ xử lý phù hợp.</li>
@@ -148,7 +148,7 @@
                         @forelse ($records as $application)
                             @php($label = App\Support\CandidateStatusLabels::application($application->status))
                             <tr wire:key="admin-application-{{ $application->id }}" class="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
-                                <th scope="row" class="whitespace-nowrap px-5 py-4 font-semibold sm:px-6"><a href="{{ route('admin.applications.show', $application->id) }}" wire:navigate class="text-indigo-700 underline-offset-4 hover:underline dark:text-indigo-300">{{ $application->application_code }}</a></th>
+                                <th scope="row" class="whitespace-nowrap px-5 py-4 font-semibold sm:px-6"><a href="{{ route('admin.applications.show', $application->id) }}" wire:navigate class="text-rose-700 underline-offset-4 hover:underline dark:text-rose-300">{{ $application->application_code }}</a></th>
                                 <td class="whitespace-nowrap px-5 py-4 text-zinc-500 dark:text-zinc-400 sm:px-6">{{ $application->candidateProfile->candidate_code }}</td>
                                 <td class="min-w-40 px-5 py-4 font-medium sm:px-6">{{ $application->candidateProfile->user->name }}</td>
                                 <td class="min-w-40 px-5 py-4 text-zinc-600 dark:text-zinc-300 sm:px-6">{{ $application->admissionRound->name }}</td>

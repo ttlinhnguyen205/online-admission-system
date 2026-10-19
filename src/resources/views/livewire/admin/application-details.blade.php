@@ -19,7 +19,7 @@
     <div role="status" wire:loading.delay>{{ __('Updating review...') }}</div>
     <div class="space-y-3 admission-panel p-5">
         <div class="flex flex-wrap gap-3">
-            <flux:badge>{{ __(ucwords(str_replace('_', ' ', $application->status->value))) }}</flux:badge>@if ($application->status === App\Enums\ApplicationStatus::Verified)<flux:badge color="green">{{ __('Review complete') }}</flux:badge>@endif
+            <flux:badge>{{ __(ucwords(str_replace('_', ' ', $application->status->value))) }}</flux:badge>@if ($application->status === App\Enums\ApplicationStatus::Verified)<flux:badge color="rose">{{ __('Review complete') }}</flux:badge>@endif
         </div>
         <flux:text>{{ __('Round') }}: {{ $application->admissionRound?->name ?? __('Unavailable') }} · {{ $application->admissionRound?->code }}</flux:text>
         <flux:text>{{ __('Latest submission') }}: {{ $application->submitted_at?->format('Y-m-d H:i:s') ?? __('Not recorded') }}</flux:text>
@@ -36,7 +36,7 @@
         <flux:heading size="lg">{{ __('Candidate profile — read only') }}</flux:heading>
         @if ($profile)
         <div class="flex flex-wrap gap-5">
-            @if ($photoAvailable)<img src="{{ route('admission.profiles.photo', $profile->id) }}" alt="{{ __('Candidate profile photo') }}" class="h-40 w-30 rounded-lg object-cover" />@else<flux:badge color="amber">{{ __('Private profile photo unavailable') }}</flux:badge>@endif
+            @if ($photoAvailable)<img src="{{ route('admission.profiles.photo', $profile->id) }}" alt="{{ __('Candidate profile photo') }}" class="h-40 w-30 rounded-lg object-cover" />@else<flux:badge color="rose">{{ __('Private profile photo unavailable') }}</flux:badge>@endif
             <div class="space-y-2">
                 <div class="font-medium">{{ $profile->user?->name }}</div>
                 <flux:text>{{ $profile->user?->email }} · {{ $profile->candidate_code }}</flux:text>
@@ -78,7 +78,7 @@
                             class="max-h-64 rounded-lg border border-zinc-200 object-contain dark:border-zinc-700" />
                     </a>
                     @else
-                    <flux:badge color="amber">
+                    <flux:badge color="rose">
                         {{ __('Chưa tải lên CCCD mặt trước') }}
                     </flux:badge>
                     @endif
@@ -105,7 +105,7 @@
                             class="max-h-64 rounded-lg border border-zinc-200 object-contain dark:border-zinc-700" />
                     </a>
                     @else
-                    <flux:badge color="amber">
+                    <flux:badge color="rose">
                         {{ __('Chưa tải lên CCCD mặt sau') }}
                     </flux:badge>
                     @endif
@@ -135,10 +135,10 @@
                             <div>{{ $score->subject_code }} {{ $score->subject_name }}</div>
                         </flux:table.cell>
                         <flux:table.cell>{{ $score->score }} · {{ $score->exam_year }}</flux:table.cell>
-                        <flux:table.cell>@if ($scoreEvidenceAvailability->get($score->id))<flux:button size="sm" :href="route('admission.scores.evidence', $score->id)" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@else<flux:badge color="amber">{{ __('Chưa có minh chứng hợp lệ') }}</flux:badge>@endif</flux:table.cell>
+                        <flux:table.cell>@if ($scoreEvidenceAvailability->get($score->id))<flux:button size="sm" :href="route('admission.scores.evidence', $score->id)" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@else<flux:badge color="rose">{{ __('Chưa có minh chứng hợp lệ') }}</flux:badge>@endif</flux:table.cell>
                         <flux:table.cell>
                             <div class="flex flex-wrap gap-2">
-                                <flux:badge :color="$score->verified ? 'green' : 'zinc'">{{ $score->verified ? __('Đã xác minh') : __('Chưa xác minh') }}</flux:badge>@if ($reviewable && ! $score->verified)<flux:button size="sm" wire:click="confirm('verifyScore', {{ $score->id }})" :disabled="$stale" wire:loading.attr="disabled">{{ __('Xác minh điểm') }}</flux:button>@endif
+                                <flux:badge :color="$score->verified ? 'rose' : 'zinc'">{{ $score->verified ? __('Đã xác minh') : __('Chưa xác minh') }}</flux:badge>@if ($reviewable && ! $score->verified)<flux:button size="sm" wire:click="confirm('verifyScore', {{ $score->id }})" :disabled="$stale" wire:loading.attr="disabled">{{ __('Xác minh điểm') }}</flux:button>@endif
                             </div>
                         </flux:table.cell>
                     </flux:table.row>
@@ -155,7 +155,7 @@
         @forelse ($application->documents as $document)
         <article wire:key="document-{{ $document->id }}" class="space-y-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
             <div class="break-words font-medium">{{ $document->document_type }} · {{ $document->original_name }}</div>
-            <flux:badge :color="match ($document->status) { App\Enums\DocumentStatus::Verified => 'green', App\Enums\DocumentStatus::Rejected => 'red', default => 'zinc' }">{{ __(ucfirst($document->status->value)) }}</flux:badge>
+            <flux:badge :color="match ($document->status) { App\Enums\DocumentStatus::Verified => 'rose', App\Enums\DocumentStatus::Rejected => 'rose', default => 'zinc' }">{{ __(ucfirst($document->status->value)) }}</flux:badge>
             @if ($document->rejection_reason)<p class="whitespace-pre-wrap break-words text-sm">{{ $document->rejection_reason }}</p>@endif
             @if (! $documentAvailability->get($document->id))<flux:callout variant="warning">{{ __('Private file unavailable. Verification is blocked; rejection can request a replacement.') }}</flux:callout>@endif
             <div class="flex flex-wrap gap-2">
@@ -176,9 +176,9 @@
             <div class="font-medium">{{ $wish->priority }}. {{ $wish->admissionProgram?->major?->name ?? __('Missing major') }}</div>
             <flux:text>{{ $wish->admissionProgram?->major?->code }} · {{ $wish->admissionProgram?->admissionMethod?->name ?? __('Missing method') }} · {{ $wish->admissionProgram?->admissionMethod?->code }}</flux:text>
             @if ($wish->admissionProgram && ($wish->admissionProgram->status !== 'active' || ! $wish->admissionProgram->major?->is_active || ! $wish->admissionProgram->admissionMethod?->is_active || $wish->admissionProgram->quota <= 0))
-                <flux:badge color="amber">{{ __('Advisory: catalog inactive or configured capacity is zero') }}</flux:badge>
+                <flux:badge color="rose">{{ __('Advisory: catalog inactive or configured capacity is zero') }}</flux:badge>
                 @endif
-                @if ($wish->result)<flux:badge color="amber">{{ __('Existing admission result: review blocked') }}</flux:badge>@endif
+                @if ($wish->result)<flux:badge color="rose">{{ __('Existing admission result: review blocked') }}</flux:badge>@endif
         </article>
         @empty<flux:text>{{ __('No wishes recorded.') }}</flux:text>@endforelse
         <flux:text>{{ __('Current catalog availability is advisory after submission. Review does not determine admission eligibility or allocate places.') }}</flux:text>

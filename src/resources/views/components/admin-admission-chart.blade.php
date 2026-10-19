@@ -18,20 +18,20 @@
                     $percentage = $total > 0 ? $row['count'] / $total * 100 : 0;
                     $color = $colors[$row['label']] ?? 'indigo';
                     $barClass = match ($color) {
-                        'sky' => 'bg-sky-500 dark:bg-sky-400',
-                        'amber' => 'bg-amber-500 dark:bg-amber-400',
-                        'orange' => 'bg-orange-500 dark:bg-orange-400',
-                        'emerald' => 'bg-emerald-500 dark:bg-emerald-400',
+                        'sky' => 'bg-rose-500 dark:bg-rose-400',
+                        'amber' => 'bg-rose-500 dark:bg-rose-400',
+                        'orange' => 'bg-rose-500 dark:bg-rose-400',
+                        'emerald' => 'bg-rose-500 dark:bg-rose-400',
                         'rose' => 'bg-rose-500 dark:bg-rose-400',
-                        'violet' => 'bg-violet-500 dark:bg-violet-400',
-                        'teal' => 'bg-teal-500 dark:bg-teal-400',
-                        default => 'bg-indigo-500 dark:bg-indigo-400',
+                        'violet' => 'bg-rose-500 dark:bg-rose-400',
+                        'teal' => 'bg-rose-500 dark:bg-rose-400',
+                        default => 'bg-rose-500 dark:bg-rose-400',
                     };
                 @endphp
                 <tr wire:key="admin-chart-{{ $title }}-{{ $index }}">
                     <th scope="row" class="py-3 pr-4 align-top font-normal">
                         <details class="group min-w-0">
-                            <summary aria-label="{{ $row['label'] }}" class="flex cursor-pointer list-none items-center gap-1 rounded text-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500 dark:text-zinc-200">
+                            <summary aria-label="{{ $row['label'] }}" class="flex cursor-pointer list-none items-center gap-1 rounded text-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose-500 dark:text-zinc-200">
                                 <span class="min-w-0 truncate" title="{{ $row['label'] }}">{{ Illuminate\Support\Str::limit($row['label'], 52) }}</span>
                                 <flux:icon.chevron-down variant="micro" class="size-3 shrink-0 text-zinc-400 transition-transform group-open:rotate-180" aria-hidden="true" />
                             </summary>

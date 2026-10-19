@@ -49,9 +49,9 @@
                     </flux:table.cell>
                     <flux:table.cell>{{ $record->score }}</flux:table.cell>
                     <flux:table.cell>{{ $record->exam_year }}</flux:table.cell>
-                    <flux:table.cell>@if ($evidenceAvailability->get($record->id))<flux:button size="sm" :href="route('admission.scores.evidence', $record->id)" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@else<flux:badge color="amber">{{ __('Chưa có minh chứng hợp lệ') }}</flux:badge>@endif</flux:table.cell>
+                    <flux:table.cell>@if ($evidenceAvailability->get($record->id))<flux:button size="sm" :href="route('admission.scores.evidence', $record->id)" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@else<flux:badge color="rose">{{ __('Chưa có minh chứng hợp lệ') }}</flux:badge>@endif</flux:table.cell>
                     <flux:table.cell>
-                        <flux:badge :color="$record->verified ? 'green' : 'zinc'">{{ $record->verified ? __('Đã xác minh') : __('Chưa xác minh') }}</flux:badge>
+                        <flux:badge :color="$record->verified ? 'rose' : 'zinc'">{{ $record->verified ? __('Đã xác minh') : __('Chưa xác minh') }}</flux:badge>
                     </flux:table.cell>
                     <flux:table.cell>
                         @can('update', $record)<flux:button size="sm" wire:click="edit({{ $record->id }})">{{ __('Sửa') }}</flux:button>@endcan

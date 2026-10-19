@@ -23,17 +23,15 @@ class AnswerAdmissionQuestion
         private AdmissionCounselingHistory $history,
     ) {}
 
-    public function answer(User $user, string $question, string $revision, bool $consent): void
+    public function answer(User $user, string $question, string $revision): void
     {
         Gate::forUser($user->fresh())->authorize('use-admission-counseling');
         $question = trim($question);
-        Validator::make(['question' => $question, 'consent' => $consent], [
+        Validator::make(['question' => $question], [
             'question' => ['required', 'string', 'max:'.min(2000, (int) config('admission_chatbot.max_question_characters'))],
-            'consent' => ['accepted'],
         ], [
             'question.required' => 'Vui lòng nhập câu hỏi.',
             'question.max' => 'Câu hỏi quá dài. Tối đa :max ký tự.',
-            'consent.accepted' => 'Vui lòng xác nhận thông báo quyền riêng tư trước khi gửi.',
         ])->validate();
         if (! config('admission_chatbot.enabled')) {
             throw new AdmissionCounselingFailure('disabled');

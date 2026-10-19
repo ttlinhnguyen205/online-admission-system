@@ -13,7 +13,7 @@
     @else
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($applications as $item)
-                <a wire:key="application-{{ $item->id }}" href="{{ route('candidate.applications.documents.index', $item->id) }}" wire:navigate class="rounded-xl border p-4 {{ $applicationId === $item->id ? 'border-blue-500' : 'border-zinc-200 dark:border-zinc-700' }}" @if ($applicationId === $item->id) aria-current="page" @endif>
+                <a wire:key="application-{{ $item->id }}" href="{{ route('candidate.applications.documents.index', $item->id) }}" wire:navigate class="rounded-xl border p-4 {{ $applicationId === $item->id ? 'border-rose-500' : 'border-zinc-200 dark:border-zinc-700' }}" @if ($applicationId === $item->id) aria-current="page" @endif>
                     <div class="font-medium">{{ $item->application_code }}</div><div class="text-sm">{{ $item->admissionRound->name }}</div><flux:badge class="mt-2">{{ App\Support\CandidateStatusLabels::application($item->status) }}</flux:badge>
                 </a>
             @endforeach
@@ -35,7 +35,7 @@
                         <flux:table.row :key="$record->id">
                             <flux:table.cell><div>{{ $record->document_type }}</div><div class="max-w-sm whitespace-normal break-words text-xs">{{ $record->original_name }}</div></flux:table.cell>
                             <flux:table.cell>
-                                <flux:badge :color="match ($record->status) { App\Enums\DocumentStatus::Verified => 'green', App\Enums\DocumentStatus::Rejected => 'red', default => 'zinc' }">{{ App\Support\CandidateStatusLabels::document($record->status) }}</flux:badge>
+                                <flux:badge :color="match ($record->status) { App\Enums\DocumentStatus::Verified => 'rose', App\Enums\DocumentStatus::Rejected => 'rose', default => 'zinc' }">{{ App\Support\CandidateStatusLabels::document($record->status) }}</flux:badge>
                                 @if ($record->status === App\Enums\DocumentStatus::Rejected && $record->rejection_reason)<p class="mt-2 max-w-md whitespace-pre-wrap break-words text-sm">{{ $record->rejection_reason }}</p>@endif
                             </flux:table.cell>
                             <flux:table.cell><div class="flex flex-wrap gap-2">

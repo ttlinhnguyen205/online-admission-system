@@ -36,6 +36,28 @@ test('gemini sends a server side schema constrained request with no tools or que
     );
 });
 
+test('gemini verifies TLS using the configured CA bundle or system trust', function (mixed $bundle, string|bool $expected) {
+    config(['services.gemini.ca_bundle' => $bundle]);
+    $verification = null;
+    Http::fake(['generativelanguage.googleapis.com/*' => function (Request $request, array $options) use (&$verification) {
+        $verification = $options['verify'];
+
+        return Http::response([
+            'candidates' => [['finishReason' => 'STOP', 'content' => ['parts' => [['text' => json_encode(counselingPlan())]]]]],
+        ]);
+    }]);
+
+    app(GeminiAdmissionCounselingProvider::class)->plan('Ngành nào?', [], []);
+
+    expect($verification)->toBe($expected);
+    Http::assertSentCount(1);
+})->with([
+    'custom CA bundle' => ['/trusted/cacert.pem', '/trusted/cacert.pem'],
+    'system trust' => ['', true],
+    'missing option' => [null, true],
+    'verification cannot be disabled' => [false, true],
+]);
+
 test('gemini normalizes errors without retries or leaking provider text', function (int $status, string $reason) {
     Http::fake(['generativelanguage.googleapis.com/*' => Http::response('sensitive provider response', $status)]);
 

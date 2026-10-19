@@ -15,7 +15,7 @@
                         <th scope="row" class="w-full py-2 pr-4 font-normal">
                             <span class="break-words">{{ $row['label'] }}</span>
                             <div aria-hidden="true" class="mt-1 h-2 overflow-hidden rounded bg-zinc-100 dark:bg-zinc-800">
-                                <div class="h-full rounded bg-emerald-600 dark:bg-emerald-400" style="width: {{ round($row['count'] / $maximum * 100, 2) }}%"></div>
+                                <div class="h-full rounded bg-rose-600 dark:bg-rose-400" style="width: {{ round($row['count'] / $maximum * 100, 2) }}%"></div>
                             </div>
                         </th>
                         <td class="py-2 text-right align-top tabular-nums">{{ number_format($row['count']) }}</td>

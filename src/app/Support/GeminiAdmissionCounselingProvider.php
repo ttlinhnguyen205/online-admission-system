@@ -27,6 +27,7 @@ class GeminiAdmissionCounselingProvider implements AdmissionCounselingProvider
                 ->connectTimeout(max(1, min(5, (int) config('admission_chatbot.connect_timeout'))))
                 ->timeout(max(1, min(20, (int) config('admission_chatbot.timeout'))))
                 ->withOptions([
+                    'verify' => (string) config('services.gemini.ca_bundle') ?: true,
                     'allow_redirects' => false,
                     'on_headers' => static function (ResponseInterface $response) use ($limit): void {
                         if ((int) $response->getHeaderLine('Content-Length') > $limit) {

@@ -15,7 +15,7 @@
         </flux:badge>
 
         <flux:badge
-            :color="$profile?->profile_status === App\Enums\ProfileStatus::Verified ? 'green' : 'zinc'"
+            :color="$profile?->profile_status === App\Enums\ProfileStatus::Verified ? 'rose' : 'zinc'"
         >
             {{ $profile ? App\Support\CandidateStatusLabels::profile($profile->profile_status) : __('Chưa hoàn thiện') }}
         </flux:badge>

@@ -33,7 +33,7 @@
                 </flux:table.cell>
 
                 <flux:table.cell>
-                    <flux:badge :color="$record->is_active ? 'green' : 'zinc'">
+                    <flux:badge :color="$record->is_active ? 'rose' : 'zinc'">
                         {{ $record->is_active ? __('Active') : __('Inactive') }}
                     </flux:badge>
                 </flux:table.cell>

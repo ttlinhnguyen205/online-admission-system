@@ -4,6 +4,7 @@ return [
     'gemini' => [
         'key' => env('GEMINI_API_KEY', ''),
         'model' => env('GEMINI_MODEL', ''),
+        'ca_bundle' => env('GEMINI_CA_BUNDLE', ''),
     ],
 
     /*

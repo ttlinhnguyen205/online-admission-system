@@ -330,7 +330,7 @@ test('admin chart handles an empty denominator without invalid percentages', fun
         'rows' => [['label' => 'Đã nộp', 'count' => 0]], 'colors' => ['Đã nộp' => 'sky'],
     ])->render();
 
-    expect($html)->toContain('Tỷ lệ trên 0 hồ sơ đã nộp', 'Chưa có dữ liệu phù hợp.', '0,0%', 'width: 0%', 'bg-sky-500')
+    expect($html)->toContain('Tỷ lệ trên 0 hồ sơ đã nộp', 'Chưa có dữ liệu phù hợp.', '0,0%', 'width: 0%', 'bg-rose-500')
         ->not->toContain('NaN', 'INF');
 });
 

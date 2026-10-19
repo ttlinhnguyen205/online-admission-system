@@ -37,7 +37,7 @@
                     <flux:table.cell>
                         <div class="flex flex-wrap gap-1">
                             @foreach ($catalogPrograms->get($record->admission_round_id.'-'.$record->major_id, collect()) as $catalogProgram)
-                                <flux:badge wire:key="offering-method-{{ $record->id }}-{{ $catalogProgram->id }}" :color="$catalogProgram->status === 'active' && $catalogProgram->admissionMethod->is_active ? 'green' : 'zinc'">
+                                <flux:badge wire:key="offering-method-{{ $record->id }}-{{ $catalogProgram->id }}" :color="$catalogProgram->status === 'active' && $catalogProgram->admissionMethod->is_active ? 'rose' : 'zinc'">
                                     {{ $catalogProgram->admissionMethod->name }} · {{ $catalogProgram->status === 'active' && $catalogProgram->admissionMethod->is_active ? 'Chấp nhận' : 'Ngừng hoạt động' }}
                                 </flux:badge>
                             @endforeach
@@ -46,7 +46,7 @@
                         <flux:button size="sm" variant="ghost" :href="route('admin.admission-programs.index', ['roundFilter' => $record->admission_round_id, 'majorFilter' => $record->major_id])" wire:navigate>Cấu hình phương thức</flux:button>
                     </flux:table.cell>
                     <flux:table.cell>
-                        <flux:badge :color="$record->is_selectable ? 'green' : 'zinc'">{{ $record->is_selectable ? __('Registration enabled') : __('Registration disabled') }}</flux:badge>
+                        <flux:badge :color="$record->is_selectable ? 'rose' : 'zinc'">{{ $record->is_selectable ? __('Registration enabled') : __('Registration disabled') }}</flux:badge>
                         @if ($record->is_selectable)
                             <p class="mt-2 max-w-xs text-xs text-zinc-500 dark:text-zinc-400">
                                 {{ App\Actions\CandidateMajorOfferings::available($record, $record->admissionProgram, $record->admissionRound) ? __('Currently accepting registration') : ($record->admissionProgram ? App\Actions\CandidateWishes::unavailableReason($record->admissionProgram, $record->admissionRound) : __('Not configured')) }}
@@ -54,10 +54,10 @@
                         @endif
                     </flux:table.cell>
                     <flux:table.cell>
-                        <flux:badge :color="$nativeReadiness[$record->id]['status'] === 'READY' ? 'green' : 'amber'">{{ $nativeReadiness[$record->id]['status'] }}</flux:badge>
+                        <flux:badge :color="$nativeReadiness[$record->id]['status'] === 'READY' ? 'rose' : 'rose'">{{ $nativeReadiness[$record->id]['status'] }}</flux:badge>
                         <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $nativeReadiness[$record->id]['total'] }} accepted · {{ $nativeReadiness[$record->id]['approved'] }} hợp lệ · {{ $nativeReadiness[$record->id]['missing'] }} thiếu · {{ $nativeReadiness[$record->id]['unsupported'] }} unsupported</div>
                         @foreach ($nativeReadiness[$record->id]['methods'] as $methodState)
-                            @if (! $methodState['ready'])<div wire:key="rule-readiness-{{ $record->id }}-{{ $methodState['program_id'] }}" class="mt-1 max-w-xs whitespace-normal text-xs text-amber-700 dark:text-amber-300">{{ $methodState['name'] }}: {{ $methodState['reason'] }}</div>@endif
+                            @if (! $methodState['ready'])<div wire:key="rule-readiness-{{ $record->id }}-{{ $methodState['program_id'] }}" class="mt-1 max-w-xs whitespace-normal text-xs text-rose-700 dark:text-rose-300">{{ $methodState['name'] }}: {{ $methodState['reason'] }}</div>@endif
                         @endforeach
                     </flux:table.cell>
                     <flux:table.cell>

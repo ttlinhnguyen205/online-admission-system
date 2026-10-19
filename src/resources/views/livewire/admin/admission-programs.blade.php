@@ -76,13 +76,13 @@
                 </flux:table.cell>
 
                 <flux:table.cell>
-                    <flux:badge :color="$record->status === 'active' ? 'green' : 'zinc'">
+                    <flux:badge :color="$record->status === 'active' ? 'rose' : 'zinc'">
                         {{ __(ucfirst($record->status)) }}
                     </flux:badge>
                 </flux:table.cell>
 
                 <flux:table.cell>
-                    <flux:badge :color="$ruleReadiness[$record->id] ? 'green' : 'amber'">{{ $ruleReadiness[$record->id] ? 'Rule hợp lệ' : 'Thiếu rule đã duyệt hợp lệ' }}</flux:badge>
+                    <flux:badge :color="$ruleReadiness[$record->id] ? 'rose' : 'rose'">{{ $ruleReadiness[$record->id] ? 'Rule hợp lệ' : 'Thiếu rule đã duyệt hợp lệ' }}</flux:badge>
                     @if ($record->evaluationRule)
                         <div class="text-xs text-zinc-500 dark:text-zinc-400">#{{ $record->evaluationRule->id }} / v{{ $record->evaluationRule->version }} · {{ ['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$record->evaluationRule->status] ?? $record->evaluationRule->status }}</div>
                     @endif

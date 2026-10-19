@@ -43,10 +43,12 @@ test('candidate without a profile can use counseling without exposing credential
     $this->actingAs(User::factory()->create());
 
     $this->get(route('candidate.counseling.index'))
-        ->assertSee('Tư vấn tuyển sinh')->assertSee('Google Gemini')
+        ->assertSee('Tư vấn tuyển sinh')->assertSee('Câu hỏi của bạn')
+        ->assertDontSee('Bạn muốn tìm hiểu gì?')
+        ->assertDontSee('Tôi hiểu thông báo quyền riêng tư')
         ->assertDontSee('test-placeholder-not-a-real-key');
     Livewire::test(AdmissionCounseling::class)
-        ->set('consent', true)->set('question', 'Ngành nào đang mở?')->call('send')
+        ->set('question', 'Ngành nào đang mở?')->call('send')
         ->assertHasNoErrors()->assertSee('Hiện không có đợt tuyển sinh nào đang nhận hồ sơ');
     Http::assertNothingSent();
 });
@@ -61,7 +63,7 @@ test('read only counseling renders catalog facts and preserves admission and use
         $before[$table] = DB::table($table)->get()->toJson();
     }
 
-    Livewire::test(AdmissionCounseling::class)->set('consent', true)
+    Livewire::test(AdmissionCounseling::class)
         ->set('question', 'Ngành nào đang mở?')->call('send')
         ->assertHasNoErrors()->assertSee($offering->major->name)
         ->assertSee('không phải cam kết trúng tuyển')->assertSee(route('candidate.applications.index'));
@@ -75,19 +77,19 @@ test('read only counseling renders catalog facts and preserves admission and use
         ->assertDontSee($offering->major->name);
 });
 
-test('empty overlong or unconsented questions do not reach the provider', function (string $question, bool $consent, string $error) {
+test('empty or overlong questions do not reach the provider', function (string $question, string $error) {
     $this->actingAs(User::factory()->create());
 
-    Livewire::test(AdmissionCounseling::class)->set('question', $question)->set('consent', $consent)
+    Livewire::test(AdmissionCounseling::class)->set('question', $question)
         ->call('send')->assertHasErrors($error);
 
     expect(app(AdmissionCounselingProvider::class)->requests)->toBeEmpty();
-})->with([['   ', true, 'question'], [str_repeat('a', 2001), true, 'question'], ['Ngành nào?', false, 'consent']]);
+})->with([['   ', 'question'], [str_repeat('a', 2001), 'question']]);
 
 test('private results and unsupported policies bypass the provider', function (string $question, string $expected) {
     $this->actingAs(User::factory()->create());
 
-    Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', $question)
+    Livewire::test(AdmissionCounseling::class)->set('question', $question)
         ->call('send')->assertSee($expected);
 
     expect(app(AdmissionCounselingProvider::class)->requests)->toBeEmpty();
@@ -104,7 +106,7 @@ test('provider errors retain the question and do not add a fabricated answer', f
         throw new AdmissionCounselingFailure('network');
     }));
 
-    Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', 'Ngành nào?')
+    Livewire::test(AdmissionCounseling::class)->set('question', 'Ngành nào?')
         ->call('send')->assertSet('question', 'Ngành nào?')->assertSee('tạm thời không phản hồi')
         ->assertSee('Gửi lại');
 });
@@ -118,7 +120,7 @@ test('database changes during generation discard stale facts', function () {
         return counselingPlan('majors', array_column(array_filter($context['facts'], fn ($fact) => $fact['kind'] === 'offering'), 'ref'));
     }));
 
-    Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', 'Ngành nào?')
+    Livewire::test(AdmissionCounseling::class)->set('question', 'Ngành nào?')
         ->call('send')->assertSee('Thông tin tuyển sinh vừa thay đổi')->assertDontSee($offering->major->name);
 });
 
@@ -131,7 +133,7 @@ test('account revocation during generation blocks release of the answer', functi
         return counselingPlan();
     }));
 
-    Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', 'Ngành nào?')
+    Livewire::test(AdmissionCounseling::class)->set('question', 'Ngành nào?')
         ->call('send')->assertForbidden();
 });
 
@@ -139,7 +141,7 @@ test('conversation history supplies prior focus but refreshes database facts', f
     $offering = counselingOffering();
     $user = User::factory()->create();
     $this->actingAs($user);
-    $page = Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', $offering->major->name)->call('send');
+    $page = Livewire::test(AdmissionCounseling::class)->set('question', $offering->major->name)->call('send');
     $offering->update(['is_selectable' => false]);
 
     $page->set('question', 'Ngành đó còn đăng ký được không?')->call('send');
@@ -171,13 +173,13 @@ test('stale revisions and concurrent sends cannot duplicate provider requests', 
     $history = app(AdmissionCounselingHistory::class);
     $revision = $history->read($user)['revision'];
     $action = app(AnswerAdmissionQuestion::class);
-    $action->answer($user, 'Ngành nào?', $revision, true);
+    $action->answer($user, 'Ngành nào?', $revision);
 
-    expect(fn () => $action->answer($user, 'Ngành nào?', $revision, true))->toThrow(AdmissionCounselingFailure::class, 'stale');
+    expect(fn () => $action->answer($user, 'Ngành nào?', $revision))->toThrow(AdmissionCounselingFailure::class, 'stale');
     $lock = Cache::lock('admission-chat:user:'.$user->id, 45);
     $lock->get();
     try {
-        expect(fn () => $action->answer($user, 'Ngành nào?', $history->read($user)['revision'], true))->toThrow(AdmissionCounselingFailure::class, 'busy');
+        expect(fn () => $action->answer($user, 'Ngành nào?', $history->read($user)['revision']))->toThrow(AdmissionCounselingFailure::class, 'busy');
     } finally {
         $lock->release();
     }
@@ -188,7 +190,7 @@ test('rate limiting happens inside the send action and disabled mode is safe', f
     $user = User::factory()->create();
     $this->actingAs($user);
     config(['admission_chatbot.per_minute' => 1]);
-    $page = Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', 'Ngành nào?')->call('send');
+    $page = Livewire::test(AdmissionCounseling::class)->set('question', 'Ngành nào?')->call('send');
 
     $page->set('question', 'Đợt nào?')->call('send')->assertSee('Đã đạt giới hạn');
     expect(app(AdmissionCounselingProvider::class)->requests)->toHaveCount(1);
@@ -244,7 +246,7 @@ test('time passing beyond deadline during generation invalidates availability', 
         return counselingPlan('availability', array_column(array_filter($context['facts'], fn ($fact) => $fact['kind'] === 'offering'), 'ref'));
     }));
 
-    Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', 'Ngành này còn mở không?')
+    Livewire::test(AdmissionCounseling::class)->set('question', 'Ngành này còn mở không?')
         ->call('send')->assertSee('Thông tin tuyển sinh vừa thay đổi');
 });
 
@@ -253,7 +255,7 @@ test('untrusted names and approved descriptions are escaped in conversation outp
     $offering->major->update(['name' => '<script>alert(1)</script>']);
     $this->actingAs(User::factory()->create());
 
-    Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', 'Ngành nào?')
+    Livewire::test(AdmissionCounseling::class)->set('question', 'Ngành nào?')
         ->call('send')->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
         ->assertDontSeeHtml('<script>alert(1)</script>');
 });
@@ -262,9 +264,9 @@ test('global limit and provider circuit breaker fail closed without extra reques
     $user = User::factory()->create();
     $this->actingAs($user);
     config(['admission_chatbot.global_per_day' => 1]);
-    Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', 'Ngành nào?')->call('send');
+    Livewire::test(AdmissionCounseling::class)->set('question', 'Ngành nào?')->call('send');
     $this->actingAs(User::factory()->create());
-    Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', 'Ngành nào?')
+    Livewire::test(AdmissionCounseling::class)->set('question', 'Ngành nào?')
         ->call('send')->assertSee('Đã đạt giới hạn');
     expect(app(AdmissionCounselingProvider::class)->requests)->toHaveCount(1);
 
@@ -272,7 +274,7 @@ test('global limit and provider circuit breaker fail closed without extra reques
     for ($index = 0; $index < 5; $index++) {
         RateLimiter::hit('admission-chat:failures', 60);
     }
-    Livewire::test(AdmissionCounseling::class)->set('consent', true)->set('question', 'Ngành nào?')
+    Livewire::test(AdmissionCounseling::class)->set('question', 'Ngành nào?')
         ->call('send')->assertSee('tạm thời không phản hồi');
     expect(app(AdmissionCounselingProvider::class)->requests)->toHaveCount(1);
 });

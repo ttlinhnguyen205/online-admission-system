@@ -274,7 +274,7 @@
             </div>
             <flux:error name="transcriptForm.subjects" />
             @foreach ($errors->get('transcriptForm.subjects.*') as $messages)
-                @foreach ($messages as $message)<p role="alert" class="text-sm text-red-600">{{ $message }}</p>@endforeach
+                @foreach ($messages as $message)<p role="alert" class="text-sm text-rose-600">{{ $message }}</p>@endforeach
             @endforeach
             <div x-data>
                 <label for="transcript-evidence" class="mb-2 block text-sm font-medium text-zinc-800 dark:text-white">{{ __('Ảnh minh chứng học bạ (có thể chọn nhiều trang)') }}</label>
@@ -307,7 +307,7 @@
                         </div>
                         <div class="max-w-32 truncate text-xs text-zinc-500 dark:text-zinc-400">{{ App\Actions\CandidateFiles::displayName($upload->getClientOriginalName()) }}</div>
                         <flux:error name="transcriptEvidence.{{ $index }}" />
-                        <button type="button" wire:click="removeTranscriptUpload({{ $index }})" wire:loading.attr="disabled" wire:target="removeTranscriptUpload({{ $index }})" class="inline-flex items-center justify-center rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-100 hover:shadow focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-60 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-red-900/50 dark:focus:ring-offset-zinc-900">
+                        <button type="button" wire:click="removeTranscriptUpload({{ $index }})" wire:loading.attr="disabled" wire:target="removeTranscriptUpload({{ $index }})" class="inline-flex items-center justify-center rounded-md border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 hover:shadow focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-60 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:border-rose-800 dark:hover:bg-rose-900/50 dark:focus:ring-offset-zinc-900">
                             <span wire:loading.remove wire:target="removeTranscriptUpload({{ $index }})">{{ __('Xóa ảnh') }}</span>
                             <span wire:loading wire:target="removeTranscriptUpload({{ $index }})">{{ __('Đang xóa...') }}</span>
                         </button>

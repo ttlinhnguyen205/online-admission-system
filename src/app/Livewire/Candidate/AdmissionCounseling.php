@@ -15,8 +15,6 @@ class AdmissionCounseling extends CandidatePage
 {
     public string $question = '';
 
-    public bool $consent = false;
-
     #[Locked]
     public string $revision = '';
 
@@ -33,7 +31,7 @@ class AdmissionCounseling extends CandidatePage
         $this->resetValidation();
         $this->failure = null;
         try {
-            $counseling->answer($this->candidate(), $this->question, $this->revision, $this->consent);
+            $counseling->answer($this->candidate(), $this->question, $this->revision);
             $this->question = '';
             $this->revision = $history->read($this->candidate())['revision'];
             $this->dispatch('counseling-answered');
@@ -69,13 +67,6 @@ class AdmissionCounseling extends CandidatePage
             'ready' => config('admission_chatbot.enabled')
                 && config('admission_chatbot.provider') === 'gemini'
                 && filled(config('services.gemini.key')) && filled(config('services.gemini.model')),
-            'suggestions' => [
-                'Hiện tại trường đang tuyển sinh những ngành nào?',
-                'Đợt tuyển sinh nào đang mở?',
-                'Hạn đăng ký nguyện vọng là ngày nào?',
-                'Ngành Công nghệ thông tin có đang nhận đăng ký không?',
-                'Học phí ngành Công nghệ thông tin là bao nhiêu?',
-            ],
         ]);
     }
 }

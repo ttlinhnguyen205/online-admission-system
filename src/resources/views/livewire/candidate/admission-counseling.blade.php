@@ -11,28 +11,16 @@
         <flux:callout role="status">{{ __('Tư vấn AI chưa được bật hoặc chưa được cấu hình. Các trang đăng ký và kết quả vẫn hoạt động bình thường.') }}</flux:callout>
     @endif
 
-    <div class="grid min-w-0 gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-        <aside class="flex flex-col gap-3" aria-label="{{ __('Câu hỏi gợi ý') }}">
-            <flux:heading level="2">{{ __('Bạn muốn tìm hiểu gì?') }}</flux:heading>
-            @foreach ($suggestions as $suggestion)
-                <button type="button" wire:key="suggestion-{{ $loop->index }}"
-                    x-on:click="$wire.set('question', @js($suggestion)); $nextTick(() => document.getElementById('counseling-question').focus())"
-                    class="rounded-xl border border-zinc-200 p-3 text-start text-sm text-zinc-700 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                    {{ $suggestion }}
-                </button>
-            @endforeach
-            <flux:text class="text-xs">{{ __('Không dự đoán trúng tuyển. Không thay đổi hồ sơ hoặc nguyện vọng của bạn.') }}</flux:text>
-        </aside>
-
+    <div class="min-w-0">
         <div class="flex min-w-0 flex-col gap-4">
             <div x-data="{ nearBottom: true, unread: false }"
                 x-on:counseling-answered.window="$nextTick(() => { if (nearBottom) { $refs.messages.scrollTop = $refs.messages.scrollHeight } else { unread = true } })">
                 <div x-ref="messages" x-on:scroll="nearBottom = $el.scrollHeight - $el.scrollTop - $el.clientHeight < 80; if (nearBottom) unread = false"
                     role="log" aria-live="polite" aria-relevant="additions" aria-label="{{ __('Cuộc trò chuyện tư vấn') }}"
-                    tabindex="0" class="flex max-h-[55dvh] min-h-64 flex-col gap-5 overflow-y-auto rounded-2xl border border-zinc-200 p-4 focus-visible:outline-2 focus-visible:outline-blue-600 dark:border-zinc-700 sm:p-6">
+                    tabindex="0" class="flex max-h-[55dvh] min-h-64 flex-col gap-5 overflow-y-auto rounded-2xl border border-zinc-200 p-4 focus-visible:outline-2 focus-visible:outline-rose-600 dark:border-zinc-700 sm:p-6">
                     @forelse ($turns as $turn)
                         <article wire:key="turn-{{ $turn['id'] }}" class="flex min-w-0 flex-col gap-3">
-                            <div class="ms-auto max-w-full rounded-2xl bg-blue-50 px-4 py-3 text-zinc-900 dark:bg-blue-950 dark:text-zinc-100">
+                            <div class="ms-auto max-w-full rounded-2xl bg-rose-50 px-4 py-3 text-zinc-900 dark:bg-rose-950 dark:text-zinc-100">
                                 <p class="mb-1 text-xs font-semibold">{{ __('Bạn') }}</p>
                                 <p class="whitespace-pre-wrap break-words">{{ $turn['question'] }}</p>
                             </div>
@@ -55,7 +43,7 @@
                     @empty
                         <div class="m-auto flex max-w-md flex-col gap-3 text-center">
                             <flux:heading level="2">{{ __('Xin chào! Bạn muốn tìm hiểu ngành nào?') }}</flux:heading>
-                            <flux:text>{{ __('Chọn câu hỏi gợi ý hoặc nhập câu hỏi bên dưới. Khi dữ liệu chưa được công bố, trợ lý sẽ nói rõ thay vì suy đoán.') }}</flux:text>
+                            <flux:text>{{ __('Nhập câu hỏi bên dưới. Khi dữ liệu chưa được công bố, trợ lý sẽ nói rõ thay vì suy đoán.') }}</flux:text>
                         </div>
                     @endforelse
                 </div>
@@ -73,10 +61,6 @@
                     :placeholder="__('Ví dụ: Ngành Công nghệ thông tin có đang nhận đăng ký không?')" />
                 <div class="text-end text-xs text-zinc-500" x-text="($wire.question || '').length + ' / 2000'"></div>
                 <flux:error name="question" />
-                <flux:text class="text-xs">{{ __('Câu hỏi và ngữ cảnh gần đây được gửi tới Google Gemini. Không nhập số căn cước, điện thoại, tài liệu hoặc thông tin cá nhân. Google xử lý dữ liệu theo điều khoản của dịch vụ; không cam kết lưu trữ bằng 0.') }}</flux:text>
-                <flux:text class="text-xs">{{ __('Lịch sử được mã hóa, chỉ dùng trong phiên này: tối đa 10 lượt, hết hạn sau 120 phút không hoạt động hoặc 24 giờ từ khi bắt đầu. Xóa cuộc trò chuyện để bỏ lịch sử trên hệ thống này; thao tác này không xóa dữ liệu đã gửi tới nhà cung cấp.') }}</flux:text>
-                <flux:checkbox wire:model="consent" :label="__('Tôi hiểu thông báo quyền riêng tư và đồng ý gửi câu hỏi tới dịch vụ AI.')" />
-                <flux:error name="consent" />
                 <div class="flex justify-end">
                     <flux:button type="submit" variant="primary" :disabled="! $ready" wire:loading.attr="disabled" wire:target="send,clear">{{ $failure ? __('Gửi lại') : __('Gửi câu hỏi') }}</flux:button>
                 </div>
