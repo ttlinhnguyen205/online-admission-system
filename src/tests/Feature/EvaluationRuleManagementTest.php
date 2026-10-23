@@ -307,9 +307,9 @@ test('admin UI creates approves and manually binds a saved rule', function () {
         ->set('reason', 'Manual binding')->call('bind')->assertHasNoErrors();
 
     expect($program->fresh()->evaluation_rule_version_id)->toBe($rule->id);
-    Livewire::test(AdmissionPrograms::class)->assertSee('Rule hợp lệ')->call('manageRules', $program->id)->assertSee('Quản lý quy tắc đánh giá');
+    Livewire::test(AdmissionPrograms::class)->assertSee('Quy tắc hợp lệ')->call('manageRules', $program->id)->assertSee('Quản lý quy tắc đánh giá');
     CandidateMajorOffering::factory()->for($program)->create();
-    Livewire::test(CandidateMajorOfferings::class)->assertSee('READY');
+    Livewire::test(CandidateMajorOfferings::class)->assertSee('Sẵn sàng');
 });
 
 test('retirement and program rebinding preserve sealed native snapshots', function () {

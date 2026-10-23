@@ -2,7 +2,7 @@
     <div>
         <flux:heading size="lg">Chỉ tiêu: {{ $offering->major->name }}</flux:heading>
         <flux:text>{{ $offering->admissionRound->name }} · {{ $offering->major->code }}</flux:text>
-        <flux:callout class="mt-3">Phiên bản chỉ tiêu phục vụ quản lý Q/q. Phê duyệt không kích hoạt phiên bản và không thay đổi chỉ tiêu engine legacy. Phần chưa phân bổ không được tự sử dụng.</flux:callout>
+        <flux:callout class="mt-3">Phiên bản chỉ tiêu phục vụ quản lý tổng chỉ tiêu ngành và giới hạn từng phương thức. Phê duyệt không tự kích hoạt phiên bản hoặc thay đổi chỉ tiêu xét tuyển theo chương trình. Phần chưa phân bổ không được tự sử dụng.</flux:callout>
     </div>
     <flux:error name="quota" />
     <div class="flex flex-wrap items-end gap-3">
@@ -17,7 +17,7 @@
                 V{{ $version->version }} · {{ ['draft'=>'Bản nháp','approved'=>'Đã phê duyệt','retired'=>'Đã ngừng sử dụng'][$version->status] }}
             </flux:button>
         @empty
-            <flux:text>Chưa có phiên bản chỉ tiêu. Không tự chuyển chỉ tiêu program legacy sang Q/q.</flux:text>
+            <flux:text>Chưa có phiên bản chỉ tiêu. Không tự chuyển chỉ tiêu chương trình sang chỉ tiêu ngành và phương thức.</flux:text>
         @endforelse
     </div>
     @if ($selected)
@@ -64,7 +64,7 @@
                     <flux:button wire:click="retire" wire:loading.attr="disabled">Ngừng sử dụng phiên bản</flux:button>
                 @endif
             </div>
-            <flux:text>Phê duyệt: {{ $selected->approved_at?->format('d/m/Y H:i') ?? 'Chưa phê duyệt' }}. Không có phiên bản active tự động.</flux:text>
+            <flux:text>Phê duyệt: {{ $selected->approved_at?->format('d/m/Y H:i') ?? 'Chưa phê duyệt' }}. Không tự kích hoạt phiên bản.</flux:text>
         </div>
     @endif
     <div wire:loading class="text-sm text-zinc-500" role="status">Đang xử lý chỉ tiêu…</div>

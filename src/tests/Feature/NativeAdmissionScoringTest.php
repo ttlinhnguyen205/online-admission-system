@@ -271,7 +271,7 @@ test('tampering second method rolls back first method evaluation', function () {
 test('missing migration yields actionable warning without scoring or Candidate error', function () {
     $fixture = scoringFixture();
     Schema::drop('native_method_evaluations');
-    Livewire::test(NativeScoring::class, ['applicationId' => $fixture['application']->id])->assertSee('Migration tính điểm native chưa được áp dụng');
+    Livewire::test(NativeScoring::class, ['applicationId' => $fixture['application']->id])->assertSee('Chưa cập nhật dữ liệu cho chức năng tính điểm theo ngành');
     expect(fn () => app(NativeAdmissionScoring::class)->score($fixture['application']->id))->toThrow(ValidationException::class);
     $this->actingAs($fixture['application']->candidateProfile->user);
     Livewire::test(ApplicationDetails::class, ['application' => $fixture['application']->id])->assertSee('Chờ đánh giá nội bộ');

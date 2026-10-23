@@ -49,7 +49,7 @@
             <flux:table.column>{{ __('Minimum score') }}</flux:table.column>
             <flux:table.column>{{ __('Tuition') }}</flux:table.column>
             <flux:table.column>{{ __('Status') }}</flux:table.column>
-            <flux:table.column>Rule native</flux:table.column>
+            <flux:table.column>Quy tắc xét theo ngành</flux:table.column>
             <flux:table.column>{{ __('Actions') }}</flux:table.column>
         </flux:table.columns>
 
@@ -82,7 +82,7 @@
                 </flux:table.cell>
 
                 <flux:table.cell>
-                    <flux:badge :color="$ruleReadiness[$record->id] ? 'rose' : 'rose'">{{ $ruleReadiness[$record->id] ? 'Rule hợp lệ' : 'Thiếu rule đã duyệt hợp lệ' }}</flux:badge>
+                    <flux:badge :color="$ruleReadiness[$record->id] ? 'rose' : 'rose'">{{ $ruleReadiness[$record->id] ? 'Quy tắc hợp lệ' : 'Thiếu quy tắc đã duyệt hợp lệ' }}</flux:badge>
                     @if ($record->evaluationRule)
                         <div class="text-xs text-zinc-500 dark:text-zinc-400">#{{ $record->evaluationRule->id }} / v{{ $record->evaluationRule->version }} · {{ ['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$record->evaluationRule->status] ?? $record->evaluationRule->status }}</div>
                     @endif
@@ -90,7 +90,7 @@
                 <flux:table.cell>
                     <div class="flex justify-end gap-2">
                         @can('viewAny', App\Models\EvaluationRuleVersion::class)
-                            <flux:button size="sm" wire:click="manageRules({{ $record->id }})">Cấu hình rule</flux:button>
+                            <flux:button size="sm" wire:click="manageRules({{ $record->id }})">Cấu hình quy tắc</flux:button>
                         @endcan
                         <flux:button size="sm" wire:click="details({{ $record->id }})">
                             {{ __('View') }}
