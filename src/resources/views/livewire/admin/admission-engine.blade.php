@@ -8,7 +8,7 @@
         <flux:select wire:model="roundSelection" :label="__('Admission round')" class="min-w-64">
             <option value="">{{ __('Select a round') }}</option>
             @foreach ($rounds as $round)
-                <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} · {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status) }})</option>
+                <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} · {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status, $round->end_date) }})</option>
             @endforeach
         </flux:select>
         <flux:button type="submit" variant="primary" wire:loading.attr="disabled">{{ __('Preview readiness') }}</flux:button>

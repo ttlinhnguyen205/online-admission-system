@@ -58,7 +58,7 @@
 
                 <flux:table.cell>
                     <flux:badge>
-                        {{ __(ucfirst($record->status->value)) }}
+                        {{ App\Support\CandidateStatusLabels::round($record->status, $record->end_date) }}
                     </flux:badge>
                 </flux:table.cell>
 

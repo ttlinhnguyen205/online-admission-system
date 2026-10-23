@@ -12,7 +12,7 @@
     @elseif (now()->lessThan($round->start_date))
         <flux:callout>Chưa tới thời gian nhận hồ sơ. Bắt đầu {{ $round->start_date->format('d/m/Y H:i') }}.</flux:callout>
     @elseif (now()->greaterThan($round->end_date))
-        <flux:callout>Thời gian nhận hồ sơ đã kết thúc.</flux:callout>
+        <flux:callout>Đã hết hạn đăng ký.</flux:callout>
     @endif
     @if ($checklist !== [])
         <flux:heading>Kiểm tra hồ sơ trước khi nộp</flux:heading>
