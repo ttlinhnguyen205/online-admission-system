@@ -358,3 +358,95 @@ test('candidate profile rejects nonexistent province and high school ids', funct
         ->call('save')
         ->assertHasErrors('selectedHighSchoolId');
 });
+
+test('school options follow province ids rather than administrative codes and support accentless search', function () {
+    $schools = [];
+    foreach ([
+        ['79', 'Thành phố Hồ Chí Minh', 'THPT Nguyễn Thượng Hiền'],
+        ['48', 'Thành phố Đà Nẵng', 'THPT Phan Châu Trinh'],
+        ['31', 'Thành phố Hải Phòng', 'THPT Thái Phiên'],
+        ['01', 'Thành phố Hà Nội', 'THPT Phan Đình Phùng'],
+    ] as [$code, $name, $schoolName]) {
+        $province = Province::query()->create(['code' => $code, 'name' => $name]);
+        $schools[] = HighSchool::query()->create(['province_id' => $province->id, 'code' => '001', 'name' => $schoolName]);
+    }
+    $this->actingAs(User::factory()->create());
+    $page = Livewire::test(Profile::class);
+
+    foreach ($schools as $school) {
+        $page->set('selectedProvinceId', $school->province_id)
+            ->assertViewHas('highSchools', fn ($options): bool => $options->modelKeys() === [$school->id])
+            ->assertSee($school->name)
+            ->assertSeeHtml('wire:key="high-school-select-'.$school->province_id.'"');
+    }
+    $page->set('schoolSearch', 'phan dinh phung')
+        ->assertSee('THPT Phan Đình Phùng')
+        ->set('schoolSearch', 'no matching school')
+        ->assertSee('Không tìm thấy trường phù hợp.')
+        ->assertViewHas('highSchools', fn ($options): bool => $options->isEmpty());
+});
+
+test('changing province clears search and persisted school while retaining the newly selected province', function () {
+    $locations = createProfileLocationFixtures();
+    $profile = CandidateProfile::factory()->create([
+        'province_code' => '01', 'high_school_code' => '0103', 'high_school_name' => 'THPT Phan Đình Phùng',
+    ]);
+    $this->actingAs($profile->user);
+
+    Livewire::test(Profile::class)
+        ->assertSet('selectedProvinceId', $locations['haNoi']->id)
+        ->assertSet('selectedHighSchoolId', $locations['phanDinhPhung']->id)
+        ->set('schoolSearch', 'phan dinh')
+        ->set('selectedProvinceId', $locations['caoBang']->id)
+        ->assertSet('schoolSearch', '')
+        ->assertSet('selectedHighSchoolId', null)
+        ->call('save')->assertHasNoErrors();
+
+    $this->assertDatabaseHas('candidate_profiles', [
+        'id' => $profile->id, 'province_code' => '04', 'high_school_code' => null, 'high_school_name' => null,
+    ]);
+});
+
+test('empty province shows guidance and does not show another provinces schools', function () {
+    $locations = createProfileLocationFixtures();
+    $empty = Province::query()->create(['code' => '48', 'name' => 'Thành phố Đà Nẵng']);
+    $this->actingAs(User::factory()->create());
+
+    Livewire::test(Profile::class)
+        ->set('selectedProvinceId', $locations['haNoi']->id)
+        ->set('selectedHighSchoolId', $locations['phanDinhPhung']->id)
+        ->set('selectedProvinceId', $empty->id)
+        ->assertSet('selectedHighSchoolId', null)
+        ->assertViewHas('hasHighSchools', false)
+        ->assertDontSee('THPT Phan Đình Phùng')
+        ->assertSee('Tỉnh/thành này chưa có dữ liệu trường THPT.');
+});
+
+test('search keeps a selected school visible without changing its saved identity', function () {
+    $locations = createProfileLocationFixtures();
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->set('selectedProvinceId', $locations['haNoi']->id)
+        ->set('selectedHighSchoolId', $locations['phanDinhPhung']->id)
+        ->set('schoolSearch', 'another school')
+        ->assertViewHas('highSchools', fn ($options): bool => $options->modelKeys() === [$locations['phanDinhPhung']->id])
+        ->call('save')->assertHasNoErrors();
+
+    $this->assertDatabaseHas('candidate_profiles', ['user_id' => $user->id, 'province_code' => '01', 'high_school_code' => '0103']);
+});
+
+test('school search matches names and codes only within the selected province', function (string $search) {
+    $locations = createProfileLocationFixtures();
+    HighSchool::query()->create(['province_id' => $locations['haNoi']->id, 'code' => '1102', 'name' => 'THPT Thăng Long']);
+    HighSchool::query()->create(['province_id' => $locations['caoBang']->id, 'code' => '0103', 'name' => 'THPT Phan Đình Phùng']);
+    $this->actingAs(User::factory()->create());
+
+    Livewire::test(Profile::class)
+        ->set('selectedProvinceId', $locations['haNoi']->id)
+        ->set('schoolSearch', $search)
+        ->assertViewHas('highSchools', fn ($options): bool => $options->modelKeys() === [$locations['phanDinhPhung']->id])
+        ->assertSee('THPT Phan Đình Phùng')
+        ->assertDontSee('THPT Thăng Long');
+})->with(['tên có dấu' => 'Phan Đình Phùng', 'tên không dấu' => 'phan dinh phung', 'chữ hoa và khoảng trắng' => '  PHAN   DINH PHUNG  ', 'mã trường' => '0103']);

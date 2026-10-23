@@ -153,26 +153,34 @@
                 </flux:select>
 
                 {{-- Trường THPT --}}
-                <flux:select
-                    wire:model="selectedHighSchoolId"
-                    :label="__('Trường THPT')"
-                    :disabled="$selectedProvinceId === null"
-                >
-                    <flux:select.option value="">
-                        {{ $selectedProvinceId === null
-                            ? __('Vui lòng chọn tỉnh / thành phố trước')
-                            : __('Chọn trường THPT') }}
-                    </flux:select.option>
+                <div>
+                    <flux:select
+                        wire:model.live="selectedHighSchoolId"
+                        wire:key="school-select-{{ $selectedProvinceId ?? 'none' }}"
+                        :label="__('Trường THPT')"
+                        placeholder="Chọn hoặc tìm trường THPT..."
+                        :disabled="$selectedProvinceId === null || ! $hasHighSchools"
+                    >
+                        @foreach ($highSchools as $school)
+                            <flux:select.option
+                                :value="$school->id"
+                                wire:key="school-{{ $school->id }}"
+                            >
+                                {{ $school->code }} - {{ $school->name }}
+                            </flux:select.option>
+                        @endforeach
+                    </flux:select>
 
-                    @foreach ($highSchools as $school)
-                        <flux:select.option
-                            :value="$school->id"
-                            wire:key="high-school-{{ $school->id }}"
-                        >
-                            {{ $school->code }} - {{ $school->name }}
-                        </flux:select.option>
-                    @endforeach
-                </flux:select>
+                    <flux:error name="selectedHighSchoolId" />
+
+                    @if ($selectedProvinceId !== null && ! $hasHighSchools)
+                        <flux:text>
+                            Tỉnh/thành này chưa có dữ liệu trường THPT.
+                        </flux:text>
+                    @endif
+                </div>
+
+
 
                 {{-- Năm tốt nghiệp --}}
                 <flux:input

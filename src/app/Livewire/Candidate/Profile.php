@@ -76,6 +76,8 @@ class Profile extends CandidatePage
 
     public ?int $selectedHighSchoolId = null;
 
+    public string $schoolSearch = '';
+
     public function mount(): void
     {
         $profile = $this->candidate()->candidateProfile()->first();
@@ -125,6 +127,8 @@ class Profile extends CandidatePage
     public function updatedSelectedProvinceId(): void
     {
         $this->selectedHighSchoolId = null;
+        $this->schoolSearch = '';
+        $this->resetValidation(['selectedProvinceId', 'selectedHighSchoolId']);
 
         $this->form['province_code'] = null;
         $this->form['high_school_code'] = null;
@@ -540,11 +544,32 @@ class Profile extends CandidatePage
                 ->orderBy('name')
                 ->get(['id', 'code', 'name']);
 
+        $hasHighSchools = $highSchools->isNotEmpty();
+        $search = Str::lower(
+            Str::ascii(Str::squish(mb_substr($this->schoolSearch, 0, 255)))
+        );
+        if ($search !== '') {
+            $highSchools = $highSchools->filter(fn (HighSchool $school): bool => $school->id === $this->selectedHighSchoolId
+                || str_contains(Str::lower(Str::ascii($school->name)), $search)
+                || str_contains($school->code, $search)
+            );
+        }
+        
+        $selectedSchool = $this->selectedHighSchoolId === null
+            ? null
+            : HighSchool::query()
+                ->whereKey($this->selectedHighSchoolId)
+                ->where('province_id', $this->selectedProvinceId)
+                ->first();
+
+
         return view('livewire.candidate.profile', [
             'profile' => $profile,
             'completionFields' => self::COMPLETION,
             'provinces' => $provinces,
             'highSchools' => $highSchools,
+            'hasHighSchools' => $hasHighSchools,
+            'selectedSchool' => $selectedSchool,
         ]);
     }
 }
