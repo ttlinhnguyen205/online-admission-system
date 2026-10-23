@@ -46,7 +46,7 @@ test('unknown score types are not transliterated guessed or converted', function
     CandidateScore::query()->where('candidate_profile_id', $application->candidate_profile_id)->update(['score_type' => $alias]);
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
-    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Missing verified score');
+    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Thiếu điểm đã xác minh');
 
     $this->assertDatabaseCount('admission_results', 0);
     $this->assertDatabaseCount('activity_logs', 0);
@@ -58,7 +58,7 @@ test('matching scores require verification subject code and the round year', fun
     CandidateScore::query()->where('candidate_profile_id', $application->candidate_profile_id)->where('subject_code', 'MATH')->update($changes);
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
-    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Missing verified score');
+    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Thiếu điểm đã xác minh');
 
     $this->assertDatabaseCount('admission_results', 0);
 })->with([
@@ -89,7 +89,7 @@ test('all matching attempts including distinct explicit aliases block as ambiguo
     ]);
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
-    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Ambiguous verified score attempts');
+    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Có nhiều điểm đã xác minh');
 
     $this->assertDatabaseCount('admission_results', 0);
     $this->assertDatabaseCount('activity_logs', 0);
@@ -144,7 +144,7 @@ test('unsupported methods never infer execution from names prefixes or arbitrary
     $program->admissionMethod->update(['name' => 'DEMO-DGNL', 'description' => 'Scalar score']);
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
-    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Unsupported calculation contract');
+    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'Cách tính điểm chưa được hỗ trợ');
 
     $this->assertDatabaseCount('admission_results', 0);
 })->with(['DEMO-THANG', 'OTHER', 'DEMO-DGNL-NEW']);
@@ -172,7 +172,7 @@ test('arithmetic overflow blocks the whole cohort without clipping', function ()
     engineApplication($program, '99999.999');
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
 
-    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'storage capacity');
+    expect(fn () => engineRun($program))->toThrow(ValidationException::class, 'vượt quá giới hạn lưu trữ');
 
     $this->assertDatabaseCount('admission_results', 0);
     $this->assertDatabaseCount('activity_logs', 0);
