@@ -53,7 +53,7 @@
                                 x-model="code"
                                 length="6"
                                 name="code"
-                                label="OTP Code"
+                                label="Mã xác thực"
                                 label:sr-only
                                 class="mx-auto"
                              />

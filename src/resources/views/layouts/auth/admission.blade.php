@@ -21,7 +21,7 @@
             <img class="auth-hero-background" src="{{ asset('admission-auth-hero.jpg') }}" alt="" fetchpriority="high" />
             <div class="auth-hero-content">
                 <div class="auth-hero-message">
-                    <p>Explore Your<br /><span>Potential</span> &amp; <span>Talents</span><br />In UniCamp</p>
+                    <p>Khám phá<br /><span>Tiềm năng</span> và <span>Tài năng</span><br />tại UniCamp</p>
                 </div>
                 <section class="auth-form-panel" aria-labelledby="auth-title">
                     <h1 id="auth-title">{{ $title }} {{ __('tài khoản của bạn') }}</h1>
