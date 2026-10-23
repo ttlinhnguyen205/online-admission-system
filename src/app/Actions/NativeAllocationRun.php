@@ -71,7 +71,7 @@ class NativeAllocationRun
             try {
                 $allocation = $this->engine->allocate($contracts, $capacities, $payload);
             } catch (DomainException $exception) {
-                throw ValidationException::withMessages(['allocation' => $exception->getMessage()]);
+                throw ValidationException::withMessages(['allocation' => 'Không thể phân bổ: '.__(substr($exception->getMessage(), strlen('BLOCKED: ')))]);
             }
             $applications = DB::table('applications')->where('admission_round_id', $roundId)->where('registration_mode', 'native')->whereNotNull('submitted_at')->pluck('id');
             $decisions = [];

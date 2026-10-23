@@ -15,7 +15,7 @@ test('native preview and export are read only and refuse allocation without poli
     Application::factory()->for($round)->create(['registration_mode' => 'native']);
 
     Livewire::test(AdmissionEngine::class)->set('roundSelection', (string) $round->id)->call('preview')
-        ->assertSee('Báo cáo Native')->assertSee('BLOCKED')
+        ->assertSee('Báo cáo xét tuyển theo ngành')->assertSee('Chưa thể phân bổ')
         ->call('exportNative')->assertFileDownloaded('native-scoring-round-'.$round->id.'.csv')
         ->call('confirm')->assertHasErrors('engine');
 

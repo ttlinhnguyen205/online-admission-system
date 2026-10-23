@@ -23,7 +23,7 @@
         </div>
         <flux:text>{{ __('Round') }}: {{ $application->admissionRound?->name ?? __('Unavailable') }} · {{ $application->admissionRound?->code }}</flux:text>
         <flux:text>{{ __('Latest submission') }}: {{ $application->submitted_at?->format('Y-m-d H:i:s') ?? __('Not recorded') }}</flux:text>
-        <flux:text>{{ __('Latest application reviewer') }}: {{ $application->reviewer?->name ?? __('Not recorded / unavailable') }} · {{ __('Review time') }}: {{ $application->reviewed_at?->format('Y-m-d H:i:s') ?? __('Not recorded') }} ({{ config('app.timezone') }})</flux:text>
+        <flux:text>{{ __('Latest application reviewer') }}: {{ $application->reviewer?->name ?? __('Not recorded / unavailable') }} · {{ __('Review time') }}: {{ $application->reviewed_at?->format('Y-m-d H:i:s') ?? __('Not recorded') }}</flux:text>
         <flux:text>{{ __('Review is collaborative. The latest reviewer is not an exclusive assignee.') }}</flux:text>
         @if ($application->revision_reason)<flux:callout>
             <div class="font-medium">{{ __('Latest revision reason') }}</div>

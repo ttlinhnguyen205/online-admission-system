@@ -66,7 +66,8 @@ test('read only counseling renders catalog facts and preserves admission and use
     Livewire::test(AdmissionCounseling::class)
         ->set('question', 'Ngành nào đang mở?')->call('send')
         ->assertHasNoErrors()->assertSee($offering->major->name)
-        ->assertSee('không phải cam kết trúng tuyển')->assertSee(route('candidate.applications.index'));
+        ->assertSee('không phải cam kết trúng tuyển')->assertSee(route('candidate.applications.index'))
+        ->assertDontSee('Asia/Ho_Chi_Minh');
 
     foreach ($tables as $table) {
         expect(DB::table($table)->get()->toJson())->toBe($before[$table]);

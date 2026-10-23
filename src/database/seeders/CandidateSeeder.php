@@ -16,7 +16,7 @@ class CandidateSeeder extends Seeder
         $user = User::query()->updateOrCreate(
             ['email' => 'candidate@example.com'],
             [
-                'name' => 'Demo Candidate',
+                'name' => 'Candidate',
                 'password' => 'password',
                 'email_verified_at' => now(),
                 'role' => UserRole::Candidate,

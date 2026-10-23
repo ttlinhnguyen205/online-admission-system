@@ -41,7 +41,7 @@ class AdmissionReportWriter
             $total += $summary['metrics']['Nguyện vọng Native (theo ngành)'] ?? 0;
         }
         $this->checkLimit($total, $maximum);
-        $generatedAt = now()->format('d/m/Y H:i:s').' ('.config('app.timezone').')';
+        $generatedAt = now()->format('d/m/Y H:i:s');
         $scope = $actor->isAdmin() ? 'Bao gồm kết quả nội bộ chưa công bố; chỉ dùng cho quản trị.' : 'Chỉ bao gồm kết quả đã công bố.';
         $applications = $this->applicationRows($actor, $filters);
         $results = $this->resultRows($actor, $filters);

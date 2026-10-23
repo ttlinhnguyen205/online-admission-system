@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Laravel\Fortify\Features;
 
@@ -56,12 +57,12 @@ test('users with two factor enabled are redirected to two factor challenge', fun
     $this->assertGuest();
 });
 
-test('users can logout', function () {
-    $user = User::factory()->create();
+test('users can logout directly to the login screen', function (UserRole $role) {
+    $user = User::factory()->create(['role' => $role]);
 
     $response = $this->actingAs($user)->post(route('logout'));
 
-    $response->assertRedirect(route('home'));
+    $response->assertRedirect(route('login'));
 
     $this->assertGuest();
-});
+})->with(UserRole::cases());

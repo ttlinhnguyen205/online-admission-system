@@ -4,7 +4,7 @@
     <flux:select wire:model.live="roundSelection" :label="__('Admission round')">
         <option value="">{{ __('Select a round') }}</option>
         @foreach ($rounds as $round)
-            <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} · {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status) }})</option>
+            <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} · {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status, $round->end_date) }})</option>
         @endforeach
     </flux:select>
     <flux:error name="roundSelection" />

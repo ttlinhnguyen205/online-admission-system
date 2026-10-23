@@ -1,14 +1,14 @@
 <div class="flex flex-col gap-5">
     <flux:heading size="lg">Quản lý quy tắc đánh giá</flux:heading>
-    <flux:callout>Chỉ cấu hình và pin quy tắc cho đăng ký native. Chưa tính điểm, phân bổ hoặc công bố kết quả. Phê duyệt áp dụng nội dung đã lưu; hãy lưu mọi thay đổi trước khi duyệt.</flux:callout>
+    <flux:callout>Cấu hình và lưu quy tắc cho đăng ký theo ngành. Chưa tính điểm, phân bổ hoặc công bố kết quả. Phê duyệt áp dụng nội dung đã lưu; hãy lưu mọi thay đổi trước khi duyệt.</flux:callout>
     @if ($program)
         <flux:text>{{ $program->major->name }} · {{ $program->admissionMethod->name }} · Chương trình #{{ $program->id }}</flux:text>
-        <flux:text>Rule đang gắn: {{ $program->evaluationRule ? '#'.$program->evaluationRule->id.' / v'.$program->evaluationRule->version.' / '.(['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$program->evaluationRule->status] ?? $program->evaluationRule->status) : 'Chưa có rule đã duyệt' }}</flux:text>
+        <flux:text>Quy tắc đang gắn: {{ $program->evaluationRule ? '#'.$program->evaluationRule->id.' / v'.$program->evaluationRule->version.' / '.(['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$program->evaluationRule->status] ?? $program->evaluationRule->status) : 'Chưa có quy tắc đã duyệt' }}</flux:text>
     @endif
     <div class="overflow-x-auto">
         <flux:table :paginate="$rules">
             <flux:table.columns>
-                <flux:table.column>Phương thức / Template</flux:table.column>
+                <flux:table.column>Phương thức / Mẫu tính điểm</flux:table.column>
                 <flux:table.column>Phiên bản / Trạng thái</flux:table.column>
                 <flux:table.column>Phê duyệt / Số chương trình</flux:table.column>
                 <flux:table.column>Thao tác</flux:table.column>
@@ -33,7 +33,7 @@
             <option value="">Chọn phương thức</option>
             @foreach ($methods as $method)<option wire:key="rule-method-{{ $method->id }}" value="{{ $method->id }}">{{ $method->name }}</option>@endforeach
         </flux:select>
-        <flux:select wire:model.live="template" label="Template" :disabled="$selected !== null">
+        <flux:select wire:model.live="template" label="Mẫu tính điểm" :disabled="$selected !== null">
             @foreach ($templates as $identifier => $definition)
                 @if ($definition['supported'])<option wire:key="rule-template-{{ $identifier }}" value="{{ $identifier }}">{{ $definition['name'] }} / v1</option>@endif
             @endforeach
@@ -53,9 +53,9 @@
         <flux:input type="number" step="0.001" wire:model="payload.minimum_subject_score" label="Ngưỡng từng môn (0–10)" :disabled="$selected !== null && $selected->status !== 'draft'" />
         <flux:input type="number" step="0.001" wire:model="payload.minimum_total_score" label="Ngưỡng tổng ba môn (0–30)" :disabled="$selected !== null && $selected->status !== 'draft'" />
         <div class="sm:col-span-2"><flux:textarea wire:model="payload.policy_reference" label="Căn cứ chính sách phê duyệt công thức và ngưỡng" :disabled="$selected !== null && $selected->status !== 'draft'" /></div>
-        <div class="sm:col-span-2"><flux:textarea wire:model="reason" label="Lý do tạo / sửa / ngừng sử dụng / gắn rule" /></div>
+        <div class="sm:col-span-2"><flux:textarea wire:model="reason" label="Lý do tạo / sửa / ngừng sử dụng / gắn quy tắc" /></div>
         @if ($selected)
-            <div class="sm:col-span-2 text-sm text-zinc-600 dark:text-zinc-300">Ranking contract: {{ $selected->ranking_contract }} / v{{ $selected->ranking_contract_version }}. Chỉ so sánh trong cùng phiên bản rule; không so sánh giữa phương thức hoặc thang điểm.</div>
+            <div class="sm:col-span-2 text-sm text-zinc-600 dark:text-zinc-300">Quy tắc xếp hạng: phiên bản {{ $selected->ranking_contract_version }}. Chỉ so sánh trong cùng phiên bản quy tắc; không so sánh giữa phương thức hoặc thang điểm.</div>
         @endif
         <div class="sm:col-span-2"><flux:error name="rules" /><flux:error name="reason" /><flux:error name="payload" /><flux:error name="payload.subjects" /></div>
         <div class="flex flex-wrap gap-2 sm:col-span-2">
@@ -71,6 +71,6 @@
         </div>
     </form>
     @foreach ($templates as $identifier => $definition)
-        @if (! $definition['supported'])<flux:callout wire:key="unsupported-template-{{ $identifier }}">{{ $definition['name'] }} — UNSUPPORTED: {{ $definition['reason'] }}</flux:callout>@endif
+        @if (! $definition['supported'])<flux:callout wire:key="unsupported-template-{{ $identifier }}">{{ $definition['name'] }} — Chưa hỗ trợ: {{ $definition['reason'] }}</flux:callout>@endif
     @endforeach
 </div>

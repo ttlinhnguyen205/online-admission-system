@@ -17,7 +17,7 @@
                 x-on:counseling-answered.window="$nextTick(() => { if (nearBottom) { $refs.messages.scrollTop = $refs.messages.scrollHeight } else { unread = true } })">
                 <div x-ref="messages" x-on:scroll="nearBottom = $el.scrollHeight - $el.scrollTop - $el.clientHeight < 80; if (nearBottom) unread = false"
                     role="log" aria-live="polite" aria-relevant="additions" aria-label="{{ __('Cuộc trò chuyện tư vấn') }}"
-                    tabindex="0" class="flex max-h-[55dvh] min-h-64 flex-col gap-5 overflow-y-auto rounded-2xl border border-zinc-200 p-4 focus-visible:outline-2 focus-visible:outline-rose-600 dark:border-zinc-700 sm:p-6">
+                    tabindex="0" class="flex max-h-[55dvh] min-h-64 flex-col gap-5 overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-4 focus-visible:outline-2 focus-visible:outline-rose-600 dark:border-zinc-700 dark:bg-zinc-800 sm:p-6">
                     @forelse ($turns as $turn)
                         <article wire:key="turn-{{ $turn['id'] }}" class="flex min-w-0 flex-col gap-3">
                             <div class="ms-auto max-w-full rounded-2xl bg-rose-50 px-4 py-3 text-zinc-900 dark:bg-rose-950 dark:text-zinc-100">
@@ -27,7 +27,7 @@
                             <div class="rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-900">
                                 <p class="mb-2 text-xs font-semibold">{{ __('Tư vấn tuyển sinh') }}</p>
                                 <p class="whitespace-pre-wrap break-words text-sm leading-7">{{ $turn['answer']['body'] }}</p>
-                                <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Nguồn: danh mục tuyển sinh được phép công bố. Tra cứu lúc') }} {{ $turn['answer']['checked_at'] }} · {{ config('app.timezone') }}</p>
+                                <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Nguồn: danh mục tuyển sinh được phép công bố. Tra cứu lúc') }} {{ $turn['answer']['checked_at'] }}</p>
                                 @if ($turn['answer']['route'])
                                     <flux:button class="mt-3" size="sm" :href="route($turn['answer']['route'])" wire:navigate>
                                         {{ $turn['answer']['route'] === 'candidate.results.index' ? __('Mở kết quả xét tuyển') : __('Mở đăng ký nguyện vọng') }}
@@ -61,6 +61,21 @@
                     :placeholder="__('Ví dụ: Ngành Công nghệ thông tin có đang nhận đăng ký không?')" />
                 <div class="text-end text-xs text-zinc-500" x-text="($wire.question || '').length + ' / 2000'"></div>
                 <flux:error name="question" />
+                <flux:select :label="__('Câu hỏi gợi ý')" wire:loading.attr="disabled" wire:target="send,clear"
+                    x-on:change="if ($event.target.value) { $wire.set('question', $event.target.value, false); $event.target.value = ''; $nextTick(() => document.getElementById('counseling-question').focus()) }">
+                    <option value="">{{ __('Chọn câu hỏi có sẵn') }}</option>
+                        @foreach ([
+                            'Hiện có những ngành nào đang nhận đăng ký xét tuyển?',
+                            'Ngành Công nghệ thông tin có đang nhận đăng ký không?',
+                            'Thời hạn đăng ký xét tuyển của đợt hiện tại là khi nào?',
+                            'Có những phương thức xét tuyển nào đang được công bố?',
+                            'Chỉ tiêu tuyển sinh của ngành Công nghệ thông tin là bao nhiêu?',
+                            'Tôi có thể đăng ký nguyện vọng ở đâu?',
+                            'Tôi có thể xem kết quả xét tuyển ở đâu?',
+                        ] as $suggestedQuestion)
+                            <option value="{{ __($suggestedQuestion) }}" wire:key="counseling-suggestion-{{ $loop->index }}">{{ __($suggestedQuestion) }}</option>
+                        @endforeach
+                </flux:select>
                 <div class="flex justify-end">
                     <flux:button type="submit" variant="primary" :disabled="! $ready" wire:loading.attr="disabled" wire:target="send,clear">{{ $failure ? __('Gửi lại') : __('Gửi câu hỏi') }}</flux:button>
                 </div>

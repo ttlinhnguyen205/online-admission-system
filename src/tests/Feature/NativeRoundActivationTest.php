@@ -167,7 +167,7 @@ test('activation refuses unauthorized inactive and unverified admins', function 
 test('admin UI confirms scope and refuses a stale activation preview', function () {
     activationAdmin();
     $round = activationRound();
-    Livewire::test(AdmissionRounds::class)->call('manageNativeRegistration', $round->id)->assertSee('Đăng ký nguyện vọng native');
+    Livewire::test(AdmissionRounds::class)->call('manageNativeRegistration', $round->id)->assertSee('Đăng ký nguyện vọng theo ngành');
     $page = Livewire::test(NativeRoundRegistration::class, ['roundId' => $round->id]);
     $page->call('confirm', 'prepare')->set('confirmationCode', 'WRONG')->set('reason', 'Demo')->set('confirmed', true)
         ->call('apply')->assertHasErrors('native');
@@ -230,7 +230,7 @@ test('close blocks stale candidate mutations and preserves history', function (s
         'submit' => fn () => $native->submit($application->id),
     };
     expect($action)->toThrow(HttpException::class);
-    Livewire::test(NativeWishes::class, ['applicationId' => $application->id])->assertSee('Đăng ký native đã đóng')->assertDontSee('Thêm nguyện vọng');
+    Livewire::test(NativeWishes::class, ['applicationId' => $application->id])->assertSee('Đăng ký theo ngành đã đóng')->assertDontSee('Thêm nguyện vọng');
     expect($application->nativeWishes()->count())->toBe(1);
     expect($application->submissionSnapshots()->count())->toBe(0);
 })->with(['add', 'delete', 'reorder', 'submit']);

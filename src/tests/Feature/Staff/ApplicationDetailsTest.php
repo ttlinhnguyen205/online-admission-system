@@ -50,7 +50,7 @@ test('draft revision and later application states have no staff mutation control
     CandidateDocument::factory()->for($application)->create();
     $this->actingAs(User::factory()->create(['role' => UserRole::Staff]));
     Livewire::test(ApplicationDetails::class, ['application' => $application->id])
-        ->assertSee('Read-only application')->assertDontSee("wire:click=\"confirm('start')\"", false)
+        ->assertSee('Hồ sơ chỉ được xem')->assertDontSee("wire:click=\"confirm('start')\"", false)
         ->assertDontSee("wire:click=\"confirm('revision')\"", false)->assertDontSee("wire:click=\"confirm('verify')\"", false);
 })->with([ApplicationStatus::Draft, ApplicationStatus::NeedsRevision, ApplicationStatus::Verified, ApplicationStatus::Processing, ApplicationStatus::Completed]);
 

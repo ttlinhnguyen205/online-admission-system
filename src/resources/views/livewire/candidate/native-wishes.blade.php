@@ -3,16 +3,16 @@
         <flux:heading size="xl">{{ $application->application_code }}</flux:heading>
         <flux:text>{{ $round->name }} · {{ App\Support\CandidateStatusLabels::application($application->status) }}</flux:text>
     </div>
-    <flux:callout>Đăng ký theo ngành, xét nhiều phương thức. Chức năng phân bổ và công bố native chưa được kích hoạt.</flux:callout>
-    <flux:text>Thời gian nhận hồ sơ: {{ $round->start_date->format('d/m/Y H:i') }} – {{ $round->end_date->format('d/m/Y H:i') }} ({{ config('app.timezone') }})</flux:text>
+    <flux:callout>Đăng ký theo ngành, xét nhiều phương thức. Kết quả chỉ hiển thị sau khi được phê duyệt và công bố.</flux:callout>
+    <flux:text>Thời gian nhận hồ sơ: {{ $round->start_date->format('d/m/Y H:i') }} – {{ $round->end_date->format('d/m/Y H:i') }}</flux:text>
     @if ($round->nativeRegistrationState() === 'native_closed')
-        <flux:callout>Đăng ký native đã đóng. Chỉ xem hồ sơ và lịch sử đã nộp.</flux:callout>
+        <flux:callout>Đăng ký theo ngành đã đóng. Chỉ xem hồ sơ và lịch sử đã nộp.</flux:callout>
     @elseif ($round->nativeRegistrationState() !== 'native_open')
-        <flux:callout>Đợt chưa kích hoạt đăng ký native. Chỉ xem hồ sơ.</flux:callout>
+        <flux:callout>Đợt chưa kích hoạt đăng ký theo ngành. Chỉ xem hồ sơ.</flux:callout>
     @elseif (now()->lessThan($round->start_date))
         <flux:callout>Chưa tới thời gian nhận hồ sơ. Bắt đầu {{ $round->start_date->format('d/m/Y H:i') }}.</flux:callout>
     @elseif (now()->greaterThan($round->end_date))
-        <flux:callout>Thời gian nhận hồ sơ đã kết thúc.</flux:callout>
+        <flux:callout>Đã hết hạn đăng ký.</flux:callout>
     @endif
     @if ($checklist !== [])
         <flux:heading>Kiểm tra hồ sơ trước khi nộp</flux:heading>
@@ -21,7 +21,7 @@
         @endforeach
     @endif
     @if (! App\Actions\NativeWishRegistration::enabled())
-        <flux:callout>Đăng ký native đang tạm khóa. Lịch sử đã nộp được giữ nguyên.</flux:callout>
+        <flux:callout>Đăng ký theo ngành đang tạm khóa. Lịch sử đã nộp được giữ nguyên.</flux:callout>
     @endif
     @if ($application->revision_reason)
         <flux:text>{{ $application->revision_reason }}</flux:text>
@@ -56,7 +56,7 @@
             </flux:select>
             <div><flux:button type="submit" variant="primary" wire:loading.attr="disabled">Thêm nguyện vọng</flux:button></div>
         </form>
-        <flux:text>Nộp hồ sơ sẽ cố định toàn bộ phương thức và quy tắc đã phê duyệt. Thiếu quy tắc sẽ chặn nộp native; không tự loại phương thức vì chưa có điểm.</flux:text>
+        <flux:text>Nộp hồ sơ sẽ lưu cố định toàn bộ phương thức và quy tắc đã phê duyệt. Chưa thể nộp hồ sơ theo ngành nếu thiếu quy tắc; không tự loại phương thức vì chưa có điểm.</flux:text>
         <div><flux:button variant="primary" wire:click="submit" wire:confirm="Nộp hồ sơ và cố định phiên bản nguyện vọng?" wire:loading.attr="disabled">{{ $application->status === App\Enums\ApplicationStatus::NeedsRevision ? 'Nộp lại hồ sơ' : 'Nộp hồ sơ' }}</flux:button></div>
     @endif
     <flux:heading>Lịch sử đã nộp</flux:heading>

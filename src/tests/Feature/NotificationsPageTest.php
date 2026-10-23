@@ -4,6 +4,7 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Livewire\Notifications;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 
@@ -19,7 +20,7 @@ test('admin toolbar links to the notifications page with an empty state', functi
 test('candidate toolbar keeps its dedicated notification destination', function () {
     $this->actingAs(User::factory()->create());
 
-    $this->get(route('home'))->assertSee('href="'.route('candidate.notifications.index').'"', false);
+    $this->get(route('dashboard'))->assertSee('href="'.route('candidate.notifications.index').'"', false);
 });
 
 test('notifications are private and marking read preserves the first read time', function () {
@@ -45,7 +46,7 @@ test('notifications are private and marking read preserves the first read time',
     $page->call('markRead', $own->id);
     expect($own->fresh()->read_at->equalTo($readAt))->toBeTrue();
     expect($foreign->fresh()->read_at)->toBeNull();
-    $page->call('markRead', $foreign->id)->assertNotFound();
+    expect(fn () => $page->call('markRead', $foreign->id))->toThrow(ModelNotFoundException::class);
 });
 
 test('notification content is escaped and supplied URLs are not rendered', function () {
@@ -80,7 +81,7 @@ test('locked users cannot mark notifications read from an existing page', functi
     ]);
     $this->actingAs($user);
     $page = Livewire::test(Notifications::class);
-    $user->update(['status' => UserStatus::Locked]);
+    $user->forceFill(['status' => UserStatus::Locked])->save();
 
     $page->call('markRead', $notification->id)->assertForbidden();
 

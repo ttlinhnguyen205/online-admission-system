@@ -148,7 +148,7 @@ test('verified documents and scores permit application verification after deadli
     CandidateScore::factory()->for($application->candidateProfile)->create(['verified' => true]);
     $this->actingAs(User::factory()->create(['role' => UserRole::Staff]));
     Livewire::test(ApplicationDetails::class, ['application' => $application->id])
-        ->assertSee('Advisory: catalog inactive')->call('confirm', 'verify')->call('perform')->assertHasNoErrors();
+        ->assertSee('Lưu ý: cấu hình đã ngừng hoạt động')->call('confirm', 'verify')->call('perform')->assertHasNoErrors();
     expect($application->fresh()->status)->toBe(ApplicationStatus::Verified);
 });
 

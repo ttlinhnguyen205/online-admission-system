@@ -4,7 +4,7 @@
     @if ($nativeResults)
         @foreach ($nativeResults as $entry)
             <article wire:key="native-result-{{ $entry->id }}">
-                <flux:heading>{{ $entry->version->admissionRound->name }} · Native V{{ $entry->version->version }}</flux:heading>
+                <flux:heading>{{ $entry->version->admissionRound->name }} · Xét theo ngành · Phiên bản {{ $entry->version->version }}</flux:heading>
                 <flux:text>{{ $entry->decision === 'admitted' ? 'Trúng tuyển' : 'Không trúng tuyển' }}</flux:text>
                 @if ($entry->decision === 'admitted')
                     <flux:text>NV{{ $entry->getAttribute('payload')['priority'] }} · {{ $entry->getAttribute('payload')['major_name'] }} · Điểm: {{ $entry->score }}</flux:text>

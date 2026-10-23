@@ -12,7 +12,7 @@
             <option value="disabled">{{ __('Registration disabled') }}</option>
         </flux:select>
     </x-slot:filters>
-    <flux:callout>READY chỉ xác nhận cấu hình rule/binding Phase 2.1; không xác nhận engine xét tuyển chính thức. Demo được cấu hình thủ công: tạo đợt và ngành demo riêng, thêm chương trình THPT/học bạ, tạo và duyệt rule theo chính sách, gắn từng chương trình rồi kiểm tra READY. HSA chưa được hỗ trợ. Feature flag native vẫn giữ nguyên.</flux:callout>
+    <flux:callout>Trạng thái sẵn sàng cho biết cấu hình quy tắc xét tuyển đã hợp lệ, chưa phải kết quả xét tuyển. Hiện hỗ trợ điểm thi THPT và học bạ; chưa hỗ trợ HSA.</flux:callout>
     <flux:table :paginate="$records">
         <flux:table.columns>
             <flux:table.column>{{ __('Major') }}</flux:table.column>
@@ -20,7 +20,7 @@
             <flux:table.column>{{ __('Compatibility program') }}</flux:table.column>
             <flux:table.column>Phương thức của ngành</flux:table.column>
             <flux:table.column>{{ __('Candidate registration') }}</flux:table.column>
-            <flux:table.column>Cấu hình native</flux:table.column>
+            <flux:table.column>Cấu hình xét theo ngành</flux:table.column>
             <flux:table.column>{{ __('Actions') }}</flux:table.column>
         </flux:table.columns>
         <flux:table.rows>
@@ -54,8 +54,8 @@
                         @endif
                     </flux:table.cell>
                     <flux:table.cell>
-                        <flux:badge :color="$nativeReadiness[$record->id]['status'] === 'READY' ? 'rose' : 'rose'">{{ $nativeReadiness[$record->id]['status'] }}</flux:badge>
-                        <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $nativeReadiness[$record->id]['total'] }} accepted · {{ $nativeReadiness[$record->id]['approved'] }} hợp lệ · {{ $nativeReadiness[$record->id]['missing'] }} thiếu · {{ $nativeReadiness[$record->id]['unsupported'] }} unsupported</div>
+                        <flux:badge :color="$nativeReadiness[$record->id]['status'] === 'READY' ? 'rose' : 'rose'">{{ __($nativeReadiness[$record->id]['status']) }}</flux:badge>
+                        <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $nativeReadiness[$record->id]['total'] }} phương thức · {{ $nativeReadiness[$record->id]['approved'] }} hợp lệ · {{ $nativeReadiness[$record->id]['missing'] }} thiếu · {{ $nativeReadiness[$record->id]['unsupported'] }} chưa hỗ trợ</div>
                         @foreach ($nativeReadiness[$record->id]['methods'] as $methodState)
                             @if (! $methodState['ready'])<div wire:key="rule-readiness-{{ $record->id }}-{{ $methodState['program_id'] }}" class="mt-1 max-w-xs whitespace-normal text-xs text-rose-700 dark:text-rose-300">{{ $methodState['name'] }}: {{ $methodState['reason'] }}</div>@endif
                         @endforeach

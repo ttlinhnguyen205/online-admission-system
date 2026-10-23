@@ -12,10 +12,10 @@
     <div class="flex flex-col gap-3 admission-panel p-5">
         <div class="flex flex-wrap gap-3">
             <flux:badge>{{ App\Support\CandidateStatusLabels::application($application->status) }}</flux:badge>
-            <flux:badge>{{ __('Đợt tuyển sinh') }}: {{ App\Support\CandidateStatusLabels::round($round->status) }}</flux:badge>
+            <flux:badge>{{ __('Đợt tuyển sinh') }}: {{ App\Support\CandidateStatusLabels::round($round->status, $round->end_date) }}</flux:badge>
         </div>
-        <flux:text>{{ __('Thời gian nhận hồ sơ') }}: {{ $round->start_date->format('Y-m-d H:i:s') }} - {{ $round->end_date->format('Y-m-d H:i:s') }} ({{ config('app.timezone') }})</flux:text>
-        <flux:text>{{ __('Thời điểm nộp gần nhất') }}: {{ $application->submitted_at?->format('Y-m-d H:i:s') ?? __('Chưa nộp') }} ({{ config('app.timezone') }})</flux:text>
+        <flux:text>{{ __('Thời gian nhận hồ sơ') }}: {{ $round->start_date->format('Y-m-d H:i:s') }} - {{ $round->end_date->format('Y-m-d H:i:s') }}</flux:text>
+        <flux:text>{{ __('Thời điểm nộp gần nhất') }}: {{ $application->submitted_at?->format('Y-m-d H:i:s') ?? __('Chưa nộp') }}</flux:text>
         @if ($application->revision_reason)
             <flux:callout><div class="font-medium">{{ __('Lý do yêu cầu bổ sung') }}</div><p class="whitespace-pre-wrap break-words">{{ $application->revision_reason }}</p></flux:callout>
         @endif

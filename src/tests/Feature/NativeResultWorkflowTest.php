@@ -187,7 +187,7 @@ test('native UI requires confirmation and rejects a blocked draft without deleti
     $fixture = nativeResultFixture();
     $version = $fixture['version'];
     Livewire::test(NativeResults::class, ['roundId' => $version->admission_round_id])->call('select', $version->id)
-        ->assertSee('BLOCKED')->call('reject')->assertHasErrors('confirmed')
+        ->assertSee('Chưa thể phân bổ')->call('reject')->assertHasErrors('confirmed')
         ->set('confirmed', true)->set('rejectionReason', 'Missing approved coordination policy')->call('reject')->assertHasNoErrors();
     expect($version->fresh()->status)->toBe('rejected');
     expect($version->entries()->count())->toBe(1);

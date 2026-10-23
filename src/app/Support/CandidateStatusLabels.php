@@ -8,6 +8,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\DocumentStatus;
 use App\Enums\ProfileStatus;
 use App\Enums\VerificationStatus;
+use Carbon\CarbonInterface;
 
 class CandidateStatusLabels
 {
@@ -25,8 +26,12 @@ class CandidateStatusLabels
         };
     }
 
-    public static function round(AdmissionRoundStatus $status): string
+    public static function round(AdmissionRoundStatus $status, ?CarbonInterface $endDate = null): string
     {
+        if ($status === AdmissionRoundStatus::Open && $endDate !== null && now()->greaterThan($endDate)) {
+            return 'Đã hết hạn đăng ký';
+        }
+
         return match ($status) {
             AdmissionRoundStatus::Draft => 'Bản nháp',
             AdmissionRoundStatus::Open => 'Đang nhận hồ sơ',

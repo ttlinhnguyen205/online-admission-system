@@ -9,6 +9,44 @@ use App\Models\Application;
 use App\Models\User;
 use Livewire\Livewire;
 
+test('round labels distinguish expired registration from the stored lifecycle status', function (AdmissionRoundStatus $status, int $secondsUntilDeadline, string $label) {
+    $this->travelTo(now()->setDate(2026, 10, 23)->setTime(12, 0));
+    $round = AdmissionRound::factory()->create([
+        'status' => $status,
+        'start_date' => now()->subDay(),
+        'end_date' => now()->addSeconds($secondsUntilDeadline),
+    ]);
+    $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
+
+    Livewire::test(AdmissionRounds::class)->assertSee($label);
+
+    expect($round->fresh()->status)->toBe($status);
+})->with([
+    'expired open round' => [AdmissionRoundStatus::Open, -1, 'Đã hết hạn đăng ký'],
+    'before deadline' => [AdmissionRoundStatus::Open, 1, 'Đang nhận hồ sơ'],
+    'at deadline' => [AdmissionRoundStatus::Open, 0, 'Đang nhận hồ sơ'],
+    'closed round' => [AdmissionRoundStatus::Closed, -1, 'Đã đóng'],
+    'draft round' => [AdmissionRoundStatus::Draft, -1, 'Bản nháp'],
+    'processing round' => [AdmissionRoundStatus::Processing, -1, 'Đang xét tuyển'],
+    'published round' => [AdmissionRoundStatus::Published, -1, 'Đã công bố'],
+]);
+
+test('candidate sees expired registration while the round remains open', function () {
+    $this->travelTo(now()->setDate(2026, 10, 23)->setTime(12, 0));
+    $round = AdmissionRound::factory()->create([
+        'status' => AdmissionRoundStatus::Open,
+        'start_date' => now()->subDays(2),
+        'end_date' => now()->subDay(),
+    ]);
+    $application = Application::factory()->for($round)->create();
+    $this->actingAs($application->candidateProfile->user);
+
+    $this->get(route('candidate.applications.show', $application->id))
+        ->assertOk()->assertSeeText('Đã hết hạn đăng ký');
+
+    expect($round->fresh()->status)->toBe(AdmissionRoundStatus::Open);
+});
+
 test('admin can create view update and delete admission_rounds', function () {
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
     $page = Livewire::test(AdmissionRounds::class)->call('create')->set('form', ['code' => 'ROUND-NEW', 'name' => 'New round', 'year' => 2026, 'start_date' => '2026-01-01T09:00:12', 'end_date' => '2026-12-31T17:00:34', 'result_date' => null, 'status' => 'draft'])->call('save')->assertHasNoErrors();
@@ -71,7 +109,7 @@ test('round dates preserve seconds in the configured timezone and allow historic
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
     $record = AdmissionRound::factory()->create(['year' => 2000, 'start_date' => '2000-12-31 23:59:12', 'end_date' => '2001-01-01 00:00:34', 'result_date' => '2001-01-01 00:00:34']);
     Livewire::test(AdmissionRounds::class)->call('edit', $record->id)
-        ->assertSet('form.start_date', '2000-12-31T23:59:12')->assertSee($timezone)
+        ->assertSet('form.start_date', '2000-12-31T23:59:12')->assertDontSee($timezone)
         ->call('save')->assertHasNoErrors();
     $this->assertDatabaseHas('admission_rounds', ['id' => $record->id, 'start_date' => '2000-12-31 23:59:12', 'end_date' => '2001-01-01 00:00:34', 'result_date' => '2001-01-01 00:00:34']);
 })->with(['UTC', 'Asia/Ho_Chi_Minh']);

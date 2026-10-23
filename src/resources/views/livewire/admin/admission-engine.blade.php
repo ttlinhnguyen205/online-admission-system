@@ -8,7 +8,7 @@
         <flux:select wire:model="roundSelection" :label="__('Admission round')" class="min-w-64">
             <option value="">{{ __('Select a round') }}</option>
             @foreach ($rounds as $round)
-                <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} · {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status) }})</option>
+                <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} · {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status, $round->end_date) }})</option>
             @endforeach
         </flux:select>
         <flux:button type="submit" variant="primary" wire:loading.attr="disabled">{{ __('Preview readiness') }}</flux:button>
@@ -18,17 +18,17 @@
     <div role="status" wire:loading.delay>{{ __('Checking and processing admission data…') }}</div>
 
     @if (($previewData['native'] ?? false) === true)
-        <flux:heading>Báo cáo Native — đợt #{{ $previewData['round_id'] }}</flux:heading>
-        <flux:text>{{ $previewData['mode'] }} · {{ $previewData['applications'] }} hồ sơ</flux:text>
+        <flux:heading>Báo cáo xét tuyển theo ngành — đợt #{{ $previewData['round_id'] }}</flux:heading>
+        <flux:text>{{ __($previewData['mode']) }} · {{ $previewData['applications'] }} hồ sơ</flux:text>
         @foreach ($previewData['counts'] as $status => $count)
-            <flux:text wire:key="native-count-{{ $status }}">{{ $status }}: {{ $count }}</flux:text>
+            <flux:text wire:key="native-count-{{ $status }}">{{ __($status) }}: {{ $count }}</flux:text>
         @endforeach
         <flux:callout variant="warning">
             @foreach ($previewData['blockers'] as $index => $blocker)
-                <p wire:key="native-blocker-{{ $index }}">{{ $blocker }}</p>
+                <p wire:key="native-blocker-{{ $index }}">{{ __($blocker) }}</p>
             @endforeach
         </flux:callout>
-        <flux:button wire:click="exportNative">Xuất báo cáo điểm Native CSV</flux:button>
+        <flux:button wire:click="exportNative">Xuất báo cáo điểm xét theo ngành (CSV)</flux:button>
     @elseif ($previewData !== [])
         <div class="space-y-4 admission-panel p-5">
             <flux:heading size="lg">{{ __('Readiness for round') }} #{{ $previewData['round_id'] }}</flux:heading>

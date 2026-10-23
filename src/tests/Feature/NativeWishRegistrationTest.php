@@ -17,6 +17,7 @@ use App\Models\Application;
 use App\Models\CandidateMajorOffering;
 use App\Models\EvaluationRuleVersion;
 use App\Models\User;
+use App\Notifications\StaffApplicationSubmitted;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
@@ -136,6 +137,7 @@ test('wrong round offerings cannot be selected', function () {
 });
 
 test('submission pins every accepted method even without candidate source scores', function () {
+    $staff = User::factory()->create(['role' => UserRole::Staff]);
     $application = nativeApplication();
     $offering = nativeOffering($application, 3);
     $this->actingAs($application->candidateProfile->user);
@@ -144,6 +146,9 @@ test('submission pins every accepted method even without candidate source scores
     $snapshot = $application->submissionSnapshots()->sole();
     expect($snapshot->readiness)->toBe('rules_pinned')->and($snapshot->entries()->sole()->bindings()->count())->toBe(3);
     expect($application->fresh()->status)->toBe(ApplicationStatus::Submitted);
+    $notification = $staff->notifications()->sole();
+    expect($notification->type)->toBe(StaffApplicationSubmitted::class);
+    expect($notification->data['application_id'])->toBe($application->id);
     $this->assertDatabaseCount('candidate_scores', 0);
     $this->assertDatabaseCount('admission_results', 0);
 });

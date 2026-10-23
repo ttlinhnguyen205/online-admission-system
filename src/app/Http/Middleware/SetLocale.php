@@ -16,14 +16,7 @@ class SetLocale
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = session('locale', config('app.locale', 'vi'));
-
-        // Chỉ cho phép các ngôn ngữ hệ thống hỗ trợ
-        if (! in_array($locale, ['vi', 'en'], true)) {
-            $locale = 'vi';
-        }
-
-        App::setLocale($locale);
+        App::setLocale('vi');
 
         return $next($request);
     }

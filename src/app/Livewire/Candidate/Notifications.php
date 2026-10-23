@@ -40,6 +40,7 @@ class Notifications extends CandidatePage
 
         return view('livewire.candidate.notifications', [
             'notifications' => $notifications,
+            'unreadCount' => $candidate->unreadNotifications()->count(),
             'details' => $details,
         ]);
     }

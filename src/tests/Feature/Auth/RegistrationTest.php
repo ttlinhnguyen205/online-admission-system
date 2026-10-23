@@ -73,7 +73,7 @@ test('registration retains password complexity and confirmation requirements', f
     $this->post(route('register.store'), [
         'name' => 'Candidate', 'email' => 'candidate@example.com',
         'password' => $password, 'password_confirmation' => $confirmation,
-    ])->assertSessionHasErrors(['password' => __($message, ['attribute' => 'password', 'min' => 12])]);
+    ])->assertSessionHasErrors(['password' => __($message, ['attribute' => 'mật khẩu', 'min' => 12])]);
 
     $this->assertGuest();
     $this->assertDatabaseMissing('users', ['email' => 'candidate@example.com']);

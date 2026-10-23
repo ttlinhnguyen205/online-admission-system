@@ -118,7 +118,7 @@ test('review history survives reviewer deletion and never claims a missing actor
     app(StaffApplicationReview::class)->requestRevision($application->id, reviewToken($application), ['revision_reason' => '<script>history</script>']);
     $actor->delete();
     $this->actingAs(User::factory()->create(['role' => UserRole::Staff]));
-    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->assertSee('Reviewer unavailable')
+    Livewire::test(ApplicationDetails::class, ['application' => $application->id])->assertSee('Không có thông tin người xét duyệt')
         ->assertDontSee('<script>history</script>', false);
     expect(ActivityLog::query()->sole()->user_id)->toBeNull();
 });
