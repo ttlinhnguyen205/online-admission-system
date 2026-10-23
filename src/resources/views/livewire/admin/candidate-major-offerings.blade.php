@@ -12,7 +12,7 @@
             <option value="disabled">{{ __('Registration disabled') }}</option>
         </flux:select>
     </x-slot:filters>
-    <flux:callout>READY chỉ xác nhận cấu hình rule/binding Phase 2.1; không xác nhận engine xét tuyển chính thức. Demo được cấu hình thủ công: tạo đợt và ngành demo riêng, thêm chương trình THPT/học bạ, tạo và duyệt rule theo chính sách, gắn từng chương trình rồi kiểm tra READY. HSA chưa được hỗ trợ. Feature flag native vẫn giữ nguyên.</flux:callout>
+    <flux:callout>READY cho biết cấu hình quy tắc xét tuyển đã hợp lệ, chưa phải kết quả xét tuyển. Hiện hỗ trợ điểm thi THPT và học bạ; chưa hỗ trợ HSA.</flux:callout>
     <flux:table :paginate="$records">
         <flux:table.columns>
             <flux:table.column>{{ __('Major') }}</flux:table.column>
