@@ -19,7 +19,7 @@ test('admin toolbar links to the notifications page with an empty state', functi
 test('candidate toolbar keeps its dedicated notification destination', function () {
     $this->actingAs(User::factory()->create());
 
-    $this->get(route('home'))->assertSee('href="'.route('candidate.notifications.index').'"', false);
+    $this->get(route('dashboard'))->assertSee('href="'.route('candidate.notifications.index').'"', false);
 });
 
 test('notifications are private and marking read preserves the first read time', function () {

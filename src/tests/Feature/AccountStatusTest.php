@@ -41,7 +41,7 @@ test('restricted accounts can log in and log out without a redirect loop', funct
         ->assertRedirect(route('dashboard', absolute: false));
     $this->assertAuthenticatedAs($user);
     $this->get(route('dashboard'))->assertForbidden();
-    $this->post(route('logout'))->assertRedirect(route('home'));
+    $this->post(route('logout'))->assertRedirect(route('login'));
     $this->assertGuest();
 })->with([UserStatus::Inactive, UserStatus::Locked]);
 
