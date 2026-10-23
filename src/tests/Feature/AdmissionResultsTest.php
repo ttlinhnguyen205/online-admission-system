@@ -209,7 +209,9 @@ test('candidate notifications are private and read state is idempotent', functio
     $this->actingAs($candidate);
     Livewire::test(Notifications::class)->assertSee('Chưa đọc')->assertSee(route('candidate.results.index'))
         ->assertViewHas('notifications', fn ($items) => $items->count() === 1)
-        ->call('markRead', $own->id)->assertSee('Đã đọc')->assertDontSee('Đánh dấu đã đọc');
+        ->assertViewHas('unreadCount', 1)
+        ->call('markRead', $own->id)->assertSee('Đã đọc')->assertDontSee('Đánh dấu đã đọc')
+        ->assertViewHas('unreadCount', 0);
     $time = $own->fresh()->read_at->format('Y-m-d H:i:s');
     $this->travel(10)->minutes();
     Livewire::test(Notifications::class)->call('markRead', $own->id);

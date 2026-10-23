@@ -458,7 +458,7 @@ test('unknown notification is marked read without using a supplied arbitrary URL
     ]);
     $this->actingAs($candidate);
     Livewire::test(Notifications::class)->call('openNotification', $notification->id)->assertNoRedirect()
-        ->assertSee('Đã đọc')->assertDontSee('Chưa đọc')->assertDontSee('https://evil.invalid')
+        ->assertSee('Đã đọc')->assertViewHas('unreadCount', 0)->assertDontSee('https://evil.invalid')
         ->assertDontSee('Đánh dấu đã đọc');
     expect($notification->fresh()->read_at)->not->toBeNull();
 });
