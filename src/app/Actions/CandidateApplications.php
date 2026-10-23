@@ -139,6 +139,7 @@ class CandidateApplications
                 throw ValidationException::withMessages(['submission' => __('Không thể nộp hồ sơ xét tuyển.')]);
             }
             $profile->user()->firstOrFail()->notify(new ApplicationSubmitted($application->getKey()));
+            app(NotifyStaffOfApplicationSubmission::class)->handle($application);
         }, 3);
     }
 

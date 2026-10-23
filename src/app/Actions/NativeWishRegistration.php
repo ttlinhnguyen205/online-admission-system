@@ -236,6 +236,7 @@ class NativeWishRegistration
             $snapshot->update(['sealed_at' => now()]);
             $application->update(['status' => ApplicationStatus::Submitted, 'submitted_at' => now()]);
             $application->candidateProfile->user->notify(new ApplicationSubmitted($application->id));
+            app(NotifyStaffOfApplicationSubmission::class)->handle($application);
         }, 3);
     }
 }
