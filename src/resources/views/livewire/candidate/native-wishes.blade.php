@@ -4,7 +4,7 @@
         <flux:text>{{ $round->name }} · {{ App\Support\CandidateStatusLabels::application($application->status) }}</flux:text>
     </div>
     <flux:callout>Đăng ký theo ngành, xét nhiều phương thức. Chức năng phân bổ và công bố native chưa được kích hoạt.</flux:callout>
-    <flux:text>Thời gian nhận hồ sơ: {{ $round->start_date->format('d/m/Y H:i') }} – {{ $round->end_date->format('d/m/Y H:i') }} ({{ config('app.timezone') }})</flux:text>
+    <flux:text>Thời gian nhận hồ sơ: {{ $round->start_date->format('d/m/Y H:i') }} – {{ $round->end_date->format('d/m/Y H:i') }}</flux:text>
     @if ($round->nativeRegistrationState() === 'native_closed')
         <flux:callout>Đăng ký native đã đóng. Chỉ xem hồ sơ và lịch sử đã nộp.</flux:callout>
     @elseif ($round->nativeRegistrationState() !== 'native_open')

@@ -109,7 +109,7 @@ test('round dates preserve seconds in the configured timezone and allow historic
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
     $record = AdmissionRound::factory()->create(['year' => 2000, 'start_date' => '2000-12-31 23:59:12', 'end_date' => '2001-01-01 00:00:34', 'result_date' => '2001-01-01 00:00:34']);
     Livewire::test(AdmissionRounds::class)->call('edit', $record->id)
-        ->assertSet('form.start_date', '2000-12-31T23:59:12')->assertSee($timezone)
+        ->assertSet('form.start_date', '2000-12-31T23:59:12')->assertDontSee($timezone)
         ->call('save')->assertHasNoErrors();
     $this->assertDatabaseHas('admission_rounds', ['id' => $record->id, 'start_date' => '2000-12-31 23:59:12', 'end_date' => '2001-01-01 00:00:34', 'result_date' => '2001-01-01 00:00:34']);
 })->with(['UTC', 'Asia/Ho_Chi_Minh']);

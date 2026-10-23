@@ -27,7 +27,7 @@
                             <div class="rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-900">
                                 <p class="mb-2 text-xs font-semibold">{{ __('Tư vấn tuyển sinh') }}</p>
                                 <p class="whitespace-pre-wrap break-words text-sm leading-7">{{ $turn['answer']['body'] }}</p>
-                                <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Nguồn: danh mục tuyển sinh được phép công bố. Tra cứu lúc') }} {{ $turn['answer']['checked_at'] }} · {{ config('app.timezone') }}</p>
+                                <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Nguồn: danh mục tuyển sinh được phép công bố. Tra cứu lúc') }} {{ $turn['answer']['checked_at'] }}</p>
                                 @if ($turn['answer']['route'])
                                     <flux:button class="mt-3" size="sm" :href="route($turn['answer']['route'])" wire:navigate>
                                         {{ $turn['answer']['route'] === 'candidate.results.index' ? __('Mở kết quả xét tuyển') : __('Mở đăng ký nguyện vọng') }}

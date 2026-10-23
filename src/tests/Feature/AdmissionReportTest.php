@@ -439,10 +439,10 @@ test('pdf report template escapes content and contains Vietnamese title filters 
     $round = AdmissionRound::factory()->create(['name' => '<script>PRIVATE</script>']);
     $html = view('reports.admissions', [
         'filters' => new AdmissionReportFilters((string) $round->id, 'submitted', 'Nguyễn'),
-        'generatedAt' => '09/10/2026 10:00:00 (Asia/Ho_Chi_Minh)', 'scope' => 'Chỉ bao gồm kết quả đã công bố.',
+        'generatedAt' => '09/10/2026 10:00:00', 'scope' => 'Chỉ bao gồm kết quả đã công bố.',
         'summary' => ['metrics' => ['Hồ sơ đã nộp' => 0]], 'applicationRows' => [], 'resultRows' => [],
         'headers' => ['Hồ sơ' => ['Mã hồ sơ'], 'Kết quả' => ['Kết quả']],
     ])->render();
     expect($html)->toContain('BÁO CÁO TUYỂN SINH', 'DejaVu Sans', '09/10/2026 10:00:00', 'Đã nộp', 'Nguyễn', 'Không có dữ liệu phù hợp.', '&lt;script&gt;')
-        ->not->toContain('<script>PRIVATE</script>');
+        ->not->toContain('<script>PRIVATE</script>', 'Asia/Ho_Chi_Minh');
 });

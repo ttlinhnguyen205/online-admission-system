@@ -6,7 +6,7 @@
         <flux:text>Chế độ: {{ $check['state'] }} · Điều kiện: {{ $check['status'] }}</flux:text>
         <flux:text>Offering READY: {{ $check['ready'] }} · NOT READY: {{ $check['not_ready'] }}</flux:text>
         <flux:text>Hồ sơ legacy: {{ $check['legacy'] }} · native: {{ $check['native'] }}</flux:text>
-        <flux:text>Thời gian nhận: {{ $round->start_date->format('d/m/Y H:i') }} – {{ $round->end_date->format('d/m/Y H:i') }} ({{ config('app.timezone') }}) · {{ $check['time_open'] ? 'Đang nhận' : 'Chưa tới thời gian, đã kết thúc hoặc vòng đời chưa mở' }}</flux:text>
+        <flux:text>Thời gian nhận: {{ $round->start_date->format('d/m/Y H:i') }} – {{ $round->end_date->format('d/m/Y H:i') }} · {{ $check['time_open'] ? 'Đang nhận' : 'Chưa tới thời gian, đã kết thúc hoặc vòng đời chưa mở' }}</flux:text>
         <flux:text>Người kích hoạt: {{ $activator?->name ?? 'Chưa kích hoạt' }}</flux:text>
         <flux:text>Thời điểm: {{ $round->native_activated_at?->format('d/m/Y H:i') ?? 'Chưa kích hoạt' }}</flux:text>
     </div>

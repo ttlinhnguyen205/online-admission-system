@@ -120,7 +120,7 @@ class AdmissionCounselingAnswer
                         default => $fact[$field],
                     };
                 } else {
-                    $details[] = 'Thời gian đăng ký: '.$fact['start'].' đến '.$fact['end'].' ('.$context['timezone'].').';
+                    $details[] = 'Thời gian đăng ký: '.$fact['start'].' đến '.$fact['end'].'.';
                 }
                 if (strlen(implode("\n\n", [...$lines, ...$details])) > 8000) {
                     $answerTruncated = true;

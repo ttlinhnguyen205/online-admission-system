@@ -53,7 +53,6 @@
                 <flux:table.cell>
                     <div>{{ $record->start_date->format('d/m/Y H:i:s') }}</div>
                     <div>{{ $record->end_date->format('d/m/Y H:i:s') }}</div>
-                    <div class="text-xs text-zinc-500">{{ config('app.timezone') }}</div>
                 </flux:table.cell>
 
                 <flux:table.cell>
@@ -162,12 +161,6 @@
         <flux:text>
             {{ __('Use Admission results to publish results. Published rounds cannot be reopened here.') }}
         </flux:text>
-
-        <div class="sm:col-span-2">
-            <flux:callout>
-                {{ __('All date and time values use :timezone (application timezone). Enter times in this timezone; no automatic local-time conversion is applied.', ['timezone' => config('app.timezone')]) }}
-            </flux:callout>
-        </div>
 
         <flux:input
             wire:model="form.start_date"

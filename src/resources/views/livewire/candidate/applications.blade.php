@@ -51,7 +51,6 @@
                     <flux:select.option :value="$round->id" wire:key="round-{{ $round->id }}">{{ $round->name }} · {{ $round->code }}</flux:select.option>
                 @endforeach
             </flux:select>
-            <flux:text>{{ __('Tất cả mốc thời gian của đợt tuyển sinh dùng múi giờ') }} {{ config('app.timezone') }}.</flux:text>
             <div class="flex justify-end gap-3">
                 <flux:modal.close><flux:button>{{ __('Hủy') }}</flux:button></flux:modal.close>
                 <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">{{ __('Tạo bản nháp') }}</flux:button>
