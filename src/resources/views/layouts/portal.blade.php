@@ -88,7 +88,7 @@
                     <flux:icon.home class="size-5" />
                     <span>{{ __('Trang chủ') }}</span>
                 </a>
-                <a href="{{ route('news') }}" wire:navigate x-on:click="menuOpen = false" @if (request()->routeIs('news')) aria-current="page" @endif class="portal-nav-link">
+                <a href="{{ route('news') }}" wire:navigate x-on:click="menuOpen = false" @if (request()->routeIs('news', 'news.*')) aria-current="page" @endif class="portal-nav-link">
                     <flux:icon.newspaper class="size-5" />
                     <span>{{ __('Tin tức') }}</span>
                 </a>
@@ -138,6 +138,7 @@
                         ['admission-methods', 'book-open', 'Phương thức xét tuyển', App\Models\AdmissionMethod::class],
                         ['admission-programs', 'document-text', 'Chương trình tuyển sinh', App\Models\AdmissionProgram::class],
                         ['candidate-major-offerings', 'clipboard-document-list', 'Ngành nhận đăng ký', App\Models\CandidateMajorOffering::class],
+                        ['news', 'newspaper', 'Quản lý tin tức', App\Models\NewsArticle::class],
                     ] as [$path, $icon, $label, $model])
                         @can('viewAny', $model)
                             <a href="{{ route('admin.'.$path.'.index') }}" wire:navigate class="portal-nav-link" @if (request()->routeIs('admin.'.$path.'.*')) aria-current="page" @endif>

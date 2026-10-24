@@ -13,6 +13,11 @@
         </flux:sidebar.header>
 
         @if (auth()->user()->isAdmin())
+        @can('viewAny', App\Models\NewsArticle::class)
+        <flux:sidebar.nav>
+            <flux:sidebar.item icon="newspaper" :href="route('admin.news.index')" :current="request()->routeIs('admin.news.*')" wire:navigate>Quản lý tin tức</flux:sidebar.item>
+        </flux:sidebar.nav>
+        @endcan
         <flux:sidebar.nav>
             <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Trang chủ') }}</flux:sidebar.item>
         </flux:sidebar.nav>

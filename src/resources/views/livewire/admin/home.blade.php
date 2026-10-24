@@ -50,6 +50,14 @@
         'Connect catalogs to rounds with quotas, scores and tuition.',
         'Open admission programs',
         App\Models\AdmissionProgram::class
+        ],
+        [
+        'news',
+        '05',
+        'Quản lý tin tức',
+        'Soạn bài và xuất bản tin nhà trường, tin tuyển sinh.',
+        'Mở quản lý tin tức',
+        App\Models\NewsArticle::class
         ]
         ] as [$path, $step, $title, $description, $openLabel, $model])
 

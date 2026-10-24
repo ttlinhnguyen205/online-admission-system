@@ -22,8 +22,8 @@ test('candidate navigation retains registration guidance', function () {
 test('news page contains school and admission news without registration guidance', function () {
     $response = $this->get(route('news'));
 
-    $response->assertSeeText('TIN NHÀ TRƯỜNG')
-        ->assertSeeText('TIN TUYỂN SINH')
+    $response->assertSeeText('Tin nhà trường')
+        ->assertSeeText('Tin tuyển sinh')
         ->assertDontSeeText('Hoàn thiện hồ sơ cá nhân')
         ->assertSee('href="'.route('registration-guidance').'"', false);
 });
