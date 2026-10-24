@@ -51,7 +51,7 @@ class CandidateApplications
                     }
                     $application = $profile->applications()->make([
                         'registration_mode' => $round->nativeRegistrationState() === 'native_open' ? 'native' : 'legacy',
-                        'application_code' => 'APP-'.Str::ulid(),
+                        'application_code' => 'HS-'.Str::upper(Str::random(8)),
                         'admission_round_id' => $round->getKey(),
                         'status' => ApplicationStatus::Draft,
                     ]);

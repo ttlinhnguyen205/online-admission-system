@@ -63,8 +63,7 @@ test('an incomplete profile creates one owned draft with a server generated stab
     $this->actingAs($profile->user);
     Livewire::test(Applications::class)->call('create')->set('form.admission_round_id', $round->id)->call('save')->assertHasNoErrors();
     $application = $profile->applications()->sole();
-    expect($application->application_code)->toStartWith('APP-')->toHaveLength(30);
-    expect(Str::isUlid(substr($application->application_code, 4)))->toBeTrue();
+    expect($application->application_code)->toMatch('/^HS-[A-Z0-9]{8}$/');
     expect($application->status)->toBe(ApplicationStatus::Draft);
     expect($application->admission_round_id)->toBe($round->id);
     expect($application->submitted_at)->toBeNull();
@@ -152,15 +151,19 @@ test('application lists are owner scoped and paginate while foreign details retu
 });
 
 test('real code collisions retry without retrying ownership uniqueness', function (bool $exhausted) {
-    $existing = Application::factory()->create(['application_code' => 'APP-01K00000000000000000000000']);
+    $existing = Application::factory()->create(['application_code' => 'HS-A7K2M9PX']);
     $profile = CandidateProfile::factory()->create();
     $round = AdmissionRound::factory()->create(['status' => AdmissionRoundStatus::Open]);
     $this->actingAs($profile->user);
     $attempts = 0;
-    Str::createUlidsUsing(function () use (&$attempts, $exhausted): string {
+    Str::createRandomStringsUsing(function (int $length) use (&$attempts, $exhausted): string {
+        if ($length !== 8) {
+            return substr(bin2hex(random_bytes($length)), 0, $length);
+        }
+
         $attempts++;
 
-        return $exhausted || $attempts === 1 ? '01K00000000000000000000000' : '01K00000000000000000000001';
+        return $exhausted || $attempts === 1 ? 'A7K2M9PX' : 'B8N3R6TY';
     });
     try {
         $page = Livewire::test(Applications::class)->set('form.admission_round_id', $round->id)->call('save');
@@ -169,7 +172,7 @@ test('real code collisions retry without retrying ownership uniqueness', functio
         expect($profile->applications()->count())->toBe($exhausted ? 0 : 1);
         $this->assertModelExists($existing);
     } finally {
-        Str::createUlidsNormally();
+        Str::createRandomStringsNormally();
     }
 })->with([false, true]);
 

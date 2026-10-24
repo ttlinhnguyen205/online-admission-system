@@ -66,7 +66,7 @@
                                 <flux:table.cell>{{ $programLabels->get($program['id'])?->admissionMethod?->name ?? $program['method'] }}<p class="text-sm text-zinc-500">{{ $program['method'] }}</p></flux:table.cell>
                                 <flux:table.cell><flux:badge :color="$program['type'] === 'unsupported' ? 'amber' : 'zinc'">{{ match ($program['type']) { 'weighted' => 'Điểm có trọng số', 'unsupported' => 'Chưa được hỗ trợ', 'scalar' => 'Điểm đơn', default => 'Quy tắc tính điểm' } }}</flux:badge></flux:table.cell>
                                 <flux:table.cell align="end">{{ $program['quota'] }}</flux:table.cell>
-                                <flux:table.cell align="end">{{ $program['minimum_score'] ?? __('No threshold') }}</flux:table.cell>
+                                <flux:table.cell align="end">{{ $program['minimum_score'] === null ? __('No threshold') : App\Support\DisplayNumber::decimal($program['minimum_score']) }}</flux:table.cell>
                             </flux:table.row>
                         @empty
                             <flux:table.row><flux:table.cell colspan="6">{{ __('No participating programs available.') }}</flux:table.cell></flux:table.row>

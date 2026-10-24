@@ -8,9 +8,11 @@ use App\Models\AdmissionRound;
 use App\Models\Application;
 use App\Models\CandidateMajorOffering;
 use App\Models\Major;
+use App\Models\NewsArticle;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active', 'verified'])->prefix('admin')->name('admin.')->group(function (): void {
+    Route::livewire('news', Admin\NewsArticles::class)->can('viewAny', NewsArticle::class)->name('news.index');
     Route::get('reports/{format}', AdmissionReportController::class)->whereIn('format', ['xlsx', 'pdf'])
         ->can('export', Application::class)->middleware('throttle:6,1')->name('reports.download');
     Route::livewire('results', Admin\Results::class)->can('publishResults', AdmissionRound::class)->name('results.index');

@@ -70,11 +70,11 @@
                 <flux:table.cell>{{ number_format($record->quota) }}</flux:table.cell>
 
                 <flux:table.cell>
-                    {{ $record->minimum_score === null ? __('Not specified') : number_format((float) $record->minimum_score, 3, ',', '.').' '.__('points') }}
+                    {{ $record->minimum_score === null ? __('Not specified') : App\Support\DisplayNumber::decimal($record->minimum_score).' '.__('points') }}
                 </flux:table.cell>
 
                 <flux:table.cell>
-                    {{ $record->tuition_fee === null ? __('Not specified') : number_format((float) $record->tuition_fee, (float) $record->tuition_fee === floor((float) $record->tuition_fee) ? 0 : 2, ',', '.').' VND' }}
+                    {{ $record->tuition_fee === null ? __('Not specified') : App\Support\DisplayNumber::tuition($record->tuition_fee).' VND' }}
                 </flux:table.cell>
 
                 <flux:table.cell>

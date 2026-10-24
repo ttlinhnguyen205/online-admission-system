@@ -32,21 +32,7 @@
     </div>
 
     @if ($page !== 'guidance')
-    @foreach ([
-        ['portal-news', 'TIN NHÀ TRƯỜNG'],
-        ['portal-admissions', 'TIN TUYỂN SINH'],
-    ] as [$sectionId, $sectionTitle])
-        <section id="{{ $sectionId }}" data-portal-search="{{ __($sectionTitle) }}" x-show="matches($el.dataset.portalSearch)" class="portal-news-panel scroll-mt-20 overflow-hidden" aria-labelledby="{{ $sectionId }}-title">
-            <div class="flex items-center gap-3 border-b border-zinc-100 px-5 py-4 dark:border-zinc-700">
-                <span class="h-4 w-1 rounded-full bg-admission-blue" aria-hidden="true"></span>
-                <h2 id="{{ $sectionId }}-title" class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{{ __($sectionTitle) }}</h2>
-            </div>
-            <div class="flex min-h-24 items-center justify-center gap-3 px-5 py-8">
-                <flux:icon.inbox class="size-6 text-slate-300" />
-                <p class="text-sm italic text-slate-400">{{ __('Thông tin sẽ được cập nhật tại đây.') }}</p>
-            </div>
-        </section>
-    @endforeach
+        <x-admission.news-feed />
     @endif
 
     @if ($page !== 'news')

@@ -4,7 +4,7 @@
     @foreach ($records as $record)
         <div wire:key="native-thpt-{{ $record->id }}" class="space-y-2">
             <flux:text>Nguồn #{{ $record->id }} · Năm {{ $record->exam_year }} · {{ __($record->getRawOriginal('status')) }}</flux:text>
-            @foreach ($record->subjectScores as $score)<flux:text>{{ $score->subject_name }}: {{ $score->score }}</flux:text>@endforeach
+            @foreach ($record->subjectScores as $score)<flux:text>{{ $score->subject_name }}: {{ App\Support\DisplayNumber::decimal($score->score) }}</flux:text>@endforeach
             <flux:button size="sm" :href="route('candidate.admission-information.evidence', ['type' => 'exam-results', 'record' => $record->id])" target="_blank">Xem minh chứng</flux:button>
         </div>
     @endforeach

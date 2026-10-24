@@ -32,7 +32,7 @@
             @foreach ($headers[$title] as $header)<th>{{ $header }}</th>@endforeach
         </tr></thead><tbody>
             @forelse ($rows as $row)
-                <tr>@foreach ($row as $value)<td>{{ $value }}</td>@endforeach</tr>
+                <tr>@foreach ($row as $column => $value)<td>{{ $title === 'Kết quả' && $column === 5 ? App\Support\DisplayNumber::decimal($value) : $value }}</td>@endforeach</tr>
             @empty
                 <tr><td colspan="{{ count($headers[$title]) }}">Không có dữ liệu phù hợp.</td></tr>
             @endforelse

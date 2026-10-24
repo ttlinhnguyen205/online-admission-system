@@ -43,7 +43,7 @@ test('admin reviews publishes and retries immutable results with one notificatio
 
     $this->get(route('admin.results.index'))->assertOk();
     Livewire::test(AdminResults::class)->set('roundSelection', (string) $program->admission_round_id)
-        ->assertSee($application->application_code)->assertSee('8.125')->call('publish')->assertHasNoErrors()->assertSee('Kết quả đã được công bố');
+        ->assertSee($application->application_code)->assertSee('8,13')->call('publish')->assertHasNoErrors()->assertSee('Kết quả đã được công bố');
 
     expect($program->admissionRound->fresh()->status->value)->toBe('published');
     expect(AdmissionResult::all()->pluck('published_at')->map->format('Y-m-d H:i:s')->unique()->all())->toBe([now()->format('Y-m-d H:i:s')]);
@@ -143,17 +143,17 @@ test('candidate sees only own published result with score rank major and decisio
     [$program, $application, $other, $admin] = publicationFixture();
     $candidate = $application->candidateProfile->user;
     $this->actingAs($candidate);
-    $this->get(route('candidate.results.index'))->assertOk()->assertDontSee('8.125')->assertDontSee('7.500');
-    Livewire::test(Results::class)->assertDontSee('8.125')->assertDontSee('7.500');
+    $this->get(route('candidate.results.index'))->assertOk()->assertDontSee('8,13')->assertDontSee('7,50');
+    Livewire::test(Results::class)->assertDontSee('8,13')->assertDontSee('7,50');
     $this->actingAs($admin);
     app(PublishAdmissionResults::class)->publish($program->admission_round_id);
     $this->actingAs($candidate);
-    Livewire::test(Results::class)->assertSee('8.125')->assertSee('Trúng tuyển')->assertSee($program->major->name)
-        ->assertDontSee($program->admissionMethod->name)->assertDontSee($program->admissionMethod->code)->assertDontSee('7.500')
+    Livewire::test(Results::class)->assertSee('8,13')->assertSee('Trúng tuyển')->assertSee($program->major->name)
+        ->assertDontSee($program->admissionMethod->name)->assertDontSee($program->admissionMethod->code)->assertDontSee('7,50')
         ->assertViewHas('results', fn ($results) => $results->count() === 1 && $results->first()->rank === 1);
     $this->actingAs($other->candidateProfile->user);
     Livewire::test(Results::class)->assertSee('Không trúng tuyển')->assertSee('Điểm xét tuyển')
-        ->assertSee('Thứ hạng')->assertSee('Thời gian công bố')->assertDontSee('8.125');
+        ->assertSee('Thứ hạng')->assertSee('Thời gian công bố')->assertDontSee('8,13');
 });
 
 test('candidate confirms once and publication retries remain read only after confirmation', function () {
@@ -310,7 +310,7 @@ test('candidate result responses escape names and contain no unpublished result 
     $this->actingAs($application->candidateProfile->user);
     $component = Livewire::test(Results::class)->assertViewHas('results', fn ($items) => $items->isEmpty());
     expect($component->snapshot['data'])->not->toHaveKeys(['results', 'decision', 'final_score', 'rank']);
-    $this->get(route('candidate.results.index'))->assertDontSee('8.125')->assertDontSee('123456789123')->assertDontSee('SECRET ADDRESS');
+    $this->get(route('candidate.results.index'))->assertDontSee('8,13')->assertDontSee('123456789123')->assertDontSee('SECRET ADDRESS');
     $this->actingAs($admin);
     app(PublishAdmissionResults::class)->publish($program->admission_round_id);
     $this->actingAs($application->candidateProfile->user);

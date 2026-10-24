@@ -32,8 +32,7 @@
 
             <button type="button" class="flex shrink-0 items-center gap-2 rounded p-1 text-sm font-semibold text-admission-blue hover:bg-admission-soft focus-visible:outline-2 focus-visible:outline-admission-blue" x-on:click="window.innerWidth >= 1024 ? desktopCollapsed = !desktopCollapsed : menuOpen = !menuOpen" x-bind:aria-expanded="window.innerWidth >= 1024 ? !desktopCollapsed : menuOpen" aria-controls="portal-navigation">
                 <flux:icon.bars-3 class="size-6" />
-                <span class="hidden sm:inline">{{ __('Menu') }}</span>
-                <span class="sr-only sm:hidden">{{ __('Mở menu') }}</span>
+                <span class="sr-only">{{ __('Mở menu') }}</span>
             </button>
 
             <div class="relative hidden min-w-0 w-full max-w-[394px] sm:block">
@@ -89,7 +88,7 @@
                     <flux:icon.home class="size-5" />
                     <span>{{ __('Trang chủ') }}</span>
                 </a>
-                <a href="{{ route('news') }}" wire:navigate x-on:click="menuOpen = false" @if (request()->routeIs('news')) aria-current="page" @endif class="portal-nav-link">
+                <a href="{{ route('news') }}" wire:navigate x-on:click="menuOpen = false" @if (request()->routeIs('news', 'news.*')) aria-current="page" @endif class="portal-nav-link">
                     <flux:icon.newspaper class="size-5" />
                     <span>{{ __('Tin tức') }}</span>
                 </a>
@@ -139,6 +138,7 @@
                         ['admission-methods', 'book-open', 'Phương thức xét tuyển', App\Models\AdmissionMethod::class],
                         ['admission-programs', 'document-text', 'Chương trình tuyển sinh', App\Models\AdmissionProgram::class],
                         ['candidate-major-offerings', 'clipboard-document-list', 'Ngành nhận đăng ký', App\Models\CandidateMajorOffering::class],
+                        ['news', 'newspaper', 'Quản lý tin tức', App\Models\NewsArticle::class],
                     ] as [$path, $icon, $label, $model])
                         @can('viewAny', $model)
                             <a href="{{ route('admin.'.$path.'.index') }}" wire:navigate class="portal-nav-link" @if (request()->routeIs('admin.'.$path.'.*')) aria-current="page" @endif>

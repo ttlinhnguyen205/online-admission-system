@@ -134,7 +134,7 @@
                             <div>{{ App\Livewire\Candidate\Scores::SCORE_TYPES[$score->score_type] ?? $score->score_type }}</div>
                             <div>{{ $score->subject_code }} {{ $score->subject_name }}</div>
                         </flux:table.cell>
-                        <flux:table.cell>{{ $score->score }} · {{ $score->exam_year }}</flux:table.cell>
+                        <flux:table.cell>{{ App\Support\DisplayNumber::decimal($score->score) }} · {{ $score->exam_year }}</flux:table.cell>
                         <flux:table.cell>@if ($scoreEvidenceAvailability->get($score->id))<flux:button size="sm" :href="route('admission.scores.evidence', $score->id)" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@else<flux:badge color="rose">{{ __('Chưa có minh chứng hợp lệ') }}</flux:badge>@endif</flux:table.cell>
                         <flux:table.cell>
                             <div class="flex flex-wrap gap-2">

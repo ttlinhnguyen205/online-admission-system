@@ -42,7 +42,7 @@
                     <div class="font-medium">{{ $record->name }}</div>
                     <div class="text-xs text-zinc-500">{{ $record->code }}</div>
                     @can('manageNativeRegistration', $record)
-                        <div class="mt-3"><flux:button size="sm" wire:click="manageNativeRegistration({{ $record->id }})">Đăng ký nguyện vọng native · {{ $record->nativeRegistrationState() }}</flux:button></div>
+                        <div class="mt-3"><flux:button size="sm" wire:click="manageNativeRegistration({{ $record->id }})">Quản lý đăng ký · {{ __($record->nativeRegistrationState()) }}</flux:button></div>
                     @endcan
                 </flux:table.cell>
 

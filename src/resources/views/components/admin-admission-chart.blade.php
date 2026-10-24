@@ -2,7 +2,7 @@
 <figure {{ $attributes->class('min-w-0 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 sm:p-6') }}>
     <figcaption class="text-base font-semibold text-zinc-900 dark:text-white">{{ $title }}</figcaption>
     <p class="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-        Tỷ lệ trên {{ number_format($total) }} {{ $unit }} theo bộ lọc. Làm tròn đến 1 chữ số thập phân.
+        Tỷ lệ trên {{ number_format($total) }} {{ $unit }} theo bộ lọc. Làm tròn đến 2 chữ số thập phân.
     </p>
     @if ($total === 0)
         <p class="mt-5 rounded-lg bg-zinc-50 p-4 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">Chưa có dữ liệu phù hợp.</p>
@@ -43,7 +43,7 @@
                     </th>
                     <td class="py-3 text-right align-top tabular-nums">
                         <span class="block font-semibold text-zinc-900 dark:text-white">{{ number_format($row['count']) }}</span>
-                        <span class="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">{{ number_format($percentage, 1, ',', '.') }}%</span>
+                        <span class="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">{{ App\Support\DisplayNumber::decimal($percentage) }}%</span>
                     </td>
                 </tr>
             @endforeach

@@ -319,7 +319,7 @@ test('admin chart shows percentages against the defined total with expandable fu
         'rows' => [['label' => $fullLabel, 'count' => 3], ['label' => '<script>KHÔNG AN TOÀN</script>', 'count' => 1]],
     ])->render();
 
-    expect($html)->toContain('Tỷ lệ trên 4 nguyện vọng theo bộ lọc', '75,0%', '25,0%', 'width: 75%', 'width: 25%',
+    expect($html)->toContain('Tỷ lệ trên 4 nguyện vọng theo bộ lọc', '75,00%', '25,00%', 'width: 75%', 'width: 25%',
         'scope="row"', '<details', $fullLabel, '&lt;script&gt;KHÔNG AN TOÀN&lt;/script&gt;')
         ->not->toContain('overflow-y-auto', 'max-h-96', '<script>KHÔNG AN TOÀN</script>');
 });
@@ -330,7 +330,7 @@ test('admin chart handles an empty denominator without invalid percentages', fun
         'rows' => [['label' => 'Đã nộp', 'count' => 0]], 'colors' => ['Đã nộp' => 'sky'],
     ])->render();
 
-    expect($html)->toContain('Tỷ lệ trên 0 hồ sơ đã nộp', 'Chưa có dữ liệu phù hợp.', '0,0%', 'width: 0%', 'bg-rose-500')
+    expect($html)->toContain('Tỷ lệ trên 0 hồ sơ đã nộp', 'Chưa có dữ liệu phù hợp.', '0,00%', 'width: 0%', 'bg-rose-500')
         ->not->toContain('NaN', 'INF');
 });
 
@@ -344,7 +344,7 @@ test('admin chart denominators and export links follow the same filters', functi
     $component = Livewire::test(ReviewDashboard::class)->set('roundFilter', (string) $target->admission_round_id)
         ->set('statusFilter', 'submitted')->set('search', 'UI-FILTER-TARGET');
 
-    $component->assertSee('Tỷ lệ trên 1 hồ sơ đã nộp')->assertSee('Tỷ lệ trên 2 nguyện vọng')->assertSee('100,0%')->assertSee('50,0%');
+    $component->assertSee('Tỷ lệ trên 1 hồ sơ đã nộp')->assertSee('Tỷ lệ trên 2 nguyện vọng')->assertSee('100,00%')->assertSee('50,00%');
     foreach (['xlsx', 'pdf'] as $format) {
         $url = route('admin.reports.download', ['format' => $format, 'roundFilter' => (string) $target->admission_round_id, 'statusFilter' => 'submitted', 'search' => 'UI-FILTER-TARGET']);
         $component->assertSee(e($url), false);
@@ -375,7 +375,7 @@ test('staff dashboard highlights review KPIs and keeps remaining statistics in c
             expect($details[2])->toContain($label);
         }
     }
-    $component->assertSee('Tỷ lệ trên 5 hồ sơ đã nộp')->assertSee('40,0%')->assertSee('20,0%')
+    $component->assertSee('Tỷ lệ trên 5 hồ sơ đã nộp')->assertSee('40,00%')->assertSee('20,00%')
         ->assertSee('Kết quả chỉ gồm các đợt đã công bố.')->assertDontSee('Kết quả gồm cả nội bộ chưa công bố.');
     expect($html)->not->toContain('max-h-96', 'overflow-y-auto');
 });
@@ -422,7 +422,7 @@ test('staff filters preserve table pagination chart counts and export parameters
         ->assertSee('STAFF-16')->assertDontSee('OTHER-ROUND')
         ->set('search', 'STAFF-16')->assertSet('paginators.page', 1)
         ->assertViewHas('records', fn ($records) => $records->total() === 1)
-        ->assertSee('Tỷ lệ trên 1 hồ sơ đã nộp')->assertSee('100,0%');
+        ->assertSee('Tỷ lệ trên 1 hồ sơ đã nộp')->assertSee('100,00%');
     foreach (['xlsx', 'pdf'] as $format) {
         $url = route('admin.reports.download', ['format' => $format, 'roundFilter' => (string) $round->id, 'statusFilter' => 'submitted', 'search' => 'STAFF-16']);
         $component->assertSee(e($url), false);
