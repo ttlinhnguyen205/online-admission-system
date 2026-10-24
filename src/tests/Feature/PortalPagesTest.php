@@ -3,13 +3,13 @@
 use App\Enums\UserRole;
 use App\Models\User;
 
-test('admin navigation omits registration guidance', function () {
-    $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));
+test('staff and admin navigation omit registration guidance', function (UserRole $role) {
+    $this->actingAs(User::factory()->create(['role' => $role]));
 
     $response = $this->get(route('news'));
 
     $response->assertDontSee('href="'.route('registration-guidance').'"', false);
-});
+})->with([UserRole::Admin, UserRole::Staff]);
 
 test('candidate navigation retains registration guidance', function () {
     $this->actingAs(User::factory()->create());

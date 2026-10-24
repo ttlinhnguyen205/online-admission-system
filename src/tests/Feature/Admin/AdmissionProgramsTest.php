@@ -6,6 +6,7 @@ use App\Models\AdmissionMethod;
 use App\Models\AdmissionProgram;
 use App\Models\AdmissionRound;
 use App\Models\AdmissionWish;
+use App\Models\EvaluationRuleVersion;
 use App\Models\Major;
 use App\Models\User;
 use Livewire\Livewire;
@@ -15,7 +16,7 @@ test('admin can create view update and delete programs with zero quota', functio
     $round = AdmissionRound::factory()->create();
     $major = Major::factory()->create(['is_active' => false]);
     $method = AdmissionMethod::factory()->create(['is_active' => false]);
-    $page = Livewire::test(AdmissionPrograms::class)->call('create')
+    $page = Livewire::test(AdmissionPrograms::class)->assertSee('Cấu hình xét tuyển')->call('create')
         ->set('form.admission_round_id', $round->id)->set('form.major_id', $major->id)->set('form.admission_method_id', $method->id)
         ->call('save')->assertHasNoErrors();
     $record = AdmissionProgram::query()->sole();
@@ -26,6 +27,44 @@ test('admin can create view update and delete programs with zero quota', functio
     $page->call('confirmDeletion', $record->id)->call('delete')->assertHasNoErrors();
     $this->assertModelMissing($record);
 });
+
+test('staff program lists hide technical configuration and expose a read only description in details', function (string $state, string $mode, string $message) {
+    $this->actingAs(User::factory()->create(['role' => UserRole::Staff]));
+    $round = AdmissionRound::factory()->create(['native_registration_state' => $state]);
+    $method = AdmissionMethod::factory()->create(['description' => 'Xét điểm các môn trong tổ hợp đã công bố.']);
+    $program = AdmissionProgram::factory()->for($round)->for($method)->create();
+
+    Livewire::test(AdmissionPrograms::class)->assertDontSee('Cấu hình xét tuyển')->assertDontSee('Cấu hình Legacy')
+        ->assertDontSee('Thiếu quy tắc đã duyệt hợp lệ')->assertDontSee('Thông tin xét tuyển')
+        ->assertDontSee('wire:click="manageRules', false)
+        ->call('details', $program->id)->assertSet('readOnly', true)
+        ->assertSee('Thông tin xét tuyển')->assertSee($mode)->assertSee($message)->assertSee($method->description)
+        ->assertDontSee('Cấu hình Legacy')->assertDontSee('Lưu cấu hình');
+})->with([
+    'program registration' => ['legacy', 'Theo chương trình', 'Chương trình sử dụng cấu hình điểm của phương thức xét tuyển đã chọn.'],
+    'major registration' => ['native_draft', 'Theo ngành', 'Cấu hình tính điểm chưa sẵn sàng. Vui lòng liên hệ quản trị viên.'],
+]);
+
+test('staff details describe an approved scoring rule without exposing its technical version', function () {
+    $admin = User::factory()->create(['role' => UserRole::Admin]);
+    $round = AdmissionRound::factory()->create(['native_registration_state' => 'native_draft']);
+    $program = AdmissionProgram::factory()->for($round)->create();
+    $rule = EvaluationRuleVersion::factory()->create(['admission_method_id' => $program->admission_method_id,
+        'status' => 'approved', 'approved_by' => $admin->id, 'approved_at' => now()]);
+    $program->evaluationRule()->associate($rule)->save();
+    $this->actingAs(User::factory()->create(['role' => UserRole::Staff]));
+
+    Livewire::test(AdmissionPrograms::class)->call('details', $program->id)
+        ->assertSee('Quy tắc tính điểm đã được phê duyệt và hợp lệ.')
+        ->assertDontSee('Cấu hình tính điểm chưa sẵn sàng')->assertDontSee('Cấu hình xét tuyển')
+        ->assertDontSee('wire:click="manageRules', false);
+});
+
+test('empty program tables retain the correct column span for each role', function (UserRole $role, int $columns) {
+    $this->actingAs(User::factory()->create(['role' => $role]));
+
+    Livewire::test(AdmissionPrograms::class)->assertSee('colspan="'.$columns.'"', false);
+})->with([[UserRole::Staff, 8], [UserRole::Admin, 9]]);
 
 test('programs reject invalid values without changing storage', function (string $field, mixed $value) {
     $this->actingAs(User::factory()->create(['role' => UserRole::Admin]));

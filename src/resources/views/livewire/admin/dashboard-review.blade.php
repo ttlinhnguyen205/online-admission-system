@@ -98,11 +98,12 @@
                 <flux:icon.chevron-down class="size-5 shrink-0 text-zinc-500 transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
             <div class="border-t border-zinc-100 p-5 dark:border-zinc-800 sm:p-6">
-                <dl class="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+                <dl class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     @foreach ($metrics as $label => $count)
                         @if (! in_array($label, ['Hồ sơ đã nộp', 'Cần bổ sung', 'Đã xác minh'], true))
-                            <div wire:key="staff-detail-{{ $label }}" class="flex items-start justify-between gap-4">
-                                <dt class="text-sm leading-6 text-zinc-600 dark:text-zinc-300">{{ $label }}</dt><dd class="text-lg font-semibold tabular-nums">{{ number_format($count) }}</dd>
+                            <div wire:key="staff-detail-{{ $label }}" class="flex min-w-0 flex-col gap-2 rounded-lg border border-zinc-200 bg-zinc-50/70 px-3 py-2.5 dark:border-zinc-700 dark:bg-zinc-800/50">
+                                <dt class="break-words text-xs font-medium leading-5 text-zinc-600 dark:text-zinc-300">{{ $label }}</dt>
+                                <dd class="text-xl font-semibold leading-6 tabular-nums text-admission-blue dark:text-rose-200">{{ number_format($count) }}</dd>
                             </div>
                         @endif
                     @endforeach

@@ -1,3 +1,5 @@
+@php($canManageRules = auth()->user()->can('viewAny', App\Models\EvaluationRuleVersion::class))
+
 <x-admin.page
     :title="__('Admission Programs')"
     :description="__('Connect a round, major and admission method with seats, score thresholds and tuition.')"
@@ -42,7 +44,7 @@
     @can('viewAny', App\Models\EvaluationRuleVersion::class)
         <flux:button wire:click="manageRules">Quản lý quy tắc Native</flux:button>
     @endcan
-    <flux:table :paginate="$records" class="workspace-table admin-records-table sm:min-w-[1200px]" container:class="min-w-0">
+    <flux:table :paginate="$records" class="workspace-table admin-records-table {{ $canManageRules ? 'sm:min-w-[1200px]' : 'sm:min-w-[1000px]' }}" container:class="min-w-0">
         <flux:table.columns>
             <flux:table.column class="table-stt">STT</flux:table.column>
             <flux:table.column>{{ __('Offering') }}</flux:table.column>
@@ -51,7 +53,9 @@
             <flux:table.column>{{ __('Minimum score') }}</flux:table.column>
             <flux:table.column>{{ __('Tuition') }}</flux:table.column>
             <flux:table.column>{{ __('Status') }}</flux:table.column>
-            <flux:table.column>Cấu hình xét tuyển</flux:table.column>
+            @if ($canManageRules)
+                <flux:table.column>Cấu hình xét tuyển</flux:table.column>
+            @endif
             <flux:table.column>{{ __('Actions') }}</flux:table.column>
         </flux:table.columns>
 
@@ -84,6 +88,7 @@
                     </flux:badge>
                 </flux:table.cell>
 
+                @if ($canManageRules)
                 <flux:table.cell data-label="Cấu hình xét tuyển">
                     @if ($record->admissionRound->nativeRegistrationState() === 'legacy')
                         <flux:badge color="zinc">Cấu hình Legacy</flux:badge>
@@ -96,6 +101,7 @@
                     @endif
                     @endif
                 </flux:table.cell>
+                @endif
                 <flux:table.cell data-label="{{ __('Actions') }}">
                     <div class="flex flex-wrap justify-start gap-2">
                         @can('viewAny', App\Models\EvaluationRuleVersion::class)
@@ -124,7 +130,7 @@
             </flux:table.row>
             @empty
             <flux:table.row>
-                <flux:table.cell colspan="9">
+                <flux:table.cell :colspan="$canManageRules ? 9 : 8">
                     <div class="py-12 text-center">
                         @if ($this->search !== '' || $this->statusFilter !== '' || $this->roundFilter !== '' || $this->majorFilter !== '' || $this->methodFilter !== '')
                         <flux:heading>
@@ -155,6 +161,35 @@
             <livewire:admin.evaluation-rules :program-id="$ruleProgramId" :key="'evaluation-rules-'.($ruleProgramId ?? 'all')" />
         @endif
     </flux:modal>
+    <x-slot:details>
+        @if ($detailProgram)
+            <section class="space-y-4 border-t border-zinc-200 pt-5 dark:border-zinc-700" aria-label="Thông tin xét tuyển">
+                <flux:heading size="lg">Thông tin xét tuyển</flux:heading>
+                <dl class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm text-zinc-600 dark:text-zinc-300">Phương thức xét tuyển</dt>
+                        <dd class="mt-1 font-medium">{{ $detailProgram->admissionMethod->name }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm text-zinc-600 dark:text-zinc-300">Hình thức đăng ký</dt>
+                        <dd class="mt-1 font-medium">{{ $detailProgram->admissionRound->nativeRegistrationState() === 'legacy' ? 'Theo chương trình' : 'Theo ngành' }}</dd>
+                    </div>
+                </dl>
+                @if ($detailProgram->admissionMethod->description)
+                    <p class="whitespace-pre-line text-sm leading-6 text-zinc-600 dark:text-zinc-300">{{ $detailProgram->admissionMethod->description }}</p>
+                @endif
+                <p class="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                    @if ($detailProgram->admissionRound->nativeRegistrationState() === 'legacy')
+                        Chương trình sử dụng cấu hình điểm của phương thức xét tuyển đã chọn.
+                    @elseif ($detailRuleReady)
+                        Quy tắc tính điểm đã được phê duyệt và hợp lệ.
+                    @else
+                        Cấu hình tính điểm chưa sẵn sàng. Vui lòng liên hệ quản trị viên.
+                    @endif
+                </p>
+            </section>
+        @endif
+    </x-slot:details>
     <x-slot:editor>
         <div class="sm:col-span-2"><flux:callout>{{ __('Score thresholds use the calculated score of the selected method: weighted methods use the sum of subject scores multiplied by weights, while scalar methods use the original score. No automatic normalization is applied. Previous cutoff scores are for reference only. Confirm the approved scale before entering a threshold.') }}</flux:callout></div>
         @if ($this->relationshipsLocked)

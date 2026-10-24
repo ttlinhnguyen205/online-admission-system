@@ -30,13 +30,7 @@
                 @endphp
                 <tr wire:key="admin-chart-{{ $title }}-{{ $index }}">
                     <th scope="row" class="py-3 pr-4 align-top font-normal">
-                        <details class="group min-w-0">
-                            <summary aria-label="{{ $row['label'] }}" class="flex cursor-pointer list-none items-center gap-1 rounded text-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose-500 dark:text-zinc-200">
-                                <span class="min-w-0 truncate" title="{{ $row['label'] }}">{{ Illuminate\Support\Str::limit($row['label'], 52) }}</span>
-                                <flux:icon.chevron-down variant="micro" class="size-3 shrink-0 text-zinc-400 transition-transform group-open:rotate-180" aria-hidden="true" />
-                            </summary>
-                            <p class="mt-2 break-words rounded-lg bg-zinc-50 p-3 text-xs leading-5 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $row['label'] }}</p>
-                        </details>
+                        <span class="block break-words leading-6 text-zinc-700 dark:text-zinc-200">{{ $row['label'] }}</span>
                         <div aria-hidden="true" class="mt-2 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                             <div class="h-full rounded-full {{ $barClass }}" style="width: {{ round($percentage, 3) }}%"></div>
                         </div>

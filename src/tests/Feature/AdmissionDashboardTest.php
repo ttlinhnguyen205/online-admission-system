@@ -312,7 +312,7 @@ test('admin dashboard highlights four KPIs and retains all other metrics in coll
     }
 });
 
-test('admin chart shows percentages against the defined total with expandable full labels', function () {
+test('admin and staff charts show full labels without redundant expansion controls', function () {
     $fullLabel = str_repeat('Công nghệ thông tin ', 5).' (7480201) — Phương thức xét tuyển — ROUND-2026';
     $html = view('components.admin-admission-chart', [
         'title' => 'Nguyện vọng theo ngành', 'total' => 4, 'unit' => 'nguyện vọng',
@@ -320,8 +320,8 @@ test('admin chart shows percentages against the defined total with expandable fu
     ])->render();
 
     expect($html)->toContain('Tỷ lệ trên 4 nguyện vọng theo bộ lọc', '75,00%', '25,00%', 'width: 75%', 'width: 25%',
-        'scope="row"', '<details', $fullLabel, '&lt;script&gt;KHÔNG AN TOÀN&lt;/script&gt;')
-        ->not->toContain('overflow-y-auto', 'max-h-96', '<script>KHÔNG AN TOÀN</script>');
+        'scope="row"', $fullLabel, '&lt;script&gt;KHÔNG AN TOÀN&lt;/script&gt;')
+        ->not->toContain('<details', '<summary', 'truncate', 'overflow-y-auto', 'max-h-96', '<script>KHÔNG AN TOÀN</script>');
 });
 
 test('admin chart handles an empty denominator without invalid percentages', function () {

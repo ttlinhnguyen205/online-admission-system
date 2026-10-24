@@ -11,7 +11,9 @@
             <nav class="auth-site-navigation" aria-label="{{ __('Điều hướng chính') }}">
                 <a href="{{ route('home') }}" wire:navigate>{{ __('Trang chủ') }}</a>
                 <a href="{{ route('home') }}#portal-admissions" wire:navigate>{{ __('Tuyển sinh') }}</a>
-                <a href="{{ route('registration-guidance') }}" wire:navigate>{{ __('Hướng dẫn') }}</a>
+                @if (auth()->guest() || auth()->user()->isCandidate())
+                    <a href="{{ route('registration-guidance') }}" wire:navigate>{{ __('Hướng dẫn') }}</a>
+                @endif
                 <a href="{{ route('news') }}" wire:navigate>{{ __('Tin tức') }}</a>
                 <a href="{{ route('login') }}" wire:navigate>{{ __('Đăng nhập') }}</a>
             </nav>

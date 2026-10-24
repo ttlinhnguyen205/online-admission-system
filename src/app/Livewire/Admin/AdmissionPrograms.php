@@ -164,7 +164,14 @@ class AdmissionPrograms extends ConfigurationPage
             Gate::authorize('viewAny', $model);
         }
 
+        $detailProgram = $this->showEditor && $this->readOnly && $this->recordId !== null
+            && Gate::denies('viewAny', EvaluationRuleVersion::class)
+                ? AdmissionProgram::query()->with(['admissionRound', 'admissionMethod', 'evaluationRule'])->find($this->recordId) : null;
+
         return [
+            'detailProgram' => $detailProgram,
+            'detailRuleReady' => $detailProgram !== null && $detailProgram->admissionRound->nativeRegistrationState() !== 'legacy'
+                ? app(NativeRegistrationReadiness::class)->programReady($detailProgram) : null,
             'rounds' => AdmissionRound::query()->orderByDesc('year')->orderBy('name')->get(),
             'majors' => Major::query()->orderBy('name')->get(),
             'methods' => AdmissionMethod::query()->orderBy('name')->get(),
