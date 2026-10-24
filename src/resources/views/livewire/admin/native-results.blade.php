@@ -35,7 +35,7 @@
                 @if ($versionId === $version->id)
                     @foreach ($blockers as $blocker)<flux:text>{{ __($blocker) }}</flux:text>@endforeach
                     @foreach ($version->entries as $entry)
-                        <flux:text>Hồ sơ #{{ $entry->application_id }} · {{ __($entry->decision) }} · {{ $entry->score ?? '—' }} · {{ $entry->reason }}</flux:text>
+                        <flux:text>Hồ sơ #{{ $entry->application_id }} · {{ __($entry->decision) }} · {{ App\Support\DisplayNumber::decimal($entry->score) }} · {{ $entry->reason }}</flux:text>
                     @endforeach
                     <flux:checkbox wire:model="confirmed" label="Tôi xác nhận thao tác trên đúng phiên bản đã kiểm tra" />
                     <flux:error name="confirmed" />

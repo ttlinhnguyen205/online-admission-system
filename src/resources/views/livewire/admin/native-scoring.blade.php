@@ -13,7 +13,7 @@
                 <flux:text>{{ $type === 'thpt' ? 'THPT' : 'Học bạ' }} #{{ $source->id }} · Năm {{ $type === 'thpt' ? $source->exam_year : $source->graduation_year }} · {{ __($source->getRawOriginal('status')) }}</flux:text>
                 <div class="flex flex-wrap gap-2">
                     @foreach (($type === 'thpt' ? $source->subjectScores : $source->scores) as $score)
-                        <flux:badge>{{ $score->subject_code }}{{ $type === 'transcript' ? ' / lớp '.$score->grade_level : '' }}: {{ $score->getRawOriginal('score') }}</flux:badge>
+                        <flux:badge>{{ $score->subject_code }}{{ $type === 'transcript' ? ' / lớp '.$score->grade_level : '' }}: {{ App\Support\DisplayNumber::decimal($score->getRawOriginal('score')) }}</flux:badge>
                     @endforeach
                 </div>
                 @if ($source->evidence_path)
@@ -57,7 +57,7 @@
                         <flux:text>Quy tắc #{{ $binding->evaluation_rule_version_id }}</flux:text>
                         @if ($evaluation)
                             <flux:badge>{{ __($evaluation->status) }}</flux:badge>
-                            <flux:text>Điểm: {{ $evaluation->score ?? '—' }} / 30</flux:text>
+                            <flux:text>Điểm: {{ App\Support\DisplayNumber::decimal($evaluation->score) }} / 30</flux:text>
                             @foreach ($evaluation->reasons as $reason)<flux:text>{{ $reason }}</flux:text>@endforeach
                             <flux:text>{{ $evaluation->evaluated_at->format('d/m/Y H:i:s') }} · {{ $evaluation->algorithm_version }}</flux:text>
                             <details class="text-sm text-zinc-600 dark:text-zinc-300">

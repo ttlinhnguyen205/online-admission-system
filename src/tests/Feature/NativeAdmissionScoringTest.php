@@ -190,7 +190,7 @@ test('Candidate only sees neutral internal evaluation notice and cannot view oth
     scoringSource($fixture['application'], $fixture['admin']);
     app(NativeAdmissionScoring::class)->score($fixture['application']->id);
     $this->actingAs($fixture['application']->candidateProfile->user);
-    Livewire::test(ApplicationDetails::class, ['application' => $fixture['application']->id])->assertSee('chưa được công bố')->assertDontSee('24.000')->assertDontSee('Đủ điều kiện');
+    Livewire::test(ApplicationDetails::class, ['application' => $fixture['application']->id])->assertSee('chưa được công bố')->assertDontSee('24.000')->assertDontSee('24,00')->assertDontSee('Đủ điều kiện');
     $outsider = CandidateProfile::factory()->create();
     $this->actingAs($outsider->user);
     expect(fn () => Livewire::test(ApplicationDetails::class, ['application' => $fixture['application']->id]))->toThrow(ModelNotFoundException::class);

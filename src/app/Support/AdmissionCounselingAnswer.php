@@ -149,7 +149,7 @@ class AdmissionCounselingAnswer
         };
 
         return ($demo ? 'Học phí minh họa: ' : 'Học phí được phê duyệt công bố: ')
-            .$fee['amount'].' '.$fee['currency'].' / '.$period
+            .DisplayNumber::tuition($fee['amount']).' '.$fee['currency'].' / '.$period
             .($fee['basis'] === 'default' ? ' (mức mặc định của ngành, không phải báo giá riêng cho đợt).' : '.')
             .' Không suy ra miễn học phí hoặc học bổng từ giá trị bằng 0.';
     }

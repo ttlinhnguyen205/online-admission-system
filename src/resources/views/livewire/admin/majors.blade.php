@@ -29,7 +29,7 @@
                 </flux:table.cell>
 
                 <flux:table.cell>
-                    {{ $record->default_tuition_fee === null ? __('Not specified') : number_format((float) $record->default_tuition_fee, (float) $record->default_tuition_fee === floor((float) $record->default_tuition_fee) ? 0 : 2, ',', '.').' VND' }}
+                    {{ $record->default_tuition_fee === null ? __('Not specified') : App\Support\DisplayNumber::tuition($record->default_tuition_fee).' VND' }}
                 </flux:table.cell>
 
                 <flux:table.cell>

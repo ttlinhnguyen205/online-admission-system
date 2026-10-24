@@ -12,7 +12,7 @@
                     <article class="mt-4 space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-700" wire:key="native-result-{{ $entry->id }}">
                         <flux:badge :color="$entry->decision === 'admitted' ? 'green' : 'zinc'">{{ $entry->decision === 'admitted' ? 'Trúng tuyển' : 'Không trúng tuyển' }}</flux:badge>
                         @if ($entry->decision === 'admitted')
-                            <p>NV{{ $entry->getAttribute('payload')['priority'] }} · {{ $entry->getAttribute('payload')['major_name'] }} · Điểm: {{ $entry->score }}</p>
+                            <p>NV{{ $entry->getAttribute('payload')['priority'] }} · {{ $entry->getAttribute('payload')['major_name'] }} · Điểm: {{ App\Support\DisplayNumber::decimal($entry->score) }}</p>
                         @endif
                         <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ $entry->reason }} · Phiên bản {{ $entry->version->version }} · Công bố: {{ $entry->version->published_at->format('d/m/Y H:i') }}</p>
                     </article>
@@ -43,7 +43,7 @@
                                 <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">Thời gian công bố: {{ $result->published_at->format('d/m/Y H:i') }}</p>
                             </div>
                             <dl class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                <div><dt class="text-sm text-zinc-600 dark:text-zinc-300">Điểm xét tuyển</dt><dd class="mt-1 text-lg font-semibold tabular-nums">{{ $result->final_score }}</dd></div>
+                                <div><dt class="text-sm text-zinc-600 dark:text-zinc-300">Điểm xét tuyển</dt><dd class="mt-1 text-lg font-semibold tabular-nums">{{ App\Support\DisplayNumber::decimal($result->final_score) }}</dd></div>
                                 <div><dt class="text-sm text-zinc-600 dark:text-zinc-300">Thứ hạng</dt><dd class="mt-1 text-lg font-semibold tabular-nums">{{ $result->rank ?? '—' }}</dd></div>
                                 <div class="col-span-2 sm:col-span-1"><dt class="text-sm text-zinc-600 dark:text-zinc-300">Kết quả</dt><dd class="mt-1"><flux:badge :color="$admitted ? 'green' : 'zinc'">{{ App\Support\CandidateStatusLabels::result($result->decision) }}</flux:badge></dd></div>
                             </dl>

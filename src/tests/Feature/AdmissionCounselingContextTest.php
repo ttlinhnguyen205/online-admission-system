@@ -160,7 +160,7 @@ test('Information Technology tuition stays available as approved historical info
     $fact = collect($context['facts'])->firstWhere('kind', 'offering');
     $answer = app(AdmissionCounselingAnswer::class)->render(counselingPlan('tuition', [$fact['ref']], ['tuition']), $context);
 
-    expect($answer['body'])->toContain('Công nghệ thông tin', '15000000.00 VND / học kỳ', 'Đợt đã hết hạn')
+    expect($answer['body'])->toContain('Công nghệ thông tin', '15.000.000 VND / học kỳ', 'Đợt đã hết hạn')
         ->not->toContain('Hiện đang nhận đăng ký', 'Học phí minh họa');
 });
 
@@ -226,7 +226,7 @@ test('tuition requires explicit units approval and preserves zero and demo label
     expect($answer['body'])->toContain('DỮ LIỆU DEMO');
     if ($visible) {
         expect($fact['tuition']['amount'])->toBe('0.00');
-        expect($answer['body'])->toContain('Học phí minh họa: 0.00 VND / năm học');
+        expect($answer['body'])->toContain('Học phí minh họa: 0 VND / năm học');
     } else {
         expect($answer['body'])->toContain('chưa được phê duyệt');
     }

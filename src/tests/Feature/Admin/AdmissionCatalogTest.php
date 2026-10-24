@@ -60,14 +60,15 @@ test('offering page distinguishes configured registration from current admission
     Livewire::test(CandidateMajorOfferings::class)->assertSee('Ngoài thời gian nhận hồ sơ')->assertDontSee('Đang nhận đăng ký');
 });
 
-test('Vietnamese tuition display preserves zero unspecified and fractional amounts', function () {
+test('Vietnamese tuition display uses whole dong while preserving stored amounts', function () {
     $this->actingAs(User::factory()->create(['role' => 'admin']));
-    Major::factory()->create(['default_tuition_fee' => '25000000.50']);
+    $major = Major::factory()->create(['default_tuition_fee' => '25000000.50']);
     Major::factory()->create(['default_tuition_fee' => '0']);
     Major::factory()->create(['default_tuition_fee' => null]);
-    $this->get(route('admin.majors.index'))->assertOk()->assertSee('25.000.000,50 VND')->assertSee('0 VND')->assertSee('Chưa thiết lập');
+    $this->get(route('admin.majors.index'))->assertOk()->assertSee('25.000.001 VND')->assertSee('0 VND')->assertSee('Chưa thiết lập');
     AdmissionProgram::factory()->create(['tuition_fee' => '25000000', 'minimum_score' => '24.125']);
-    $this->get(route('admin.admission-programs.index'))->assertOk()->assertSee('25.000.000 VND')->assertSee('24,125 điểm');
+    $this->get(route('admin.admission-programs.index'))->assertOk()->assertSee('25.000.000 VND')->assertSee('24,13 điểm');
+    expect($major->fresh()->default_tuition_fee)->toBe('25000000.50');
 });
 
 test('bundled offering parent selections keep a matching program while incompatible selections clear it', function () {

@@ -53,7 +53,7 @@
                                 <td data-label="Hồ sơ / Thí sinh"><p class="font-semibold text-zinc-900 dark:text-zinc-100">{{ $wish->application->candidateProfile?->user?->name ?? 'Không xác định' }}</p><a class="text-admission-blue hover:underline dark:text-rose-300" href="{{ route('admin.applications.show', $wish->application->id) }}" wire:navigate>{{ $wish->application->application_code }}</a></td>
                                 <td data-label="Nguyện vọng"><span class="font-semibold">NV{{ $wish->priority }}</span></td>
                                 <td data-label="Ngành / Phương thức"><p class="font-medium">{{ $wish->admissionProgram->major->name }}</p><p class="text-zinc-600 dark:text-zinc-300">{{ $wish->admissionProgram->admissionMethod->name }}</p></td>
-                                <td data-label="Điểm xét tuyển" class="text-right font-semibold tabular-nums">{{ $result->final_score }}</td>
+                                <td data-label="Điểm xét tuyển" class="text-right font-semibold tabular-nums">{{ App\Support\DisplayNumber::decimal($result->final_score) }}</td>
                                 <td data-label="Thứ hạng" class="text-right tabular-nums">{{ $result->rank ?? '—' }}</td>
                                 <td data-label="Kết quả"><flux:badge :color="$result->decision->value === 'admitted' ? 'green' : 'zinc'">{{ App\Support\CandidateStatusLabels::result($result->decision) }}</flux:badge></td>
                                 <td data-label="Công bố"><flux:badge :color="$result->published_at ? 'green' : 'amber'">{{ $result->published_at ? 'Đã công bố' : 'Chưa công bố' }}</flux:badge>@if ($result->published_at)<p class="mt-1 text-zinc-600 dark:text-zinc-300">{{ $result->published_at->format('d/m/Y H:i') }}</p>@endif</td>
