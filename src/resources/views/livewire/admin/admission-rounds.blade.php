@@ -44,9 +44,6 @@
                 <flux:table.cell data-label="{{ __('Round') }}">
                     <div class="font-medium">{{ $record->name }}</div>
                     <div class="text-xs text-zinc-500">{{ $record->code }}</div>
-                    @can('manageNativeRegistration', $record)
-                        <div class="mt-3"><flux:button size="sm" wire:click="manageNativeRegistration({{ $record->id }})">Quản lý đăng ký · {{ __($record->nativeRegistrationState()) }}</flux:button></div>
-                    @endcan
                 </flux:table.cell>
 
                 <flux:table.cell data-label="{{ __('Year') }}">
@@ -127,6 +124,26 @@
             <livewire:admin.native-round-registration :round-id="$nativeRoundId" :key="'native-round-'.$nativeRoundId" />
         @endif
     </flux:modal>
+
+    <x-slot:details>
+        @if ($detailRound)
+            <div class="space-y-4 border-t border-zinc-200 pt-5 dark:border-zinc-700">
+                <dl>
+                    <dt class="text-sm text-zinc-600 dark:text-zinc-300">Chế độ đăng ký</dt>
+                    <dd class="mt-1 font-semibold">{{ __($detailRound->nativeRegistrationState()) }}</dd>
+                </dl>
+                @can('manageNativeRegistration', $detailRound)
+                    <details class="admission-panel p-4">
+                        <summary class="cursor-pointer font-semibold text-admission-blue dark:text-rose-300">Cấu hình nâng cao</summary>
+                        <div class="mt-4 flex flex-col items-start gap-3">
+                            <p class="text-sm leading-6 text-zinc-600 dark:text-zinc-300">Kiểm tra điều kiện và quản lý chế độ đăng ký của đợt tuyển sinh.</p>
+                            <flux:button type="button" wire:click="manageNativeRegistration({{ $detailRound->id }})">Quản lý đăng ký</flux:button>
+                        </div>
+                    </details>
+                @endcan
+            </div>
+        @endif
+    </x-slot:details>
 
     <x-slot:editor>
         <flux:input

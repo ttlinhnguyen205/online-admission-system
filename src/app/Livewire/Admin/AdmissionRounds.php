@@ -25,6 +25,7 @@ class AdmissionRounds extends ConfigurationPage
     public function manageNativeRegistration(int $id): void
     {
         Gate::authorize('manageNativeRegistration', AdmissionRound::query()->findOrFail($id));
+        $this->showEditor = false;
         $this->nativeRoundId = $id;
         $this->showNativeRegistration = true;
     }
@@ -40,6 +41,15 @@ class AdmissionRounds extends ConfigurationPage
     protected function viewName(): string
     {
         return 'livewire.admin.admission-rounds';
+    }
+
+    /** @return array{detailRound: AdmissionRound|null} */
+    protected function viewData(): array
+    {
+        return [
+            'detailRound' => $this->showEditor && $this->readOnly && $this->recordId !== null
+                ? AdmissionRound::query()->find($this->recordId) : null,
+        ];
     }
 
     protected function defaults(): array

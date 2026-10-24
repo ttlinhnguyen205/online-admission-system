@@ -29,7 +29,7 @@ test('round dates remain visible without showing the internal timezone name', fu
 
     $this->get(route('admin.admission-rounds.index'))->assertOk()
         ->assertSee($round->end_date->format('d/m/Y H:i:s'))
-        ->assertSeeText('Quản lý đăng ký')->assertSeeText('Theo chương trình')
+        ->assertDontSeeText('Quản lý đăng ký')->assertDontSeeText('Theo chương trình')
         ->assertSeeText('Hiển thị')->assertSeeText('kết quả')
         ->assertDontSeeText('Showing')->assertDontSeeText('Đăng ký nguyện vọng native')
         ->assertDontSee('Asia/Ho_Chi_Minh');

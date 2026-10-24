@@ -167,7 +167,11 @@ test('activation refuses unauthorized inactive and unverified admins', function 
 test('admin UI confirms scope and refuses a stale activation preview', function () {
     activationAdmin();
     $round = activationRound();
-    Livewire::test(AdmissionRounds::class)->call('manageNativeRegistration', $round->id)->assertSee('Đăng ký nguyện vọng theo ngành');
+    Livewire::test(AdmissionRounds::class)->assertDontSee('Quản lý đăng ký')->assertDontSee('Chế độ đăng ký')
+        ->call('details', $round->id)->assertSet('readOnly', true)->assertSee('Chế độ đăng ký')
+        ->assertSee('Cấu hình nâng cao')->assertSee('Quản lý đăng ký')
+        ->call('manageNativeRegistration', $round->id)->assertSet('showEditor', false)
+        ->assertSee('Đăng ký nguyện vọng theo ngành');
     $page = Livewire::test(NativeRoundRegistration::class, ['roundId' => $round->id]);
     $page->call('confirm', 'prepare')->set('confirmationCode', 'WRONG')->set('reason', 'Demo')->set('confirmed', true)
         ->call('apply')->assertHasErrors('native');

@@ -39,6 +39,7 @@
             <fieldset @disabled($this->readOnly) class="grid min-w-0 gap-5 sm:grid-cols-2">
                 {{ $editor }}
             </fieldset>
+            {{ $details ?? '' }}
             <div class="flex justify-end gap-3">
                 <flux:modal.close><flux:button>{{ $this->readOnly ? __('Close') : __('Cancel') }}</flux:button></flux:modal.close>
                 @if (! $this->readOnly)
