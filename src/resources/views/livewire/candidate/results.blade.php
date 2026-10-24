@@ -7,14 +7,14 @@
     @if ($nativeResults)
         @foreach ($nativeResults->groupBy('version.admission_round_id') as $entries)
             <section class="admission-panel p-5" wire:key="native-round-{{ $entries->first()->version->admission_round_id }}">
-                <flux:heading size="lg">{{ $entries->first()->version->admissionRound->name }} · Xét theo ngành</flux:heading>
+                <flux:heading size="lg">{{ $entries->first()->version->admissionRound->name }} | Xét theo ngành</flux:heading>
                 @foreach ($entries as $entry)
                     <article class="mt-4 space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-700" wire:key="native-result-{{ $entry->id }}">
                         <flux:badge :color="$entry->decision === 'admitted' ? 'green' : 'zinc'">{{ $entry->decision === 'admitted' ? 'Trúng tuyển' : 'Không trúng tuyển' }}</flux:badge>
                         @if ($entry->decision === 'admitted')
-                            <p>NV{{ $entry->getAttribute('payload')['priority'] }} · {{ $entry->getAttribute('payload')['major_name'] }} · Điểm: {{ App\Support\DisplayNumber::decimal($entry->score) }}</p>
+                            <p>NV{{ $entry->getAttribute('payload')['priority'] }} | {{ $entry->getAttribute('payload')['major_name'] }} | Điểm: {{ App\Support\DisplayNumber::decimal($entry->score) }}</p>
                         @endif
-                        <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ $entry->reason }} · Phiên bản {{ $entry->version->version }} · Công bố: {{ $entry->version->published_at->format('d/m/Y H:i') }}</p>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ $entry->reason }} | Phiên bản {{ $entry->version->version }} | Công bố: {{ $entry->version->published_at->format('d/m/Y H:i') }}</p>
                     </article>
                 @endforeach
             </section>
@@ -49,7 +49,7 @@
                             </dl>
                         </div>
                         @if ($result->confirmed_at)
-                            <p class="mt-4 text-sm font-semibold text-green-800 dark:text-green-200">Đã xác nhận nhập học · {{ $result->confirmed_at->format('d/m/Y H:i') }}</p>
+                            <p class="mt-4 text-sm font-semibold text-green-800 dark:text-green-200">Đã xác nhận nhập học | {{ $result->confirmed_at->format('d/m/Y H:i') }}</p>
                         @elseif ($canConfirm)
                             <div class="mt-4"><flux:button variant="primary" wire:click="confirm({{ $result->id }})" wire:confirm="{{ __('Xác nhận nhập học cho kết quả trúng tuyển này?') }}" wire:loading.attr="disabled">Xác nhận nhập học</flux:button></div>
                         @endif

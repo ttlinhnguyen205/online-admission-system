@@ -21,7 +21,7 @@
         </flux:badge>
 
         <flux:text>
-            {{ auth()->user()->name }} · {{ auth()->user()->email }}
+            {{ auth()->user()->name }} | {{ auth()->user()->email }}
         </flux:text>
 
         <flux:button

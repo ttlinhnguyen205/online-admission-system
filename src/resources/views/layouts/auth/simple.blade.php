@@ -45,7 +45,7 @@
                 <div class="admission-panel p-6 sm:p-8">
                     {{ $slot }}
                 </div>
-                <p class="text-center text-xs leading-5 text-slate-500 dark:text-slate-400">{{ __('Cổng thông tin xét tuyển trực tuyến') }} · {{ config('app.name') }}</p>
+                <p class="text-center text-xs leading-5 text-slate-500 dark:text-slate-400">{{ __('Cổng thông tin xét tuyển trực tuyến') }} | {{ config('app.name') }}</p>
             </div>
         </main>
 

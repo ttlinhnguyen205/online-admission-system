@@ -10,9 +10,9 @@
         <flux:textarea wire:model="ruleEquivalences" label="Nhóm phiên bản quy tắc tương đương (không bắt buộc)" description="Mỗi dòng là các mã phiên bản cách nhau bằng dấu phẩy. Phiên bản 1 chỉ chấp nhận các quy tắc có cùng nội dung và cách xếp hạng." />
         <flux:button wire:click="draftPolicy">Tạo bản nháp chính sách</flux:button>
         @foreach ($allocationPolicies as $policy)
-            <flux:text>Chính sách V{{ $policy->version }} · {{ __($policy->status) }} · {{ $policy->getAttribute('payload')['policy_reference'] }}</flux:text>
-            <flux:text>Thứ tự phương thức: {{ implode(', ', array_map(fn ($id) => $allocationMethods->get($id, 'Không còn trong danh mục'), $policy->getAttribute('payload')['method_priority'])) }} · Đồng điểm chưa xử lý sẽ bị chặn.</flux:text>
-            <flux:text>Nhóm quy tắc tương đương: {{ json_encode($policy->getAttribute('payload')['rule_equivalences']) }} · Người phê duyệt: {{ $policy->approved_by ?? '—' }} · {{ $policy->approved_at?->format('d/m/Y H:i:s') ?? 'Chưa phê duyệt' }}</flux:text>
+            <flux:text>Chính sách V{{ $policy->version }} | {{ __($policy->status) }} | {{ $policy->getAttribute('payload')['policy_reference'] }}</flux:text>
+            <flux:text>Thứ tự phương thức: {{ implode(', ', array_map(fn ($id) => $allocationMethods->get($id, 'Không còn trong danh mục'), $policy->getAttribute('payload')['method_priority'])) }} | Đồng điểm chưa xử lý sẽ bị chặn.</flux:text>
+            <flux:text>Nhóm quy tắc tương đương: {{ json_encode($policy->getAttribute('payload')['rule_equivalences']) }} | Người phê duyệt: {{ $policy->approved_by ?? '—' }} | {{ $policy->approved_at?->format('d/m/Y H:i:s') ?? 'Chưa phê duyệt' }}</flux:text>
             @if ($policy->status === 'draft')
                 <flux:button wire:click="approvePolicy({{ $policy->id }}, '{{ $policy->content_hash }}')">Phê duyệt chính sách</flux:button>
             @endif
@@ -28,14 +28,14 @@
     @else
         @forelse ($versions as $version)
             <div wire:key="native-result-version-{{ $version->id }}">
-                <flux:heading>V{{ $version->version }} · {{ __($version->status) }} · {{ $version->entries->count() }} quyết định</flux:heading>
-                <flux:text>{{ $version->algorithm_version }} · {{ $version->policy_reference }}</flux:text>
-                <flux:text>Phê duyệt: {{ $version->approved_at?->format('d/m/Y H:i:s') ?? '—' }} · Công bố: {{ $version->published_at?->format('d/m/Y H:i:s') ?? '—' }}</flux:text>
+                <flux:heading>V{{ $version->version }} | {{ __($version->status) }} | {{ $version->entries->count() }} quyết định</flux:heading>
+                <flux:text>{{ $version->algorithm_version }} | {{ $version->policy_reference }}</flux:text>
+                <flux:text>Phê duyệt: {{ $version->approved_at?->format('d/m/Y H:i:s') ?? '—' }} | Công bố: {{ $version->published_at?->format('d/m/Y H:i:s') ?? '—' }}</flux:text>
                 <flux:button wire:click="select({{ $version->id }})">Kiểm tra phiên bản</flux:button>
                 @if ($versionId === $version->id)
                     @foreach ($blockers as $blocker)<flux:text>{{ __($blocker) }}</flux:text>@endforeach
                     @foreach ($version->entries as $entry)
-                        <flux:text>Hồ sơ #{{ $entry->application_id }} · {{ __($entry->decision) }} · {{ App\Support\DisplayNumber::decimal($entry->score) }} · {{ $entry->reason }}</flux:text>
+                        <flux:text>Hồ sơ #{{ $entry->application_id }} | {{ __($entry->decision) }} | {{ App\Support\DisplayNumber::decimal($entry->score) }} | {{ $entry->reason }}</flux:text>
                     @endforeach
                     <flux:checkbox wire:model="confirmed" label="Tôi xác nhận thao tác trên đúng phiên bản đã kiểm tra" />
                     <flux:error name="confirmed" />

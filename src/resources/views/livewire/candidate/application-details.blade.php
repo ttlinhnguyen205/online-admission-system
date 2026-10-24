@@ -2,7 +2,7 @@
     <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
             <flux:heading size="xl" level="1">{{ $application->application_code }}</flux:heading>
-            <flux:text class="mt-2">{{ $round->name }} · {{ $round->code }}</flux:text>
+            <flux:text class="mt-2">{{ $round->name }} | {{ $round->code }}</flux:text>
         </div>
         <div class="flex flex-wrap gap-3">
             <flux:button :href="route('candidate.applications.index')" wire:navigate>{{ __('Danh sách hồ sơ') }}</flux:button>

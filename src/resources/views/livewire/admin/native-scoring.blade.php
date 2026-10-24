@@ -10,7 +10,7 @@
     @foreach (['thpt' => $examSources, 'transcript' => $transcriptSources] as $type => $sources)
         @forelse ($sources as $source)
             <div wire:key="source-{{ $type }}-{{ $source->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
-                <flux:text>{{ $type === 'thpt' ? 'THPT' : 'Học bạ' }} #{{ $source->id }} · Năm {{ $type === 'thpt' ? $source->exam_year : $source->graduation_year }} · {{ __($source->getRawOriginal('status')) }}</flux:text>
+                <flux:text>{{ $type === 'thpt' ? 'THPT' : 'Học bạ' }} #{{ $source->id }} | Năm {{ $type === 'thpt' ? $source->exam_year : $source->graduation_year }} | {{ __($source->getRawOriginal('status')) }}</flux:text>
                 <div class="flex flex-wrap gap-2">
                     @foreach (($type === 'thpt' ? $source->subjectScores : $source->scores) as $score)
                         <flux:badge>{{ $score->subject_code }}{{ $type === 'transcript' ? ' / lớp '.$score->grade_level : '' }}: {{ App\Support\DisplayNumber::decimal($score->getRawOriginal('score')) }}</flux:badge>
@@ -46,7 +46,7 @@
         </form>
     @endif
     @if ($snapshot)
-        <flux:text>Snapshot V{{ $snapshot->submission_version }} · {{ $snapshot->sealed_at ? 'Đã niêm phong' : 'Chưa niêm phong' }}</flux:text>
+        <flux:text>Snapshot V{{ $snapshot->submission_version }} | {{ $snapshot->sealed_at ? 'Đã niêm phong' : 'Chưa niêm phong' }}</flux:text>
         @foreach ($snapshot->entries as $entry)
             <flux:heading>NV{{ $entry->priority }} — {{ $entry->payload['major_name'] }}</flux:heading>
             <div class="grid gap-3 md:grid-cols-2">
@@ -59,7 +59,7 @@
                             <flux:badge>{{ __($evaluation->status) }}</flux:badge>
                             <flux:text>Điểm: {{ App\Support\DisplayNumber::decimal($evaluation->score) }} / 30</flux:text>
                             @foreach ($evaluation->reasons as $reason)<flux:text>{{ $reason }}</flux:text>@endforeach
-                            <flux:text>{{ $evaluation->evaluated_at->format('d/m/Y H:i:s') }} · {{ $evaluation->algorithm_version }}</flux:text>
+                            <flux:text>{{ $evaluation->evaluated_at->format('d/m/Y H:i:s') }} | {{ $evaluation->algorithm_version }}</flux:text>
                             <details class="text-sm text-zinc-600 dark:text-zinc-300">
                                 <summary>Nguồn điểm và dấu vết đánh giá</summary>
                                 <pre class="mt-2 overflow-x-auto whitespace-pre-wrap">{{ json_encode($evaluation->provenance, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>

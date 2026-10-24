@@ -17,9 +17,9 @@
         <div class="flex flex-wrap gap-3">
             <flux:badge>{{ __(ucwords(str_replace('_', ' ', $application->status->value))) }}</flux:badge>@if ($application->status === App\Enums\ApplicationStatus::Verified)<flux:badge color="rose">{{ __('Review complete') }}</flux:badge>@endif
         </div>
-        <flux:text>{{ __('Round') }}: {{ $application->admissionRound?->name ?? __('Unavailable') }} · {{ $application->admissionRound?->code }}</flux:text>
+        <flux:text>{{ __('Round') }}: {{ $application->admissionRound?->name ?? __('Unavailable') }} | {{ $application->admissionRound?->code }}</flux:text>
         <flux:text>{{ __('Latest submission') }}: {{ $application->submitted_at?->format('Y-m-d H:i:s') ?? __('Not recorded') }}</flux:text>
-        <flux:text>{{ __('Latest application reviewer') }}: {{ $application->reviewer?->name ?? __('Not recorded / unavailable') }} · {{ __('Review time') }}: {{ $application->reviewed_at?->format('Y-m-d H:i:s') ?? __('Not recorded') }}</flux:text>
+        <flux:text>{{ __('Latest application reviewer') }}: {{ $application->reviewer?->name ?? __('Not recorded / unavailable') }} | {{ __('Review time') }}: {{ $application->reviewed_at?->format('Y-m-d H:i:s') ?? __('Not recorded') }}</flux:text>
         <flux:text>{{ __('Review is collaborative. The latest reviewer is not an exclusive assignee.') }}</flux:text>
         @if ($application->revision_reason)<flux:callout>
             <div class="font-medium">{{ __('Latest revision reason') }}</div>
@@ -35,7 +35,7 @@
             @if ($photoAvailable)<img src="{{ route('admission.profiles.photo', $profile->id) }}" alt="{{ __('Candidate profile photo') }}" class="h-40 w-30 rounded-lg object-cover" />@else<flux:badge color="rose">{{ __('Private profile photo unavailable') }}</flux:badge>@endif
             <div class="space-y-2">
                 <div class="font-medium">{{ $profile->user?->name }}</div>
-                <flux:text>{{ $profile->user?->email }} · {{ $profile->candidate_code }}</flux:text>
+                <flux:text>{{ $profile->user?->email }} | {{ $profile->candidate_code }}</flux:text>
                 <flux:badge>{{ __(ucfirst($profile->profile_status->value)) }}</flux:badge>
             </div>
         </div>
@@ -130,7 +130,7 @@
                             <div>{{ App\Livewire\Candidate\Scores::SCORE_TYPES[$score->score_type] ?? $score->score_type }}</div>
                             <div>{{ $score->subject_code }} {{ $score->subject_name }}</div>
                         </flux:table.cell>
-                        <flux:table.cell>{{ App\Support\DisplayNumber::decimal($score->score) }} · {{ $score->exam_year }}</flux:table.cell>
+                        <flux:table.cell>{{ App\Support\DisplayNumber::decimal($score->score) }} | {{ $score->exam_year }}</flux:table.cell>
                         <flux:table.cell>@if ($scoreEvidenceAvailability->get($score->id))<flux:button size="sm" :href="route('admission.scores.evidence', $score->id)" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@else<flux:badge color="rose">{{ __('Chưa có minh chứng hợp lệ') }}</flux:badge>@endif</flux:table.cell>
                         <flux:table.cell>
                             <div class="flex flex-wrap gap-2">
@@ -150,7 +150,7 @@
         <flux:heading size="lg">{{ __('Application documents') }}</flux:heading>
         @forelse ($application->documents as $document)
         <article wire:key="document-{{ $document->id }}" class="space-y-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
-            <div class="break-words font-medium">{{ $document->document_type }} · {{ $document->original_name }}</div>
+            <div class="break-words font-medium">{{ $document->document_type }} | {{ $document->original_name }}</div>
             <flux:badge :color="match ($document->status) { App\Enums\DocumentStatus::Verified => 'rose', App\Enums\DocumentStatus::Rejected => 'rose', default => 'zinc' }">{{ __(ucfirst($document->status->value)) }}</flux:badge>
             @if ($document->rejection_reason)<p class="whitespace-pre-wrap break-words text-sm">{{ $document->rejection_reason }}</p>@endif
             @if (! $documentAvailability->get($document->id))<flux:callout variant="warning">{{ __('Private file unavailable. Verification is blocked; rejection can request a replacement.') }}</flux:callout>@endif
@@ -170,7 +170,7 @@
         @forelse ($application->wishes->sortBy('priority') as $wish)
         <article wire:key="wish-{{ $wish->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
             <div class="font-medium">{{ $wish->priority }}. {{ $wish->admissionProgram?->major?->name ?? __('Missing major') }}</div>
-            <flux:text>{{ $wish->admissionProgram?->major?->code }} · {{ $wish->admissionProgram?->admissionMethod?->name ?? __('Missing method') }} · {{ $wish->admissionProgram?->admissionMethod?->code }}</flux:text>
+            <flux:text>{{ $wish->admissionProgram?->major?->code }} | {{ $wish->admissionProgram?->admissionMethod?->name ?? __('Missing method') }} | {{ $wish->admissionProgram?->admissionMethod?->code }}</flux:text>
             @if ($wish->admissionProgram && ($wish->admissionProgram->status !== 'active' || ! $wish->admissionProgram->major?->is_active || ! $wish->admissionProgram->admissionMethod?->is_active || $wish->admissionProgram->quota <= 0))
                 <flux:badge color="rose">{{ __('Advisory: catalog inactive or configured capacity is zero') }}</flux:badge>
                 @endif
@@ -211,7 +211,7 @@
         <summary class="cursor-pointer font-medium">{{ __('Recent application review history') }}</summary>
         <div class="mt-4 space-y-3">
             @forelse ($history as $entry)<div wire:key="history-{{ $entry->id }}" class="text-sm">
-                <div>{{ $entry->action }} · {{ $entry->user?->name ?? __('Reviewer unavailable') }} · {{ $entry->created_at->format('Y-m-d H:i:s') }}</div>@if ($entry->new_values['revision_reason'] ?? null)<p class="whitespace-pre-wrap break-words">{{ $entry->new_values['revision_reason'] }}</p>@endif
+                <div>{{ $entry->action }} | {{ $entry->user?->name ?? __('Reviewer unavailable') }} | {{ $entry->created_at->format('Y-m-d H:i:s') }}</div>@if ($entry->new_values['revision_reason'] ?? null)<p class="whitespace-pre-wrap break-words">{{ $entry->new_values['revision_reason'] }}</p>@endif
             </div>@empty<flux:text>{{ __('No Phase 6 review transitions recorded yet.') }}</flux:text>@endforelse
             <flux:text>{{ __('Showing up to 20 recent transitions. Earlier candidate submissions and content versions are not reconstructed.') }}</flux:text>
         </div>

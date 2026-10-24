@@ -4,7 +4,7 @@
         <flux:select wire:model.live="roundSelection" label="Đợt tuyển sinh">
             <option value="">Chọn đợt tuyển sinh</option>
             @foreach ($rounds as $round)
-                <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} · {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status, $round->end_date) }})</option>
+                <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} | {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status, $round->end_date) }})</option>
             @endforeach
         </flux:select>
         <flux:error name="roundSelection" /><flux:error name="engine" />
@@ -33,7 +33,7 @@
             <flux:select wire:model.live="publicationFilter" label="Trạng thái công bố"><option value="">Tất cả trạng thái</option><option value="published">Đã công bố</option><option value="unpublished">Chưa công bố</option></flux:select>
             <flux:select wire:model.live="confirmationFilter" label="Xác nhận nhập học"><option value="">Tất cả kết quả</option><option value="confirmed">Đã xác nhận</option><option value="unconfirmed">Trúng tuyển, chưa xác nhận</option></flux:select>
             <div class="flex flex-wrap items-center justify-between gap-3 sm:col-span-2 xl:col-span-4">
-                <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ number_format($results->total()) }} kết quả phù hợp · Thống kê phía trên tính toàn bộ đợt</p>
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ number_format($results->total()) }} kết quả phù hợp | Thống kê phía trên tính toàn bộ đợt</p>
                 <flux:button wire:click="clearFilters">Xóa bộ lọc</flux:button>
             </div>
         </div>

@@ -10,7 +10,7 @@
     <table class="mt-5 w-full table-fixed text-left text-sm">
         <caption class="sr-only">{{ $title }} — số lượng và tỷ lệ trên tổng {{ number_format($total) }} {{ $unit }} theo bộ lọc</caption>
         <thead class="text-xs text-zinc-500 dark:text-zinc-400">
-            <tr><th scope="col" class="pb-2 font-medium">Nhóm</th><th scope="col" class="w-24 pb-2 text-right font-medium sm:w-28">Số lượng · Tỷ lệ</th></tr>
+            <tr><th scope="col" class="pb-2 font-medium">Nhóm</th><th scope="col" class="w-24 pb-2 text-right font-medium sm:w-28">Số lượng | Tỷ lệ</th></tr>
         </thead>
         <tbody>
             @foreach ($rows as $index => $row)

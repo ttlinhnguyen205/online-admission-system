@@ -3,7 +3,7 @@
     <flux:text>Nhập đúng điểm thi và ảnh minh chứng. Nguồn này chờ xác minh, không tự tính điểm hoặc nộp hồ sơ.</flux:text>
     @foreach ($records as $record)
         <div wire:key="native-thpt-{{ $record->id }}" class="space-y-2">
-            <flux:text>Nguồn #{{ $record->id }} · Năm {{ $record->exam_year }} · {{ __($record->getRawOriginal('status')) }}</flux:text>
+            <flux:text>Nguồn #{{ $record->id }} | Năm {{ $record->exam_year }} | {{ __($record->getRawOriginal('status')) }}</flux:text>
             @foreach ($record->subjectScores as $score)<flux:text>{{ $score->subject_name }}: {{ App\Support\DisplayNumber::decimal($score->score) }}</flux:text>@endforeach
             <flux:button size="sm" :href="route('candidate.admission-information.evidence', ['type' => 'exam-results', 'record' => $record->id])" target="_blank">Xem minh chứng</flux:button>
         </div>

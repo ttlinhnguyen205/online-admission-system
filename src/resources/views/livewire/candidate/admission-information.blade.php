@@ -26,7 +26,7 @@
                     </div>
                     <flux:text>{{ __('Điểm: :score', ['score' => App\Support\DisplayNumber::decimal($certificate->score)]) }}</flux:text>
                     @if ($certificate->certificate_number)<flux:text>{{ __('Số chứng chỉ: :number', ['number' => $certificate->certificate_number]) }}</flux:text>@endif
-                    <flux:text>{{ __('Ngày cấp: :date', ['date' => $certificate->issued_at?->format('d/m/Y') ?? '—']) }} · {{ __('Ngày hết hạn: :date', ['date' => $certificate->expires_at?->format('d/m/Y') ?? '—']) }}</flux:text>
+                    <flux:text>{{ __('Ngày cấp: :date', ['date' => $certificate->issued_at?->format('d/m/Y') ?? '—']) }} | {{ __('Ngày hết hạn: :date', ['date' => $certificate->expires_at?->format('d/m/Y') ?? '—']) }}</flux:text>
                     @if ($certificate->rejection_reason)<flux:callout variant="warning">{{ __('Lý do từ chối: :reason', ['reason' => $certificate->rejection_reason]) }}</flux:callout>@endif
                     <div class="flex flex-wrap gap-2">
                         @if ($certificate->evidence_path)<flux:button size="sm" :href="route('candidate.admission-information.evidence', ['type' => 'certificates', 'record' => $certificate->id])" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@endif
@@ -167,8 +167,8 @@
             @forelse ($competencyResults as $result)
                 <article wire:key="competency-{{ $result->id }}" class="space-y-2 admission-panel p-4">
                     <div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $examTypes[$result->exam_type->value]['label'] }}</strong><flux:badge>{{ App\Support\CandidateStatusLabels::verification($result->status) }}</flux:badge></div>
-                    <flux:text>{{ __('Điểm: :score · Năm thi: :year', ['score' => App\Support\DisplayNumber::decimal($result->overall_score), 'year' => $result->exam_year]) }}</flux:text>
-                    <flux:text>{{ __('Đợt thi: :session', ['session' => $result->exam_session ?? '—']) }} · {{ __('Mã dự thi: :number', ['number' => $result->registration_number ?? '—']) }}</flux:text>
+                    <flux:text>{{ __('Điểm: :score | Năm thi: :year', ['score' => App\Support\DisplayNumber::decimal($result->overall_score), 'year' => $result->exam_year]) }}</flux:text>
+                    <flux:text>{{ __('Đợt thi: :session', ['session' => $result->exam_session ?? '—']) }} | {{ __('Mã dự thi: :number', ['number' => $result->registration_number ?? '—']) }}</flux:text>
                     @if ($result->rejection_reason)<flux:callout variant="warning">{{ __('Lý do từ chối: :reason', ['reason' => $result->rejection_reason]) }}</flux:callout>@endif
                     <div class="flex flex-wrap gap-2">
                         @if ($result->evidence_path)<flux:button size="sm" :href="route('candidate.admission-information.evidence', ['type' => 'exam-results', 'record' => $result->id])" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@endif
@@ -203,7 +203,7 @@
         </div>
         @forelse ($transcripts as $transcript)
             <article wire:key="transcript-{{ $transcript->id }}" class="space-y-3 admission-panel p-4">
-                <div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $transcript->school_name ?? __('Chưa ghi tên trường') }} · {{ $transcript->graduation_year }}</strong><flux:badge>{{ App\Support\CandidateStatusLabels::verification($transcript->status) }}</flux:badge></div>
+                <div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $transcript->school_name ?? __('Chưa ghi tên trường') }} | {{ $transcript->graduation_year }}</strong><flux:badge>{{ App\Support\CandidateStatusLabels::verification($transcript->status) }}</flux:badge></div>
                 <div class="overflow-x-auto"><table class="w-full min-w-xl text-left text-sm"><thead><tr><th class="p-2">{{ __('Môn học') }}</th><th class="p-2">{{ __('Lớp 10') }}</th><th class="p-2">{{ __('Lớp 11') }}</th><th class="p-2">{{ __('Lớp 12') }}</th></tr></thead><tbody>
                     @foreach ($transcript->scores->groupBy('subject_code') as $subjectCode => $scores)
                         <tr wire:key="transcript-{{ $transcript->id }}-{{ $subjectCode }}"><td class="p-2">{{ $subjects[$subjectCode] ?? $scores->first()->subject_name }}</td><td class="p-2">{{ App\Support\DisplayNumber::decimal($scores->firstWhere('grade_level', 10)?->score) }}</td><td class="p-2">{{ App\Support\DisplayNumber::decimal($scores->firstWhere('grade_level', 11)?->score) }}</td><td class="p-2">{{ App\Support\DisplayNumber::decimal($scores->firstWhere('grade_level', 12)?->score) }}</td></tr>

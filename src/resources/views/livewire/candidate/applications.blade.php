@@ -48,7 +48,7 @@
             <flux:select wire:model="form.admission_round_id" :label="__('Đợt tuyển sinh')" required>
                 <flux:select.option value="">{{ __('Chọn đợt tuyển sinh') }}</flux:select.option>
                 @foreach ($rounds as $round)
-                    <flux:select.option :value="$round->id" wire:key="round-{{ $round->id }}">{{ $round->name }} · {{ $round->code }}</flux:select.option>
+                    <flux:select.option :value="$round->id" wire:key="round-{{ $round->id }}">{{ $round->name }} | {{ $round->code }}</flux:select.option>
                 @endforeach
             </flux:select>
             <div class="flex justify-end gap-3">

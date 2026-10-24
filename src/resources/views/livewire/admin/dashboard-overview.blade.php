@@ -126,7 +126,7 @@
 
         <section aria-label="Danh sách hồ sơ" class="admission-panel min-w-0 overflow-hidden">
             <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-5 sm:px-6">
-                <div><flux:heading level="2">Hồ sơ theo bộ lọc</flux:heading><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ number_format($records->total()) }} hồ sơ · Sắp xếp theo ngày nộp sớm nhất</p></div>
+                <div><flux:heading level="2">Hồ sơ theo bộ lọc</flux:heading><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ number_format($records->total()) }} hồ sơ | Sắp xếp theo ngày nộp sớm nhất</p></div>
                 <flux:badge size="sm" color="zinc">Không bao gồm bản nháp</flux:badge>
             </div>
             <div class="overflow-x-auto">

@@ -92,7 +92,7 @@
                     @else
                     <flux:badge :color="$ruleReadiness[$record->id] ? 'green' : 'red'">{{ $ruleReadiness[$record->id] ? 'Quy tắc hợp lệ' : 'Thiếu quy tắc đã duyệt hợp lệ' }}</flux:badge>
                     @if ($record->evaluationRule)
-                        <div class="text-sm text-zinc-500 dark:text-zinc-400">#{{ $record->evaluationRule->id }} / v{{ $record->evaluationRule->version }} · {{ ['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$record->evaluationRule->status] ?? $record->evaluationRule->status }}</div>
+                        <div class="text-sm text-zinc-500 dark:text-zinc-400">#{{ $record->evaluationRule->id }} / v{{ $record->evaluationRule->version }} | {{ ['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$record->evaluationRule->status] ?? $record->evaluationRule->status }}</div>
                     @endif
                     @endif
                 </flux:table.cell>

@@ -29,7 +29,7 @@ class NativeRegistrationReadiness
             $isUnsupported = $rule !== null && ($definition === null || ! $definition['supported'] || $definition['version'] !== $rule->template_version);
             $unsupported += (int) $isUnsupported;
             $methods[] = ['program_id' => $program->id, 'name' => $program->admissionMethod->name, 'ready' => $ready,
-                'reason' => $ready ? 'Rule đã duyệt hợp lệ' : ($isUnsupported ? ($definition['reason'] ?? 'Template hoặc phiên bản không được hỗ trợ') : 'Thiếu rule đã duyệt hợp lệ (phương thức/template/payload/ranking/hash).')];
+                'reason' => $ready ? 'Quy tắc tính điểm đã được phê duyệt và hợp lệ.' : ($isUnsupported ? ($definition['reason'] ?? 'Mẫu tính điểm hoặc phiên bản chưa được hỗ trợ.') : 'Chưa có quy tắc tính điểm đã được phê duyệt và hợp lệ.')];
         }
         $total = $programs->count();
 

@@ -1,7 +1,7 @@
 <section class="admission-workspace admission-panel min-w-0 space-y-5 p-5" aria-label="Quản lý chỉ tiêu ngành">
     <div>
         <flux:heading size="lg">Chỉ tiêu: {{ $offering->major->name }}</flux:heading>
-        <flux:text>{{ $offering->admissionRound->name }} · {{ $offering->major->code }}</flux:text>
+        <flux:text>{{ $offering->admissionRound->name }} | {{ $offering->major->code }}</flux:text>
         <flux:callout class="mt-3">Phiên bản chỉ tiêu phục vụ quản lý tổng chỉ tiêu ngành và giới hạn từng phương thức. Phê duyệt không tự kích hoạt phiên bản hoặc thay đổi chỉ tiêu xét tuyển theo chương trình. Phần chưa phân bổ không được tự sử dụng.</flux:callout>
     </div>
     <flux:error name="quota" />
@@ -14,7 +14,7 @@
     <div class="flex flex-wrap gap-2">
         @forelse ($versions as $version)
             <flux:button wire:key="quota-version-{{ $version->id }}" size="sm" wire:click="selectVersion({{ $version->id }})">
-                V{{ $version->version }} · {{ ['draft'=>'Bản nháp','approved'=>'Đã phê duyệt','retired'=>'Đã ngừng sử dụng'][$version->status] }}
+                V{{ $version->version }} | {{ ['draft'=>'Bản nháp','approved'=>'Đã phê duyệt','retired'=>'Đã ngừng sử dụng'][$version->status] }}
             </flux:button>
         @empty
             <flux:text>Chưa có phiên bản chỉ tiêu. Không tự chuyển chỉ tiêu chương trình sang chỉ tiêu ngành và phương thức.</flux:text>
@@ -22,7 +22,7 @@
     </div>
     @if ($selected)
         <div wire:key="quota-editor-{{ $selected->id }}" class="space-y-4">
-            <flux:heading>Phiên bản {{ $selected->version }} · {{ ['draft'=>'Bản nháp','approved'=>'Đã phê duyệt','retired'=>'Đã ngừng sử dụng'][$selected->status] }}</flux:heading>
+            <flux:heading>Phiên bản {{ $selected->version }} | {{ ['draft'=>'Bản nháp','approved'=>'Đã phê duyệt','retired'=>'Đã ngừng sử dụng'][$selected->status] }}</flux:heading>
             <flux:input type="number" min="0" step="1" wire:model.live="quotaForm.total_quota" label="Tổng chỉ tiêu ngành Q" :disabled="$selected->status !== 'draft'" />
             <flux:error name="total_quota" />
             <div class="overflow-x-auto">

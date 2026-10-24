@@ -39,7 +39,7 @@
                     <flux:table.cell data-label="{{ __('Application / Candidate') }}">
                         <div class="font-medium">{{ $record->application_code }}</div>
                         <div>{{ $record->candidateProfile?->user?->name ?? __('Unavailable candidate') }}</div>
-                        <div class="text-xs">{{ $record->candidateProfile?->candidate_code }} · {{ $record->candidateProfile?->user?->email }}</div>
+                        <div class="text-xs">{{ $record->candidateProfile?->candidate_code }} | {{ $record->candidateProfile?->user?->email }}</div>
                     </flux:table.cell>
                     <flux:table.cell data-label="{{ __('Round') }}">{{ $record->admissionRound?->name ?? __('Unavailable round') }}</flux:table.cell>
                     <flux:table.cell data-label="{{ __('Status') }}">

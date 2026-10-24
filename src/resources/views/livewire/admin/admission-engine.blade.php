@@ -5,7 +5,7 @@
         <flux:select wire:model="roundSelection" :label="__('Admission round')" class="min-w-0 w-full">
             <option value="">{{ __('Select a round') }}</option>
             @foreach ($rounds as $round)
-                <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} · {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status, $round->end_date) }})</option>
+                <option wire:key="round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->year }} | {{ $round->name }} ({{ App\Support\CandidateStatusLabels::round($round->status, $round->end_date) }})</option>
             @endforeach
         </flux:select>
         <flux:button type="submit" variant="primary" wire:loading.attr="disabled">{{ __('Preview readiness') }}</flux:button>
@@ -17,7 +17,7 @@
     @if (($previewData['native'] ?? false) === true)
         <div class="admission-panel min-w-0 space-y-4 p-5">
         <flux:heading>Báo cáo xét tuyển theo ngành — đợt #{{ $previewData['round_id'] }}</flux:heading>
-        <flux:text>Đăng ký theo ngành · {{ $previewData['applications'] }} hồ sơ</flux:text>
+        <flux:text>Đăng ký theo ngành | {{ $previewData['applications'] }} hồ sơ</flux:text>
         <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($previewData['counts'] as $status => $count)
             <div class="workspace-stat" wire:key="native-count-{{ $status }}"><dt class="text-sm text-zinc-500">{{ match ($status) { 'eligible' => 'Đủ điều kiện', 'ineligible' => 'Không đủ điều kiện', 'pending_data' => 'Chờ dữ liệu', 'unsupported' => 'Chưa được hỗ trợ', 'needs_resolution' => 'Cần xử lý', 'not_scored' => 'Chưa tính điểm', 'stale' => 'Cần tính lại', default => 'Trạng thái khác' } }}</dt><dd class="mt-2 text-xl font-semibold">{{ $count }}</dd></div>

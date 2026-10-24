@@ -2,7 +2,7 @@
     <flux:heading size="lg">Quản lý quy tắc đánh giá</flux:heading>
     <flux:callout>Cấu hình và lưu quy tắc cho đăng ký theo ngành. Chưa tính điểm, phân bổ hoặc công bố kết quả. Phê duyệt áp dụng nội dung đã lưu; hãy lưu mọi thay đổi trước khi duyệt.</flux:callout>
     @if ($program)
-        <flux:text>{{ $program->major->name }} · {{ $program->admissionMethod->name }} · Chương trình #{{ $program->id }}</flux:text>
+        <flux:text>{{ $program->major->name }} | {{ $program->admissionMethod->name }} | Chương trình #{{ $program->id }}</flux:text>
         <flux:text>Quy tắc đang gắn: {{ $program->evaluationRule ? '#'.$program->evaluationRule->id.' / v'.$program->evaluationRule->version.' / '.(['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$program->evaluationRule->status] ?? $program->evaluationRule->status) : 'Chưa có quy tắc đã duyệt' }}</flux:text>
     @endif
     <div class="admission-panel min-w-0 overflow-hidden">
@@ -19,8 +19,8 @@
                     <flux:table.row :key="$rule->id">
                         <flux:table.cell class="table-stt" data-label="STT">{{ $rules->firstItem() + $loop->index }}</flux:table.cell>
                         <flux:table.cell data-label="Phương thức / Mẫu tính điểm">{{ $rule->admissionMethod->name }}<div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $rule->template_identifier }} / v{{ $rule->template_version }}</div></flux:table.cell>
-                        <flux:table.cell data-label="Phiên bản / Trạng thái">v{{ $rule->version }} · {{ ['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$rule->status] ?? $rule->status }}</flux:table.cell>
-                        <flux:table.cell data-label="Phê duyệt / Số chương trình">{{ $rule->approved_at?->format('d/m/Y H:i') ?? 'Chưa duyệt' }} · {{ $rule->programs_count }} chương trình</flux:table.cell>
+                        <flux:table.cell data-label="Phiên bản / Trạng thái">v{{ $rule->version }} | {{ ['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$rule->status] ?? $rule->status }}</flux:table.cell>
+                        <flux:table.cell data-label="Phê duyệt / Số chương trình">{{ $rule->approved_at?->format('d/m/Y H:i') ?? 'Chưa duyệt' }} | {{ $rule->programs_count }} chương trình</flux:table.cell>
                         <flux:table.cell data-label="Thao tác"><flux:button size="sm" wire:click="selectRule({{ $rule->id }})">Chọn</flux:button></flux:table.cell>
                     </flux:table.row>
                 @empty

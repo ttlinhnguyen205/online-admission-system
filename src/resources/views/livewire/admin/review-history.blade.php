@@ -23,7 +23,7 @@
         <flux:input type="date" wire:model.live="dateFrom" label="Từ ngày" />
         <flux:input type="date" wire:model.live="dateTo" label="Đến ngày" />
         <div class="flex flex-wrap items-center justify-between gap-3 sm:col-span-2 xl:col-span-3">
-            <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ number_format($records->total()) }} thao tác phù hợp · Giờ Việt Nam (UTC+7)</p>
+            <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ number_format($records->total()) }} thao tác phù hợp | Giờ Việt Nam (UTC+7)</p>
             <flux:button wire:click="clearFilters">Xóa bộ lọc</flux:button>
         </div>
         <div role="status" wire:loading.delay class="text-sm text-zinc-600">Đang tải lịch sử…</div>

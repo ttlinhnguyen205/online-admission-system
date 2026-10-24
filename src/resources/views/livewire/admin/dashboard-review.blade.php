@@ -74,7 +74,7 @@
         <div class="grid items-start gap-5 xl:grid-cols-2">
             <section aria-label="Hàng đợi xét duyệt" class="overflow-hidden rounded-xl border border-rose-200 bg-white shadow-sm dark:border-rose-500/30 dark:bg-zinc-900">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rose-100 bg-rose-50/60 px-5 py-4 dark:border-rose-500/20 dark:bg-rose-500/5 sm:px-6">
-                    <div><flux:heading level="2">Hồ sơ ưu tiên xử lý</flux:heading><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Tối đa 5 hồ sơ đã nộp hoặc đang xét duyệt · Nộp sớm nhất theo bộ lọc.</p></div>
+                    <div><flux:heading level="2">Hồ sơ ưu tiên xử lý</flux:heading><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Tối đa 5 hồ sơ đã nộp hoặc đang xét duyệt | Nộp sớm nhất theo bộ lọc.</p></div>
                     <flux:icon.clock class="size-5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
                 </div>
                 <ul class="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -113,7 +113,7 @@
 
         <section aria-label="Danh sách hồ sơ" class="admission-panel min-w-0 overflow-hidden">
             <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-5 sm:px-6">
-                <div><flux:heading level="2">Hồ sơ theo bộ lọc</flux:heading><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ number_format($records->total()) }} hồ sơ · Sắp xếp theo ngày nộp sớm nhất</p></div>
+                <div><flux:heading level="2">Hồ sơ theo bộ lọc</flux:heading><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ number_format($records->total()) }} hồ sơ | Sắp xếp theo ngày nộp sớm nhất</p></div>
                 <flux:badge size="sm" color="zinc">Không bao gồm bản nháp</flux:badge>
             </div>
             <div class="overflow-x-auto">

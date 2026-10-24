@@ -10,6 +10,7 @@ use App\Models\AdmissionMethod;
 use App\Models\AdmissionProgram;
 use App\Models\AdmissionQuotaVersion;
 use App\Models\AdmissionResult;
+use App\Models\AdmissionRound;
 use App\Models\AdmissionWish;
 use App\Models\CandidateMajorOffering;
 use App\Models\User;
@@ -56,6 +57,29 @@ test('duplicate round major method remains rejected by the catalog', function ()
         ->set('form.major_id', $offering->major_id)->set('form.admission_method_id', $first->admission_method_id)
         ->call('save')->assertHasErrors('form.admission_method_id');
 });
+
+test('legacy offerings direct quota management to admission programs', function () {
+    $offering = CandidateMajorOffering::factory()->create();
+
+    Livewire::test(OfferingPage::class)->assertDontSee('wire:click="manageQuota(', false)
+        ->assertDontSee('Chỉ tiêu Q/q')->assertSee('Chỉ tiêu quản lý tại')
+        ->assertSee('Không áp dụng')->assertSee('Đợt đang xét theo chương trình.')
+        ->assertDontSee('Chưa có quy tắc tính điểm đã được phê duyệt và hợp lệ.')
+        ->assertSee(route('admin.admission-programs.index', ['roundFilter' => $offering->admission_round_id, 'majorFilter' => $offering->major_id]));
+});
+
+test('native offerings display the clear quota management action', function (string $state) {
+    $round = AdmissionRound::factory()->create(['native_registration_state' => $state]);
+    $program = AdmissionProgram::factory()->for($round)->create();
+    $offering = CandidateMajorOffering::factory()->create(['admission_program_id' => $program->id]);
+
+    Livewire::test(OfferingPage::class)->assertSee('Quản lý chỉ tiêu')->assertDontSee('Chỉ tiêu Q/q')
+        ->assertDontSee('Chỉ tiêu quản lý tại')
+        ->assertSee('Chưa có quy tắc tính điểm đã được phê duyệt và hợp lệ.')
+        ->assertDontSee('Thiếu rule')->assertDontSee('payload/ranking/hash')
+        ->assertSee('wire:click="manageQuota('.$offering->id.')"', false)
+        ->call('manageQuota', $offering->id)->assertSee('Chưa có phiên bản chỉ tiêu');
+})->with(['native_draft', 'native_open', 'native_closed']);
 
 test('quota approval preserves remainder and zero caps without updating legacy quotas', function () {
     [$offering,$first,$second] = quotaCatalogFixture();

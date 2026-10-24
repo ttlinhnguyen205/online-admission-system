@@ -43,7 +43,7 @@
                 </ol>
                 @foreach ($application->wishes as $wish)
                     @if (isset($programMethods[$wish->admission_program_id]))
-                        <p wire:key="own-program-{{ $wish->id }}" class="mt-2 text-xs break-words text-zinc-500 dark:text-zinc-400">Chương trình nguyện vọng {{ $wish->priority }}: {{ $wish->admissionProgram->major->name }} · {{ $programMethods[$wish->admission_program_id] }}</p>
+                        <p wire:key="own-program-{{ $wish->id }}" class="mt-2 text-xs break-words text-zinc-500 dark:text-zinc-400">Chương trình nguyện vọng {{ $wish->priority }}: {{ $wish->admissionProgram->major->name }} | {{ $programMethods[$wish->admission_program_id] }}</p>
                     @endif
                 @endforeach
                 <flux:button class="mt-4" size="sm" variant="subtle" :href="route('candidate.applications.show', $application->id)" icon:trailing="arrow-right" wire:navigate>Xem chi tiết hồ sơ</flux:button>
@@ -55,7 +55,7 @@
         <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
             <flux:heading level="2">Kết quả đã công bố</flux:heading>
             <ul class="mt-3 space-y-3">
-                @forelse ($results as $result)<li wire:key="own-result-{{ $result->id }}" class="text-sm">{{ $result->admissionWish->admissionProgram->major->name }} · {{ $result->admissionWish->application->admissionRound->name }}<p class="mt-1 font-medium">{{ App\Support\CandidateStatusLabels::result($result->decision) }}</p></li>@empty<li class="text-sm text-zinc-500">Chưa có kết quả được phép công bố.</li>@endforelse
+                @forelse ($results as $result)<li wire:key="own-result-{{ $result->id }}" class="text-sm">{{ $result->admissionWish->admissionProgram->major->name }} | {{ $result->admissionWish->application->admissionRound->name }}<p class="mt-1 font-medium">{{ App\Support\CandidateStatusLabels::result($result->decision) }}</p></li>@empty<li class="text-sm text-zinc-500">Chưa có kết quả được phép công bố.</li>@endforelse
             </ul>
             <flux:button class="mt-4" :href="route('candidate.results.index')" wire:navigate>Xem kết quả và xác nhận nhập học</flux:button>
         </div>
