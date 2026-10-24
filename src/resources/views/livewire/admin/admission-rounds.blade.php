@@ -2,6 +2,7 @@
     :title="__('Admission Rounds')"
     :description="__('Set admission periods, dates and availability for each intake.')"
     :singular="__('round')"
+    :total="$records->total()"
     :resource-model="$resourceModel">
     <x-slot:filters>
         <flux:input
@@ -25,8 +26,9 @@
         </flux:select>
     </x-slot:filters>
 
-    <flux:table :paginate="$records">
+    <flux:table :paginate="$records" class="admin-records-table">
         <flux:table.columns>
+            <flux:table.column class="table-stt">STT</flux:table.column>
             <flux:table.column>{{ __('Round') }}</flux:table.column>
             <flux:table.column>{{ __('Year') }}</flux:table.column>
             <flux:table.column>{{ __('Application period') }}</flux:table.column>
@@ -38,7 +40,8 @@
         <flux:table.rows>
             @forelse ($records as $record)
             <flux:table.row :key="$record->id">
-                <flux:table.cell>
+                <flux:table.cell class="table-stt" data-label="STT">{{ $records->firstItem() + $loop->index }}</flux:table.cell>
+                <flux:table.cell data-label="{{ __('Round') }}">
                     <div class="font-medium">{{ $record->name }}</div>
                     <div class="text-xs text-zinc-500">{{ $record->code }}</div>
                     @can('manageNativeRegistration', $record)
@@ -46,28 +49,28 @@
                     @endcan
                 </flux:table.cell>
 
-                <flux:table.cell>
+                <flux:table.cell data-label="{{ __('Year') }}">
                     {{ $record->year }}
                 </flux:table.cell>
 
-                <flux:table.cell>
+                <flux:table.cell data-label="{{ __('Application period') }}">
                     <div>{{ $record->start_date->format('d/m/Y H:i:s') }}</div>
                     <div>{{ $record->end_date->format('d/m/Y H:i:s') }}</div>
                 </flux:table.cell>
 
-                <flux:table.cell>
+                <flux:table.cell data-label="{{ __('Status') }}">
                     <flux:badge>
                         {{ App\Support\CandidateStatusLabels::round($record->status, $record->end_date) }}
                     </flux:badge>
                 </flux:table.cell>
 
-                <flux:table.cell>
+                <flux:table.cell data-label="{{ __('Dependencies') }}">
                     {{ $record->programs_count }} {{ __('programs') }} /
                     {{ $record->applications_count }} {{ __('applications') }}
                 </flux:table.cell>
 
-                <flux:table.cell>
-                    <div class="flex justify-end gap-2">
+                <flux:table.cell data-label="{{ __('Actions') }}">
+                    <div class="flex flex-wrap justify-start gap-2">
                         <flux:button
                             size="sm"
                             wire:click="details({{ $record->id }})">
@@ -93,7 +96,7 @@
             </flux:table.row>
             @empty
             <flux:table.row>
-                <flux:table.cell colspan="6">
+                <flux:table.cell colspan="7">
                     <div class="py-12 text-center">
                         @if ($this->search !== '' || $this->statusFilter !== '' || $this->yearFilter !== '')
                         <flux:heading>

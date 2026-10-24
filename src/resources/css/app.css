@@ -407,3 +407,68 @@ select:focus[data-flux-control] {
     .admission-workspace .results-table td[data-label]::before { content: attr(data-label); display: block; font-weight: 600; margin-bottom: .25rem; }
 }
 .admission-workspace .results-table td.table-stt { text-align: center; }
+
+.admission-shell .admission-workspace [data-flux-table] thead {
+    @apply bg-admission-soft text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100;
+}
+
+.admission-shell .admission-workspace [data-flux-table] [data-flux-column] {
+    @apply text-sm font-semibold text-zinc-800 dark:text-zinc-100;
+}
+
+.admission-workspace [data-flux-table] [data-flux-cell] {
+    @apply leading-6 text-zinc-700 dark:text-zinc-300;
+}
+
+.admission-workspace [data-flux-table] [data-flux-badge] {
+    white-space: normal;
+}
+
+.admission-workspace [data-flux-table] [data-flux-row]:hover {
+    @apply bg-zinc-50/70 dark:bg-white/5;
+}
+
+.admission-workspace [data-flux-pagination] {
+    @apply border-zinc-200 p-4 dark:border-zinc-700;
+}
+
+.admission-shell .admission-workspace [data-flux-table] .table-stt {
+    width: 60px;
+    min-width: 60px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (width < 640px) {
+    .admission-workspace .admin-records-table,
+    .admission-workspace .admin-records-table tbody,
+    .admission-workspace .admin-records-table tr {
+        display: block;
+        min-width: 0;
+    }
+
+    .admission-workspace .admin-records-table thead {
+        display: none;
+    }
+
+    .admission-workspace .admin-records-table tr {
+        @apply border-t border-zinc-200 p-3 dark:border-zinc-700;
+    }
+
+    .admission-shell .admission-workspace .admin-records-table [data-flux-cell],
+    .admission-workspace .admin-records-table td,
+    .admission-workspace .admin-records-table th[scope="row"] {
+        display: block;
+        width: auto;
+        padding: .5rem;
+        border: 0;
+        text-align: left;
+    }
+
+    .admission-workspace .admin-records-table [data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: .25rem;
+        font-weight: 600;
+    }
+}

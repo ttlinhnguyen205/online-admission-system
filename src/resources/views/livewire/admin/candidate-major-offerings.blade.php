@@ -1,4 +1,5 @@
-<x-admin.page :title="__('Candidate Major Offerings')" :description="__('Configure the majors candidates may register for in each round.')" :singular="__('candidate major offering')" :resource-model="$resourceModel" burgundy>
+<x-admin.page :title="__('Candidate Major Offerings')" :description="__('Configure the majors candidates may register for in each round.')" :singular="__('candidate major offering')" :total="$records->total()"
+    :resource-model="$resourceModel" burgundy>
     <x-slot:filters>
         <flux:select wire:model.live="roundFilter" :label="__('Round')">
             <option value="">{{ __('All rounds') }}</option>
@@ -13,8 +14,9 @@
         </flux:select>
     </x-slot:filters>
     <flux:callout>Trạng thái sẵn sàng cho biết cấu hình quy tắc xét tuyển đã hợp lệ, chưa phải kết quả xét tuyển. Hiện hỗ trợ điểm thi THPT và học bạ; chưa hỗ trợ HSA.</flux:callout>
-    <flux:table :paginate="$records">
+    <flux:table :paginate="$records" class="admin-records-table">
         <flux:table.columns>
+            <flux:table.column class="table-stt">STT</flux:table.column>
             <flux:table.column>{{ __('Major') }}</flux:table.column>
             <flux:table.column>{{ __('Round') }}</flux:table.column>
             <flux:table.column>{{ __('Compatibility program') }}</flux:table.column>
@@ -26,18 +28,19 @@
         <flux:table.rows>
             @forelse ($records as $record)
                 <flux:table.row :key="$record->id">
-                    <flux:table.cell>{{ $record->major->name }} · {{ $record->major->code }}</flux:table.cell>
-                    <flux:table.cell>{{ $record->admissionRound->code }}</flux:table.cell>
-                    <flux:table.cell>
+                    <flux:table.cell class="table-stt" data-label="STT">{{ $records->firstItem() + $loop->index }}</flux:table.cell>
+                    <flux:table.cell data-label="{{ __('Major') }}">{{ $record->major->name }} · {{ $record->major->code }}</flux:table.cell>
+                    <flux:table.cell data-label="{{ __('Round') }}">{{ $record->admissionRound->code }}</flux:table.cell>
+                    <flux:table.cell data-label="{{ __('Compatibility program') }}">
                         {{ $record->admissionProgram?->admissionMethod?->name ?? __('Not configured') }}
                         @if ($record->admissionProgram)
                             <div class="text-xs text-zinc-500">#{{ $record->admission_program_id }} · {{ $record->admissionProgram->admissionMethod->code }}</div>
                         @endif
                     </flux:table.cell>
-                    <flux:table.cell>
+                    <flux:table.cell data-label="Phương thức của ngành">
                         <div class="flex flex-wrap gap-1">
                             @foreach ($catalogPrograms->get($record->admission_round_id.'-'.$record->major_id, collect()) as $catalogProgram)
-                                <flux:badge wire:key="offering-method-{{ $record->id }}-{{ $catalogProgram->id }}" :color="$catalogProgram->status === 'active' && $catalogProgram->admissionMethod->is_active ? 'rose' : 'zinc'">
+                                <flux:badge wire:key="offering-method-{{ $record->id }}-{{ $catalogProgram->id }}" :color="$catalogProgram->status === 'active' && $catalogProgram->admissionMethod->is_active ? 'green' : 'zinc'">
                                     {{ $catalogProgram->admissionMethod->name }} · {{ $catalogProgram->status === 'active' && $catalogProgram->admissionMethod->is_active ? 'Chấp nhận' : 'Ngừng hoạt động' }}
                                 </flux:badge>
                             @endforeach
@@ -45,23 +48,23 @@
                         <p class="mt-1 text-xs text-zinc-500">Nguyện vọng hiện tại vẫn dùng chương trình legacy đã chọn.</p>
                         <flux:button size="sm" variant="ghost" :href="route('admin.admission-programs.index', ['roundFilter' => $record->admission_round_id, 'majorFilter' => $record->major_id])" wire:navigate>Cấu hình phương thức</flux:button>
                     </flux:table.cell>
-                    <flux:table.cell>
-                        <flux:badge :color="$record->is_selectable ? 'rose' : 'zinc'">{{ $record->is_selectable ? __('Registration enabled') : __('Registration disabled') }}</flux:badge>
+                    <flux:table.cell data-label="{{ __('Candidate registration') }}">
+                        <flux:badge :color="$record->is_selectable ? 'green' : 'zinc'">{{ $record->is_selectable ? __('Registration enabled') : __('Registration disabled') }}</flux:badge>
                         @if ($record->is_selectable)
                             <p class="mt-2 max-w-xs text-xs text-zinc-500 dark:text-zinc-400">
                                 {{ App\Actions\CandidateMajorOfferings::available($record, $record->admissionProgram, $record->admissionRound) ? __('Currently accepting registration') : ($record->admissionProgram ? App\Actions\CandidateWishes::unavailableReason($record->admissionProgram, $record->admissionRound) : __('Not configured')) }}
                             </p>
                         @endif
                     </flux:table.cell>
-                    <flux:table.cell>
-                        <flux:badge :color="$nativeReadiness[$record->id]['status'] === 'READY' ? 'rose' : 'rose'">{{ __($nativeReadiness[$record->id]['status']) }}</flux:badge>
+                    <flux:table.cell data-label="Cấu hình xét theo ngành">
+                        <flux:badge :color="$nativeReadiness[$record->id]['status'] === 'READY' ? 'green' : 'amber'">{{ __($nativeReadiness[$record->id]['status']) }}</flux:badge>
                         <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $nativeReadiness[$record->id]['total'] }} phương thức · {{ $nativeReadiness[$record->id]['approved'] }} hợp lệ · {{ $nativeReadiness[$record->id]['missing'] }} thiếu · {{ $nativeReadiness[$record->id]['unsupported'] }} chưa hỗ trợ</div>
                         @foreach ($nativeReadiness[$record->id]['methods'] as $methodState)
                             @if (! $methodState['ready'])<div wire:key="rule-readiness-{{ $record->id }}-{{ $methodState['program_id'] }}" class="mt-1 max-w-xs whitespace-normal text-xs text-rose-700 dark:text-rose-300">{{ $methodState['name'] }}: {{ $methodState['reason'] }}</div>@endif
                         @endforeach
                     </flux:table.cell>
-                    <flux:table.cell>
-                        <div class="flex justify-end gap-2">
+                    <flux:table.cell data-label="{{ __('Actions') }}">
+                        <div class="flex flex-wrap justify-start gap-2">
                             <flux:button size="sm" wire:click="edit({{ $record->id }})">{{ __('Edit') }}</flux:button>
                             <flux:button size="sm" wire:click="manageQuota({{ $record->id }})">Chỉ tiêu Q/q</flux:button>
                             <flux:button size="sm" variant="ghost" wire:click="confirmDeletion({{ $record->id }})">{{ __('Delete') }}</flux:button>
@@ -69,7 +72,7 @@
                     </flux:table.cell>
                 </flux:table.row>
             @empty
-                <flux:table.row><flux:table.cell colspan="7"><div class="py-10 text-center"><flux:heading>{{ __('No candidate major offerings found') }}</flux:heading><flux:text class="mt-2">{{ __('Configure a program first, then enable its major for candidate registration. Clear filters to view all configured offerings.') }}</flux:text></div></flux:table.cell></flux:table.row>
+                <flux:table.row><flux:table.cell colspan="8"><div class="py-10 text-center"><flux:heading>{{ __('No candidate major offerings found') }}</flux:heading><flux:text class="mt-2">{{ __('Configure a program first, then enable its major for candidate registration. Clear filters to view all configured offerings.') }}</flux:text></div></flux:table.cell></flux:table.row>
             @endforelse
         </flux:table.rows>
     </flux:table>

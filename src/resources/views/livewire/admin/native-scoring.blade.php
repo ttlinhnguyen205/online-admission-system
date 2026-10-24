@@ -1,4 +1,4 @@
-<div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+<div class="admission-workspace admission-panel min-w-0 space-y-5 p-5">
     <flux:heading size="lg">Tính điểm xét tuyển theo từng phương thức</flux:heading>
     <flux:text>Đánh giá nội bộ theo quy tắc đã lưu khi nộp hồ sơ. Chưa xếp hạng, phân bổ chỉ tiêu hoặc quyết định trúng tuyển.</flux:text>
     @if (!$available)

@@ -1,34 +1,35 @@
-@props(['title', 'description', 'resourceModel', 'singular', 'burgundy' => false, 'workspace' => false])
+@props(['title', 'description', 'resourceModel', 'singular', 'burgundy' => false, 'total' => null])
 
-<section @class(['mx-auto flex w-full max-w-7xl flex-col gap-6', 'admission-workspace min-w-0' => $workspace]) @if ($burgundy) style="--color-accent: #9D2036; --color-accent-content: #9D2036; --color-accent-foreground: #fff" @endif>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6" @if ($burgundy) style="--color-accent: #9D2036; --color-accent-content: #9D2036; --color-accent-foreground: #fff" @endif>
     <flux:breadcrumbs>
         <flux:breadcrumbs.item :href="route('admin.home')" wire:navigate>{{ __('Configuration') }}</flux:breadcrumbs.item>
         <flux:breadcrumbs.item>{{ $title }}</flux:breadcrumbs.item>
     </flux:breadcrumbs>
-    <div @class(['flex flex-col justify-between gap-4 sm:flex-row sm:items-start', 'admission-panel border-t-4 border-t-admission-blue p-5 sm:p-6' => $workspace])>
-        <div>
-            <flux:heading size="xl" level="1">{{ $title }}</flux:heading>
-            <flux:text class="mt-2">{{ $description }}</flux:text>
-        </div>
+    <x-admin.workspace-heading :title="$title" :description="$description">
         @can('create', $resourceModel)
             <flux:button variant="primary" wire:click="create">{{ __('Create :resource', ['resource' => $singular]) }}</flux:button>
         @else
             <flux:badge>{{ __('Read-only access') }}</flux:badge>
         @endcan
-    </div>
-    <div class="flex flex-col gap-4 admission-panel p-4">
-        <div class="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    </x-admin.workspace-heading>
+    <div class="admission-panel flex min-w-0 flex-col gap-4 p-5">
+        <div class="grid items-end gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <flux:input wire:model.live.debounce.300ms="search" :label="__('Search')" :placeholder="__('Search code or name')" maxlength="100" type="search" />
             {{ $filters }}
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ $total === null ? 'Lọc danh sách theo thông tin cần tra cứu.' : number_format($total).' bản ghi phù hợp' }}</p>
             <flux:button wire:click="clearFilters">{{ __('Clear filters') }}</flux:button>
         </div>
         <div role="status" class="min-h-5 text-sm text-zinc-500">
             <span wire:loading.delay>{{ __('Updating records...') }}</span>
         </div>
+    </div>
+    <div class="admission-panel min-w-0 overflow-hidden">
         {{ $slot }}
     </div>
 
-    <flux:modal wire:model="showEditor" class="w-full md:max-w-2xl">
+    <flux:modal wire:model="showEditor" class="admission-workspace w-full md:max-w-2xl">
         <form wire:submit="save" class="flex flex-col gap-6">
             <div>
                 <flux:heading size="lg">{{ $this->readOnly ? __('View :resource', ['resource' => $singular]) : ($this->recordId ? __('Edit :resource', ['resource' => $singular]) : __('Create :resource', ['resource' => $singular])) }}</flux:heading>

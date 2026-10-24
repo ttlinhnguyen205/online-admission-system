@@ -112,7 +112,7 @@ test('configuration landing and navigation follow existing policies', function (
     $response = $this->get(route('profile.edit'));
     if ($allowed) {
         $response->assertSee(route('admin.admission-rounds.index'))->assertSee(route('admin.admission-programs.index'));
-        $this->get(route('admin.home'))->assertOk()->assertSee('Admission configuration');
+        $this->get(route('admin.home'))->assertOk()->assertSeeText('Cấu hình tuyển sinh');
     } else {
         $response->assertDontSee(route('admin.home'));
         $this->get(route('admin.home'))->assertForbidden();

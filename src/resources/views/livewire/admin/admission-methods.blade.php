@@ -2,6 +2,7 @@
     :title="__('Admission Methods')"
     :description="__('Manage admission methods and optional subject-weight configuration.')"
     :singular="__('method')"
+    :total="$records->total()"
     :resource-model="$resourceModel"
     burgundy
 >
@@ -13,8 +14,9 @@
         </flux:select>
     </x-slot:filters>
 
-    <flux:table :paginate="$records">
+    <flux:table :paginate="$records" class="admin-records-table">
         <flux:table.columns>
+            <flux:table.column class="table-stt">STT</flux:table.column>
             <flux:table.column>{{ __('Method') }}</flux:table.column>
             <flux:table.column>{{ __('Score configuration') }}</flux:table.column>
             <flux:table.column>{{ __('Availability') }}</flux:table.column>
@@ -25,27 +27,28 @@
         <flux:table.rows>
             @forelse ($records as $record)
                 <flux:table.row :key="$record->id">
-                    <flux:table.cell>
+                    <flux:table.cell class="table-stt" data-label="STT">{{ $records->firstItem() + $loop->index }}</flux:table.cell>
+                    <flux:table.cell data-label="{{ __('Method') }}">
                         <div class="font-medium">{{ $record->name }}</div>
                         <div class="text-xs text-zinc-500">{{ $record->code }}</div>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell data-label="{{ __('Score configuration') }}">
                         {{ $record->score_config === null ? __('Not configured') : __('Configured') }}
                     </flux:table.cell>
 
-                    <flux:table.cell>
-                        <flux:badge :color="$record->is_active ? 'rose' : 'zinc'">
+                    <flux:table.cell data-label="{{ __('Availability') }}">
+                        <flux:badge :color="$record->is_active ? 'green' : 'zinc'">
                             {{ $record->is_active ? __('Active') : __('Inactive') }}
                         </flux:badge>
                     </flux:table.cell>
 
-                    <flux:table.cell>
+                    <flux:table.cell data-label="{{ __('Programs') }}">
                         {{ $record->programs_count }}
                     </flux:table.cell>
 
-                    <flux:table.cell>
-                        <div class="flex justify-end gap-2">
+                    <flux:table.cell data-label="{{ __('Actions') }}">
+                        <div class="flex flex-wrap justify-start gap-2">
                             <flux:button size="sm" wire:click="details({{ $record->id }})">
                                 {{ __('View') }}
                             </flux:button>
@@ -65,7 +68,7 @@
 
             @empty
                 <flux:table.row>
-                    <flux:table.cell colspan="5">
+                    <flux:table.cell colspan="6">
                         <div class="py-12 text-center">
                             @if ($this->search !== '' || $this->statusFilter !== '')
                                 <flux:heading>

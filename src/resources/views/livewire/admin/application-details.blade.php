@@ -1,14 +1,10 @@
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <flux:heading size="xl" level="1">{{ $application->application_code }}</flux:heading>
-            <flux:text class="mt-2">{{ __('Application review details') }}</flux:text>
-        </div>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admin.workspace-heading :title="$application->application_code" :description="__('Application review details')">
         <div class="flex flex-wrap gap-3">
             <flux:button :href="route('admin.applications.index')" wire:navigate>{{ __('Review queue') }}</flux:button>
             <flux:button wire:click="reloadReview" wire:loading.attr="disabled">{{ __('Reload review data') }}</flux:button>
         </div>
-    </div>
+    </x-admin.workspace-heading>
     <flux:error name="review" />
     @if ($application->registration_mode === 'native')
         <livewire:admin.native-scoring :application-id="$application->id" :key="'scoring-'.$application->id" />

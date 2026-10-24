@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-5">
+<div class="admission-workspace flex min-w-0 flex-col gap-5">
     <flux:heading size="lg">Đăng ký nguyện vọng theo ngành</flux:heading>
     <flux:text>{{ $round->code }} · {{ $round->name }}</flux:text>
     <flux:callout>Chỉ kích hoạt đợt thử nghiệm riêng. Không chuyển đổi hồ sơ theo chương trình và không tự tính điểm, phân bổ hoặc công bố. Trạng thái sẵn sàng không tự mở đăng ký; cần bật tính năng sau khi kiểm tra điều kiện.</flux:callout>

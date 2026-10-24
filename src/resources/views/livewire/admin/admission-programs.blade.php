@@ -2,7 +2,8 @@
     :title="__('Admission Programs')"
     :description="__('Connect a round, major and admission method with seats, score thresholds and tuition.')"
     :singular="__('program')"
-    :resource-model="$resourceModel" burgundy workspace>
+    :total="$records->total()"
+    :resource-model="$resourceModel" burgundy>
     <x-slot:filters>
         <flux:select wire:model.live="roundFilter" :label="__('Round')">
             <option value="">{{ __('All rounds') }}</option>
@@ -41,9 +42,9 @@
     @can('viewAny', App\Models\EvaluationRuleVersion::class)
         <flux:button wire:click="manageRules">Quản lý quy tắc Native</flux:button>
     @endcan
-    <flux:table :paginate="$records" class="workspace-table min-w-[1200px]" container:class="min-w-0">
+    <flux:table :paginate="$records" class="workspace-table admin-records-table sm:min-w-[1200px]" container:class="min-w-0">
         <flux:table.columns>
-            <flux:table.column class="table-stt" align="center">STT</flux:table.column>
+            <flux:table.column class="table-stt">STT</flux:table.column>
             <flux:table.column>{{ __('Offering') }}</flux:table.column>
             <flux:table.column>{{ __('Round') }}</flux:table.column>
             <flux:table.column>{{ __('Quota') }}</flux:table.column>
@@ -57,33 +58,33 @@
         <flux:table.rows>
             @forelse ($records as $record)
             <flux:table.row :key="$record->id">
-                <flux:table.cell class="table-stt" align="center"><span data-program-stt>{{ $records->firstItem() + $loop->index }}</span></flux:table.cell>
-                <flux:table.cell>
+                <flux:table.cell class="table-stt" data-label="STT"><span data-program-stt>{{ $records->firstItem() + $loop->index }}</span></flux:table.cell>
+                <flux:table.cell data-label="{{ __('Offering') }}">
                     <div class="font-medium">{{ $record->major->name }}</div>
                     <div class="text-sm text-zinc-500">
                         {{ $record->major->code }} / {{ $record->admissionMethod->name }}
                     </div>
                 </flux:table.cell>
 
-                <flux:table.cell>{{ $record->admissionRound->code }}</flux:table.cell>
+                <flux:table.cell data-label="{{ __('Round') }}">{{ $record->admissionRound->code }}</flux:table.cell>
 
-                <flux:table.cell>{{ number_format($record->quota) }}</flux:table.cell>
+                <flux:table.cell data-label="{{ __('Quota') }}">{{ number_format($record->quota) }}</flux:table.cell>
 
-                <flux:table.cell>
+                <flux:table.cell data-label="{{ __('Minimum score') }}">
                     {{ $record->minimum_score === null ? __('Not specified') : App\Support\DisplayNumber::decimal($record->minimum_score).' '.__('points') }}
                 </flux:table.cell>
 
-                <flux:table.cell>
+                <flux:table.cell data-label="{{ __('Tuition') }}">
                     {{ $record->tuition_fee === null ? __('Not specified') : App\Support\DisplayNumber::tuition($record->tuition_fee).' VND' }}
                 </flux:table.cell>
 
-                <flux:table.cell>
-                    <flux:badge :color="$record->status === 'active' ? 'rose' : 'zinc'">
+                <flux:table.cell data-label="{{ __('Status') }}">
+                    <flux:badge :color="$record->status === 'active' ? 'green' : 'zinc'">
                         {{ __(ucfirst($record->status)) }}
                     </flux:badge>
                 </flux:table.cell>
 
-                <flux:table.cell>
+                <flux:table.cell data-label="Cấu hình xét tuyển">
                     @if ($record->admissionRound->nativeRegistrationState() === 'legacy')
                         <flux:badge color="zinc">Cấu hình Legacy</flux:badge>
                         <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{{ $record->admissionMethod->name }}</p>
@@ -95,8 +96,8 @@
                     @endif
                     @endif
                 </flux:table.cell>
-                <flux:table.cell>
-                    <div class="flex flex-wrap justify-end gap-2">
+                <flux:table.cell data-label="{{ __('Actions') }}">
+                    <div class="flex flex-wrap justify-start gap-2">
                         @can('viewAny', App\Models\EvaluationRuleVersion::class)
                             @if ($record->admissionRound->nativeRegistrationState() !== 'legacy')
                             <flux:button size="sm" wire:click="manageRules({{ $record->id }})">Cấu hình quy tắc</flux:button>

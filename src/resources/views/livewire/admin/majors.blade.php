@@ -2,6 +2,7 @@
     :title="__('Majors')"
     :description="__('Maintain the university major catalog and default tuition.')"
     :singular="__('major')"
+    :total="$records->total()"
     :resource-model="$resourceModel" burgundy>
     <x-slot:filters>
         <flux:select wire:model.live="statusFilter" :label="__('Availability')">
@@ -11,8 +12,9 @@
         </flux:select>
     </x-slot:filters>
 
-    <flux:table :paginate="$records">
+    <flux:table :paginate="$records" class="admin-records-table">
         <flux:table.columns>
+            <flux:table.column class="table-stt">STT</flux:table.column>
             <flux:table.column>{{ __('Major') }}</flux:table.column>
             <flux:table.column>{{ __('Default tuition') }}</flux:table.column>
             <flux:table.column>{{ __('Availability') }}</flux:table.column>
@@ -23,25 +25,26 @@
         <flux:table.rows>
             @forelse ($records as $record)
             <flux:table.row :key="$record->id">
-                <flux:table.cell>
+                <flux:table.cell class="table-stt" data-label="STT">{{ $records->firstItem() + $loop->index }}</flux:table.cell>
+                <flux:table.cell data-label="{{ __('Major') }}">
                     <div class="font-medium">{{ $record->name }}</div>
                     <div class="text-xs text-zinc-500">{{ $record->code }}</div>
                 </flux:table.cell>
 
-                <flux:table.cell>
+                <flux:table.cell data-label="{{ __('Default tuition') }}">
                     {{ $record->default_tuition_fee === null ? __('Not specified') : App\Support\DisplayNumber::tuition($record->default_tuition_fee).' VND' }}
                 </flux:table.cell>
 
-                <flux:table.cell>
-                    <flux:badge :color="$record->is_active ? 'rose' : 'zinc'">
+                <flux:table.cell data-label="{{ __('Availability') }}">
+                    <flux:badge :color="$record->is_active ? 'green' : 'zinc'">
                         {{ $record->is_active ? __('Active') : __('Inactive') }}
                     </flux:badge>
                 </flux:table.cell>
 
-                <flux:table.cell>{{ $record->programs_count }}</flux:table.cell>
+                <flux:table.cell data-label="{{ __('Programs') }}">{{ $record->programs_count }}</flux:table.cell>
 
-                <flux:table.cell>
-                    <div class="flex justify-end gap-2">
+                <flux:table.cell data-label="{{ __('Actions') }}">
+                    <div class="flex flex-wrap justify-start gap-2">
                         <flux:button size="sm" wire:click="details({{ $record->id }})">
                             {{ __('View') }}
                         </flux:button>
@@ -60,7 +63,7 @@
             </flux:table.row>
             @empty
             <flux:table.row>
-                <flux:table.cell colspan="5">
+                <flux:table.cell colspan="6">
                     <div class="py-12 text-center">
                         @if ($this->search !== '' || $this->statusFilter !== '')
                         <flux:heading>{{ __('No majors found') }}</flux:heading>

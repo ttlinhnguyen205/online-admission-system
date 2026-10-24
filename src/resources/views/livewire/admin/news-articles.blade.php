@@ -1,14 +1,10 @@
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
-    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <div>
-            <flux:heading size="xl" level="1">Quản lý tin tức</flux:heading>
-            <flux:text class="mt-2">Soạn bài, lưu nháp và xuất bản thông tin nhà trường, tuyển sinh.</flux:text>
-        </div>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admin.workspace-heading title="Quản lý tin tức" description="Soạn bài, lưu nháp và xuất bản thông tin nhà trường, tuyển sinh.">
         <flux:button variant="primary" wire:click="create">Tạo bài viết</flux:button>
-    </div>
+    </x-admin.workspace-heading>
 
-    <div class="admission-panel flex flex-col gap-5 p-4">
-        <div class="grid gap-4 sm:grid-cols-2">
+    <div class="admission-panel flex min-w-0 flex-col gap-4 p-5">
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <flux:input wire:model.live.debounce.300ms="search" label="Tìm bài viết" placeholder="Nhập tiêu đề" type="search" maxlength="100" />
             <flux:select wire:model.live="statusFilter" label="Trạng thái">
                 <option value="">Tất cả trạng thái</option>
@@ -17,9 +13,13 @@
                 @endforeach
             </flux:select>
         </div>
+        <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ number_format($records->total()) }} bài viết phù hợp</p>
         <div role="status" wire:loading.delay class="text-sm text-zinc-500">Đang cập nhật danh sách…</div>
-        <flux:table :paginate="$records">
+    </div>
+    <div class="admission-panel min-w-0 overflow-hidden">
+        <flux:table :paginate="$records" class="admin-records-table">
             <flux:table.columns>
+                <flux:table.column class="table-stt">STT</flux:table.column>
                 <flux:table.column>Bài viết</flux:table.column>
                 <flux:table.column>Nhóm tin</flux:table.column>
                 <flux:table.column>Trạng thái</flux:table.column>
@@ -29,12 +29,13 @@
             <flux:table.rows>
                 @forelse ($records as $record)
                     <flux:table.row :key="$record->id">
-                        <flux:table.cell><div class="max-w-sm whitespace-normal break-words font-medium">{{ $record->title }}</div></flux:table.cell>
-                        <flux:table.cell>{{ App\Models\NewsArticle::CATEGORIES[$record->category] }}</flux:table.cell>
-                        <flux:table.cell><flux:badge :color="$record->status === 'published' ? 'green' : 'zinc'">{{ App\Models\NewsArticle::STATUSES[$record->status] }}</flux:badge></flux:table.cell>
-                        <flux:table.cell>{{ $record->published_at?->format('d/m/Y H:i') ?? '—' }}</flux:table.cell>
-                        <flux:table.cell>
-                            <div class="flex flex-wrap justify-end gap-2">
+                        <flux:table.cell class="table-stt" data-label="STT">{{ $records->firstItem() + $loop->index }}</flux:table.cell>
+                        <flux:table.cell data-label="Bài viết"><div class="max-w-sm whitespace-normal break-words font-medium">{{ $record->title }}</div></flux:table.cell>
+                        <flux:table.cell data-label="Nhóm tin">{{ App\Models\NewsArticle::CATEGORIES[$record->category] }}</flux:table.cell>
+                        <flux:table.cell data-label="Trạng thái"><flux:badge :color="$record->status === 'published' ? 'green' : 'zinc'">{{ App\Models\NewsArticle::STATUSES[$record->status] }}</flux:badge></flux:table.cell>
+                        <flux:table.cell data-label="Ngày xuất bản">{{ $record->published_at?->format('d/m/Y H:i') ?? '—' }}</flux:table.cell>
+                        <flux:table.cell data-label="Thao tác">
+                            <div class="flex flex-wrap justify-start gap-2">
                                 <flux:button size="sm" wire:click="edit({{ $record->id }})">Sửa</flux:button>
                                 @if ($record->status === 'published')
                                     <flux:button size="sm" :href="route('news.show', $record->id)" wire:navigate>Xem bài</flux:button>
@@ -47,7 +48,7 @@
                         </flux:table.cell>
                     </flux:table.row>
                 @empty
-                    <flux:table.row><flux:table.cell colspan="5"><p class="py-10 text-center text-zinc-500">{{ $search !== '' || $statusFilter !== '' ? 'Không có bài viết phù hợp.' : 'Chưa có bài viết. Bấm “Tạo bài viết” để bắt đầu.' }}</p></flux:table.cell></flux:table.row>
+                    <flux:table.row><flux:table.cell colspan="6"><p class="py-10 text-center text-zinc-500">{{ $search !== '' || $statusFilter !== '' ? 'Không có bài viết phù hợp.' : 'Chưa có bài viết. Bấm “Tạo bài viết” để bắt đầu.' }}</p></flux:table.cell></flux:table.row>
                 @endforelse
             </flux:table.rows>
         </flux:table>

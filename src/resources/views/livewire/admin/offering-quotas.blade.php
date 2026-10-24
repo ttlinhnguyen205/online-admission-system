@@ -1,4 +1,4 @@
-<section class="mt-6 space-y-5 rounded-xl border border-zinc-200 bg-white p-4 sm:p-6 dark:border-zinc-700 dark:bg-zinc-900" aria-label="Quản lý chỉ tiêu ngành">
+<section class="admission-workspace admission-panel min-w-0 space-y-5 p-5" aria-label="Quản lý chỉ tiêu ngành">
     <div>
         <flux:heading size="lg">Chỉ tiêu: {{ $offering->major->name }}</flux:heading>
         <flux:text>{{ $offering->admissionRound->name }} · {{ $offering->major->code }}</flux:text>
@@ -26,7 +26,7 @@
             <flux:input type="number" min="0" step="1" wire:model.live="quotaForm.total_quota" label="Tổng chỉ tiêu ngành Q" :disabled="$selected->status !== 'draft'" />
             <flux:error name="total_quota" />
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
+                <table class="workspace-table w-full text-left text-sm">
                     <thead><tr class="border-b border-zinc-200 dark:border-zinc-700"><th class="p-3">Phương thức xét tuyển</th><th class="p-3">Chỉ tiêu tối đa q</th></tr></thead>
                     <tbody>
                         @foreach ($quotaForm['limits'] as $index => $row)

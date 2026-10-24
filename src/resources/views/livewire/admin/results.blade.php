@@ -1,8 +1,5 @@
 <section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
-    <header class="admission-panel border-t-4 border-t-admission-blue p-5 sm:p-6">
-        <flux:heading size="xl" level="1">Công bố kết quả</flux:heading>
-        <p class="mt-2 text-base leading-7 text-zinc-600 dark:text-zinc-300">Kiểm tra kết quả đã lưu và tình trạng xác nhận nhập học. Công bố không tính lại điểm hoặc thay đổi kết quả xét tuyển.</p>
-    </header>
+    <x-admin.workspace-heading title="Công bố kết quả" description="Kiểm tra kết quả đã lưu và tình trạng xác nhận nhập học. Công bố không tính lại điểm hoặc thay đổi kết quả xét tuyển." />
     <div class="admission-panel p-5">
         <flux:select wire:model.live="roundSelection" label="Đợt tuyển sinh">
             <option value="">Chọn đợt tuyển sinh</option>

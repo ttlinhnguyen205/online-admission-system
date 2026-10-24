@@ -1,5 +1,5 @@
-<div>
-    <flux:heading>Phiên bản kết quả xét tuyển theo ngành</flux:heading>
+<div class="admission-workspace flex min-w-0 flex-col gap-5">
+    <flux:heading size="lg">Phiên bản kết quả xét tuyển theo ngành</flux:heading>
     <flux:error name="nativeResults" />
     <flux:error name="allocation" />
     @if ($allocationAvailable)

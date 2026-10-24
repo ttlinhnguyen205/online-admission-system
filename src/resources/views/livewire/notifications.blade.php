@@ -1,11 +1,7 @@
-<section class="mx-auto flex w-full max-w-4xl flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <flux:heading size="xl" level="1">{{ __('Thông báo') }}</flux:heading>
-            <flux:text class="mt-2">{{ __('Thông báo dành cho tài khoản của bạn.') }}</flux:text>
-        </div>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admin.workspace-heading :title="__('Thông báo')" :description="__('Thông báo dành cho tài khoản của bạn.')">
         <flux:badge>{{ __('Chưa đọc') }}: {{ $unreadCount }}</flux:badge>
-    </div>
+    </x-admin.workspace-heading>
 
     @forelse ($notifications as $notification)
         @php($detail = $details->get($notification->id))

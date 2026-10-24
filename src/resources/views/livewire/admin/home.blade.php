@@ -1,15 +1,5 @@
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-8">
-    <div>
-        <flux:text>{{ __('ADMISSIONS ADMINISTRATION') }}</flux:text>
-
-        <flux:heading size="xl" level="1" class="mt-2">
-            {{ __('Admission configuration') }}
-        </flux:heading>
-
-        <flux:text class="mt-3 max-w-2xl">
-            {{ __('Prepare each intake in one place. Set up rounds, maintain the major and method catalogs, then combine them into admission programs.') }}
-        </flux:text>
-    </div>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admin.workspace-heading :title="__('Admission configuration')" :description="__('Prepare each intake in one place. Set up rounds, maintain the major and method catalogs, then combine them into admission programs.')" />
 
     @cannot('create', App\Models\AdmissionRound::class)
     <flux:callout>

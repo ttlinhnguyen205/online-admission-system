@@ -1,21 +1,12 @@
 @php
-    $statusColors = ['Đã nộp' => 'rose', 'Đang xét duyệt' => 'rose', 'Cần bổ sung' => 'rose', 'Đã xác minh' => 'rose', 'Không hợp lệ' => 'rose', 'Đang xét tuyển' => 'rose', 'Hoàn tất xét tuyển' => 'rose'];
+    $statusColors = ['Đã nộp' => 'zinc', 'Đang xét duyệt' => 'zinc', 'Cần bổ sung' => 'amber', 'Đã xác minh' => 'green', 'Không hợp lệ' => 'red', 'Đang xét tuyển' => 'blue', 'Hoàn tất xét tuyển' => 'green'];
 @endphp
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6 text-zinc-900 dark:text-zinc-100 sm:gap-8">
-    <header class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <p class="mb-2 flex items-center gap-2 text-xs font-semibold tracking-widest text-rose-600 uppercase dark:text-rose-400">
-                <flux:icon.academic-cap variant="mini" class="size-4" aria-hidden="true" /> Quản trị tuyển sinh
-            </p>
-            <flux:heading size="xl" level="1" class="tracking-tight">Tổng quan tuyển sinh</flux:heading>
-            <flux:text class="mt-2 max-w-xl">Theo dõi tiến độ hồ sơ và phân bố nguyện vọng trong cùng một bộ lọc.</flux:text>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-            <flux:button :href="route('admin.applications.index', ['roundFilter' => $roundFilter, 'statusFilter' => $statusFilter ?: 'all', 'search' => $search])" icon:trailing="arrow-right" wire:navigate>Mở danh sách xét duyệt</flux:button>
-        </div>
-    </header>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6 text-zinc-900 dark:text-zinc-100">
+    <x-admin.workspace-heading title="Tổng quan tuyển sinh" description="Theo dõi tiến độ hồ sơ và phân bố nguyện vọng trong cùng một bộ lọc.">
+        <flux:button :href="route('admin.applications.index', ['roundFilter' => $roundFilter, 'statusFilter' => $statusFilter ?: 'all', 'search' => $search])" icon:trailing="arrow-right" wire:navigate>Mở danh sách xét duyệt</flux:button>
+    </x-admin.workspace-heading>
 
-    <section aria-label="Bộ lọc thống kê" class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
+    <section aria-label="Bộ lọc thống kê" class="admission-panel min-w-0 p-5">
         <div class="mb-5 flex items-center gap-2 text-sm font-semibold">
             <flux:icon.adjustments-horizontal variant="mini" class="size-5 text-zinc-500" aria-hidden="true" /> Bộ lọc thống kê
         </div>
@@ -75,7 +66,7 @@
         @endphp
         <div aria-label="Chỉ số chính" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" wire:loading.class="opacity-60">
             @foreach ($primary as $metric)
-                <article wire:key="admin-primary-{{ $metric['label'] }}" class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
+                <article wire:key="admin-primary-{{ $metric['label'] }}" class="admission-panel min-w-0 p-5">
                     <div class="flex items-center justify-between gap-3">
                         <h2 class="text-sm font-medium text-zinc-600 dark:text-zinc-300">{{ $metric['label'] }}</h2>
                         <span class="rounded-xl p-2.5 {{ $metric['tone'] }}"><flux:icon :name="$metric['icon']" class="size-5" aria-hidden="true" /></span>
@@ -86,8 +77,8 @@
             @endforeach
         </div>
 
-        <details wire:key="admin-statistics-details" class="group rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl p-5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose-500 sm:p-6">
+        <details wire:key="admin-statistics-details" class="admission-panel group min-w-0 overflow-hidden">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl p-5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose-500 sm:p-6">
                 <div><h2 class="font-semibold">Thống kê chi tiết</h2><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Nguyện vọng, tiến độ xét duyệt và kết quả tuyển sinh</p></div>
                 <flux:icon.chevron-down class="size-5 shrink-0 text-zinc-500 transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
@@ -115,7 +106,7 @@
             </div>
         </section>
 
-        <section aria-label="Hàng đợi xét duyệt" class="overflow-hidden rounded-2xl border border-rose-200 bg-white shadow-sm dark:border-rose-500/30 dark:bg-zinc-900">
+        <section aria-label="Hàng đợi xét duyệt" class="overflow-hidden rounded-xl border border-rose-200 bg-white shadow-sm dark:border-rose-500/30 dark:bg-zinc-900">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rose-100 bg-rose-50/60 px-5 py-4 dark:border-rose-500/20 dark:bg-rose-500/5 sm:px-6">
                 <div><flux:heading level="2">Hồ sơ cần xử lý — nộp sớm nhất</flux:heading><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Ưu tiên tối đa 5 hồ sơ đã nộp hoặc đang xét duyệt theo bộ lọc.</p></div>
                 <flux:icon.clock class="size-5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
@@ -133,29 +124,30 @@
             </ul>
         </section>
 
-        <section aria-label="Danh sách hồ sơ" class="min-w-0 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+        <section aria-label="Danh sách hồ sơ" class="admission-panel min-w-0 overflow-hidden">
             <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-5 sm:px-6">
                 <div><flux:heading level="2">Hồ sơ theo bộ lọc</flux:heading><p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ number_format($records->total()) }} hồ sơ · Sắp xếp theo ngày nộp sớm nhất</p></div>
                 <flux:badge size="sm" color="zinc">Không bao gồm bản nháp</flux:badge>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
+                <table class="workspace-table admin-records-table w-full text-left text-sm">
                     <caption class="sr-only">Danh sách hồ sơ theo bộ lọc đợt tuyển sinh, trạng thái và tìm kiếm</caption>
-                    <thead class="border-y border-zinc-100 bg-zinc-50 text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-800/50 dark:text-zinc-400">
-                        <tr>@foreach (['Mã hồ sơ', 'Mã thí sinh', 'Họ tên', 'Đợt tuyển sinh', 'Trạng thái'] as $column)<th scope="col" class="whitespace-nowrap px-5 py-3 font-medium sm:px-6">{{ $column }}</th>@endforeach</tr>
+                    <thead>
+                        <tr><th scope="col" class="table-stt">STT</th>@foreach (['Mã hồ sơ', 'Mã thí sinh', 'Họ tên', 'Đợt tuyển sinh', 'Trạng thái'] as $column)<th scope="col" class="whitespace-nowrap px-5 py-3 font-medium sm:px-6">{{ $column }}</th>@endforeach</tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
                         @forelse ($records as $application)
                             @php($label = App\Support\CandidateStatusLabels::application($application->status))
                             <tr wire:key="admin-application-{{ $application->id }}" class="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
-                                <th scope="row" class="whitespace-nowrap px-5 py-4 font-semibold sm:px-6"><a href="{{ route('admin.applications.show', $application->id) }}" wire:navigate class="text-rose-700 underline-offset-4 hover:underline dark:text-rose-300">{{ $application->application_code }}</a></th>
-                                <td class="whitespace-nowrap px-5 py-4 text-zinc-500 dark:text-zinc-400 sm:px-6">{{ $application->candidateProfile->candidate_code }}</td>
-                                <td class="min-w-40 px-5 py-4 font-medium sm:px-6">{{ $application->candidateProfile->user->name }}</td>
-                                <td class="min-w-40 px-5 py-4 text-zinc-600 dark:text-zinc-300 sm:px-6">{{ $application->admissionRound->name }}</td>
-                                <td class="whitespace-nowrap px-5 py-4 sm:px-6"><flux:badge size="sm" :color="$statusColors[$label] ?? 'zinc'">{{ $label }}</flux:badge></td>
+                                <td class="table-stt" data-label="STT">{{ $records->firstItem() + $loop->index }}</td>
+                                <th scope="row" class="whitespace-nowrap px-5 py-4 font-semibold sm:px-6" data-label="Mã hồ sơ"><a href="{{ route('admin.applications.show', $application->id) }}" wire:navigate class="text-rose-700 underline-offset-4 hover:underline dark:text-rose-300">{{ $application->application_code }}</a></th>
+                                <td class="whitespace-nowrap px-5 py-4 text-zinc-500 dark:text-zinc-400 sm:px-6" data-label="Mã thí sinh">{{ $application->candidateProfile->candidate_code }}</td>
+                                <td class="min-w-40 px-5 py-4 font-medium sm:px-6" data-label="Họ tên">{{ $application->candidateProfile->user->name }}</td>
+                                <td class="min-w-40 px-5 py-4 text-zinc-600 dark:text-zinc-300 sm:px-6" data-label="Đợt tuyển sinh">{{ $application->admissionRound->name }}</td>
+                                <td class="whitespace-nowrap px-5 py-4 sm:px-6" data-label="Trạng thái"><flux:badge size="sm" :color="$statusColors[$label] ?? 'zinc'">{{ $label }}</flux:badge></td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="px-5 py-10 text-center text-zinc-500 dark:text-zinc-400">Chưa có hồ sơ phù hợp với bộ lọc.</td></tr>
+                            <tr><td colspan="6" class="px-5 py-10 text-center text-zinc-500 dark:text-zinc-400">Chưa có hồ sơ phù hợp với bộ lọc.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

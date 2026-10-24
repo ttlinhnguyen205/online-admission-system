@@ -1,8 +1,5 @@
 <section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
-    <div class="admission-panel border-t-4 border-t-admission-blue p-5 sm:p-6">
-        <flux:heading size="xl" level="1">{{ __('Công cụ xét tuyển') }}</flux:heading>
-        <flux:text class="mt-2">{{ __('Review readiness and allocate admission places for a closed round. Saved decisions are immutable and remain unpublished.') }}</flux:text>
-    </div>
+    <x-admin.workspace-heading :title="__('Công cụ xét tuyển')" :description="__('Review readiness and allocate admission places for a closed round. Saved decisions are immutable and remain unpublished.')" />
 
     <form wire:submit="preview" class="admission-panel grid min-w-0 gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <flux:select wire:model="roundSelection" :label="__('Admission round')" class="min-w-0 w-full">
