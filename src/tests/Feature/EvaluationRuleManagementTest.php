@@ -299,7 +299,8 @@ test('inactive and unverified admins cannot manage rules', function (string $con
 
 test('admin UI creates approves and manually binds a saved rule', function () {
     evaluationAdmin();
-    $program = AdmissionProgram::factory()->create();
+    $round = AdmissionRound::factory()->create(['native_registration_state' => 'native_draft']);
+    $program = AdmissionProgram::factory()->for($round)->create();
     $page = Livewire::test(EvaluationRules::class, ['programId' => $program->id])
         ->set('payload', evaluationPayload())->set('reason', 'Manual configuration')->call('saveDraft')->assertHasNoErrors();
     $rule = EvaluationRuleVersion::query()->sole();

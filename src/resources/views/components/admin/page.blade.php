@@ -1,11 +1,11 @@
-@props(['title', 'description', 'resourceModel', 'singular', 'burgundy' => false])
+@props(['title', 'description', 'resourceModel', 'singular', 'burgundy' => false, 'workspace' => false])
 
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6" @if ($burgundy) style="--color-accent: #9D2036; --color-accent-content: #9D2036; --color-accent-foreground: #fff" @endif>
+<section @class(['mx-auto flex w-full max-w-7xl flex-col gap-6', 'admission-workspace min-w-0' => $workspace]) @if ($burgundy) style="--color-accent: #9D2036; --color-accent-content: #9D2036; --color-accent-foreground: #fff" @endif>
     <flux:breadcrumbs>
         <flux:breadcrumbs.item :href="route('admin.home')" wire:navigate>{{ __('Configuration') }}</flux:breadcrumbs.item>
         <flux:breadcrumbs.item>{{ $title }}</flux:breadcrumbs.item>
     </flux:breadcrumbs>
-    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+    <div @class(['flex flex-col justify-between gap-4 sm:flex-row sm:items-start', 'admission-panel border-t-4 border-t-admission-blue p-5 sm:p-6' => $workspace])>
         <div>
             <flux:heading size="xl" level="1">{{ $title }}</flux:heading>
             <flux:text class="mt-2">{{ $description }}</flux:text>

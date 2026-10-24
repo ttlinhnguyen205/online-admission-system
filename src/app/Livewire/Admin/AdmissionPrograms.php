@@ -183,7 +183,8 @@ class AdmissionPrograms extends ConfigurationPage
         $statuses = [];
         foreach ($records as $record) {
             assert($record instanceof AdmissionProgram);
-            $statuses[$record->id] = $readiness->programReady($record);
+            $statuses[$record->id] = $record->admissionRound->nativeRegistrationState() === 'legacy'
+                ? null : $readiness->programReady($record);
         }
 
         return ['ruleReadiness' => $statuses];

@@ -2,7 +2,7 @@
     :title="__('Admission Programs')"
     :description="__('Connect a round, major and admission method with seats, score thresholds and tuition.')"
     :singular="__('program')"
-    :resource-model="$resourceModel" burgundy>
+    :resource-model="$resourceModel" burgundy workspace>
     <x-slot:filters>
         <flux:select wire:model.live="roundFilter" :label="__('Round')">
             <option value="">{{ __('All rounds') }}</option>
@@ -39,26 +39,28 @@
     </x-slot:filters>
 
     @can('viewAny', App\Models\EvaluationRuleVersion::class)
-        <flux:button wire:click="manageRules">Quản lý quy tắc đánh giá</flux:button>
+        <flux:button wire:click="manageRules">Quản lý quy tắc Native</flux:button>
     @endcan
-    <flux:table :paginate="$records">
+    <flux:table :paginate="$records" class="workspace-table min-w-[1200px]" container:class="min-w-0">
         <flux:table.columns>
+            <flux:table.column class="table-stt" align="center">STT</flux:table.column>
             <flux:table.column>{{ __('Offering') }}</flux:table.column>
             <flux:table.column>{{ __('Round') }}</flux:table.column>
             <flux:table.column>{{ __('Quota') }}</flux:table.column>
             <flux:table.column>{{ __('Minimum score') }}</flux:table.column>
             <flux:table.column>{{ __('Tuition') }}</flux:table.column>
             <flux:table.column>{{ __('Status') }}</flux:table.column>
-            <flux:table.column>Quy tắc xét theo ngành</flux:table.column>
+            <flux:table.column>Cấu hình xét tuyển</flux:table.column>
             <flux:table.column>{{ __('Actions') }}</flux:table.column>
         </flux:table.columns>
 
         <flux:table.rows>
             @forelse ($records as $record)
             <flux:table.row :key="$record->id">
+                <flux:table.cell class="table-stt" align="center"><span data-program-stt>{{ $records->firstItem() + $loop->index }}</span></flux:table.cell>
                 <flux:table.cell>
                     <div class="font-medium">{{ $record->major->name }}</div>
-                    <div class="text-xs text-zinc-500">
+                    <div class="text-sm text-zinc-500">
                         {{ $record->major->code }} / {{ $record->admissionMethod->name }}
                     </div>
                 </flux:table.cell>
@@ -82,15 +84,23 @@
                 </flux:table.cell>
 
                 <flux:table.cell>
-                    <flux:badge :color="$ruleReadiness[$record->id] ? 'rose' : 'rose'">{{ $ruleReadiness[$record->id] ? 'Quy tắc hợp lệ' : 'Thiếu quy tắc đã duyệt hợp lệ' }}</flux:badge>
+                    @if ($record->admissionRound->nativeRegistrationState() === 'legacy')
+                        <flux:badge color="zinc">Cấu hình Legacy</flux:badge>
+                        <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{{ $record->admissionMethod->name }}</p>
+                        <p class="text-sm text-zinc-500">Sử dụng cấu hình điểm Legacy; không yêu cầu quy tắc Native.</p>
+                    @else
+                    <flux:badge :color="$ruleReadiness[$record->id] ? 'green' : 'red'">{{ $ruleReadiness[$record->id] ? 'Quy tắc hợp lệ' : 'Thiếu quy tắc đã duyệt hợp lệ' }}</flux:badge>
                     @if ($record->evaluationRule)
-                        <div class="text-xs text-zinc-500 dark:text-zinc-400">#{{ $record->evaluationRule->id }} / v{{ $record->evaluationRule->version }} · {{ ['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$record->evaluationRule->status] ?? $record->evaluationRule->status }}</div>
+                        <div class="text-sm text-zinc-500 dark:text-zinc-400">#{{ $record->evaluationRule->id }} / v{{ $record->evaluationRule->version }} · {{ ['draft' => 'Nháp', 'approved' => 'Đã duyệt', 'retired' => 'Ngừng sử dụng'][$record->evaluationRule->status] ?? $record->evaluationRule->status }}</div>
+                    @endif
                     @endif
                 </flux:table.cell>
                 <flux:table.cell>
-                    <div class="flex justify-end gap-2">
+                    <div class="flex flex-wrap justify-end gap-2">
                         @can('viewAny', App\Models\EvaluationRuleVersion::class)
+                            @if ($record->admissionRound->nativeRegistrationState() !== 'legacy')
                             <flux:button size="sm" wire:click="manageRules({{ $record->id }})">Cấu hình quy tắc</flux:button>
+                            @endif
                         @endcan
                         <flux:button size="sm" wire:click="details({{ $record->id }})">
                             {{ __('View') }}
@@ -113,7 +123,7 @@
             </flux:table.row>
             @empty
             <flux:table.row>
-                <flux:table.cell colspan="8">
+                <flux:table.cell colspan="9">
                     <div class="py-12 text-center">
                         @if ($this->search !== '' || $this->statusFilter !== '' || $this->roundFilter !== '' || $this->majorFilter !== '' || $this->methodFilter !== '')
                         <flux:heading>
