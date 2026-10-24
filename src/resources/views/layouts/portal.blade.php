@@ -32,8 +32,7 @@
 
             <button type="button" class="flex shrink-0 items-center gap-2 rounded p-1 text-sm font-semibold text-admission-blue hover:bg-admission-soft focus-visible:outline-2 focus-visible:outline-admission-blue" x-on:click="window.innerWidth >= 1024 ? desktopCollapsed = !desktopCollapsed : menuOpen = !menuOpen" x-bind:aria-expanded="window.innerWidth >= 1024 ? !desktopCollapsed : menuOpen" aria-controls="portal-navigation">
                 <flux:icon.bars-3 class="size-6" />
-                <span class="hidden sm:inline">{{ __('Menu') }}</span>
-                <span class="sr-only sm:hidden">{{ __('Mở menu') }}</span>
+                <span class="sr-only">{{ __('Mở menu') }}</span>
             </button>
 
             <div class="relative hidden min-w-0 w-full max-w-[394px] sm:block">
