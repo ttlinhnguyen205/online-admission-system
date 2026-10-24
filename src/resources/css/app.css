@@ -360,3 +360,50 @@ select:focus[data-flux-control] {
 ) [data-flux-icon] {
     color: inherit;
 }
+
+/* Shared admission workspaces; history retains its existing layout. */
+.admission-workspace { overflow-wrap: anywhere; }
+.admission-workspace [data-flux-field] { min-width: 0; }
+.admission-workspace [data-flux-table] { width: 100%; white-space: normal; }
+.admission-shell .admission-workspace [data-flux-table] [data-flux-column] { font-size: .875rem; padding: 1rem; }
+.admission-shell .admission-workspace [data-flux-table] [data-flux-cell] { padding: 1rem; vertical-align: top; }
+.admission-workspace .history-table { table-layout: fixed; min-width: 1100px; }
+.admission-workspace .history-table td { padding: 1rem; vertical-align: top; }
+.admission-workspace .history-table th:nth-child(5),
+.admission-workspace .history-table th:last-child { width: 18%; }
+.admission-workspace .history-table [data-flux-badge] { white-space: normal; }
+@media (width < 640px) {
+    .admission-workspace .history-table { display: block; min-width: 0; }
+    .admission-workspace .history-table thead { display: none; }
+    .admission-workspace .history-table tbody,
+    .admission-workspace .history-table tr { display: block; }
+    .admission-workspace .history-table tr { padding: .75rem; }
+    .admission-workspace .history-table td { display: block; padding: .5rem; }
+    .admission-workspace .history-table td[data-label]::before { content: attr(data-label); display: block; font-weight: 600; margin-bottom: .25rem; }
+}
+
+/* Result and program tables reuse the history palette without changing its layout. */
+.admission-workspace .table-stt { width: 60px; min-width: 60px; text-align: center; font-variant-numeric: tabular-nums; }
+.admission-shell .admission-workspace .workspace-table thead,
+.admission-workspace .workspace-table thead { background: var(--color-admission-soft); color: var(--color-zinc-800); }
+.admission-workspace .workspace-table th { padding: 1rem; font-weight: 600; }
+.admission-workspace .workspace-table td { padding: 1rem; vertical-align: top; }
+.admission-workspace .workspace-table tbody tr { border-top: 1px solid var(--color-zinc-200); }
+.admission-workspace .workspace-table [data-flux-badge] { white-space: normal; }
+.admission-workspace .workspace-stat { padding: 1rem; border: 1px solid var(--color-zinc-200); border-radius: .75rem; background: var(--color-zinc-50); }
+.admission-workspace .results-table { min-width: 1250px; table-layout: fixed; }
+.admission-workspace .results-table th:nth-child(2),
+.admission-workspace .results-table th:nth-child(4) { width: 18%; }
+.dark .admission-workspace .workspace-table thead { background: var(--color-zinc-800); color: var(--color-zinc-100); }
+.dark .admission-workspace .workspace-table tbody tr { border-color: var(--color-zinc-700); }
+.dark .admission-workspace .workspace-stat { background: var(--color-zinc-800); border-color: var(--color-zinc-700); }
+@media (width < 640px) {
+    .admission-workspace .results-table { display: block; min-width: 0; }
+    .admission-workspace .results-table thead { display: none; }
+    .admission-workspace .results-table tbody,
+    .admission-workspace .results-table tr { display: block; }
+    .admission-workspace .results-table tr { padding: .75rem; }
+    .admission-workspace .results-table td { display: block; padding: .5rem; text-align: left; }
+    .admission-workspace .results-table td[data-label]::before { content: attr(data-label); display: block; font-weight: 600; margin-bottom: .25rem; }
+}
+.admission-workspace .results-table td.table-stt { text-align: center; }

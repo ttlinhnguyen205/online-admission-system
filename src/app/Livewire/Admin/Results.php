@@ -20,6 +20,27 @@ class Results extends Component
 
     public string $roundSelection = '';
 
+    public string $search = '';
+
+    public string $decisionFilter = '';
+
+    public string $publicationFilter = '';
+
+    public string $confirmationFilter = '';
+
+    public function updated(string $property): void
+    {
+        if (in_array($property, ['search', 'decisionFilter', 'publicationFilter', 'confirmationFilter'], true)) {
+            $this->resetPage();
+        }
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset('search', 'decisionFilter', 'publicationFilter', 'confirmationFilter');
+        $this->resetPage();
+    }
+
     public function boot(): void
     {
         AdmissionEngineSnapshot::actor();
@@ -53,11 +74,21 @@ class Results extends Component
             'Confirmed admitted' => (clone $query)->where('decision', 'admitted')->whereNotNull('confirmed_at')->count(),
         ];
 
+        $search = trim($this->search);
+        $query->when($search !== '', fn ($q) => $q->whereHas('admissionWish.application', fn ($application) => $application
+            ->where(fn ($application) => $application->whereLike('application_code', '%'.$search.'%')
+                ->orWhereHas('candidateProfile.user', fn ($user) => $user->whereLike('name', '%'.$search.'%')))))
+            ->when($this->decisionFilter !== '', fn ($q) => $q->where('decision', $this->decisionFilter))
+            ->when($this->publicationFilter === 'published', fn ($q) => $q->whereNotNull('published_at'))
+            ->when($this->publicationFilter === 'unpublished', fn ($q) => $q->whereNull('published_at'))
+            ->when($this->confirmationFilter === 'confirmed', fn ($q) => $q->where('decision', 'admitted')->whereNotNull('confirmed_at'))
+            ->when($this->confirmationFilter === 'unconfirmed', fn ($q) => $q->where('decision', 'admitted')->whereNull('confirmed_at'));
+
         return view('livewire.admin.results', [
             'rounds' => AdmissionRound::query()->orderByDesc('year')->orderBy('id')->get(),
             'selectedRound' => AdmissionRound::query()->find((int) $this->roundSelection),
             'counts' => $counts,
-            'results' => $query->with(['admissionWish.application:id,application_code', 'admissionWish.admissionProgram.major', 'admissionWish.admissionProgram.admissionMethod'])
+            'results' => $query->with(['admissionWish.application.candidateProfile.user', 'admissionWish.admissionProgram.major', 'admissionWish.admissionProgram.admissionMethod'])
                 ->orderBy('id')->paginate(25),
         ]);
     }

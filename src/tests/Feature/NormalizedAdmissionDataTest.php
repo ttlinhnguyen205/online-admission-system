@@ -56,7 +56,7 @@ test('exam and transcript child relationships retain decimal precision', functio
     $exam = CandidateExamResult::factory()->create(['overall_score' => '120']);
     $examScore = CandidateExamSubjectScore::factory()->for($exam, 'examResult')->create(['score' => '8.125']);
     $transcript = CandidateTranscript::factory()->create();
-    $transcriptScore = CandidateTranscriptScore::factory()->for($transcript, 'transcript')->create(['score' => '9.38', 'grade_level' => 12]);
+    $transcriptScore = CandidateTranscriptScore::factory()->for($transcript, 'transcript')->create(['score' => '9.38', 'grade_level' => '12']);
 
     expect($exam->refresh()->overall_score)->toBe('120');
     expect($exam->subjectScores()->sole()->is($examScore))->toBeTrue();
@@ -75,10 +75,10 @@ test('subject scores are unique within their parent and key', function () {
         ->toThrow(QueryException::class);
 
     $transcript = CandidateTranscript::factory()->create();
-    CandidateTranscriptScore::factory()->for($transcript, 'transcript')->create(['subject_code' => 'MATH', 'grade_level' => 10]);
-    expect(fn () => CandidateTranscriptScore::factory()->for($transcript, 'transcript')->create(['subject_code' => 'MATH', 'grade_level' => 10]))
+    CandidateTranscriptScore::factory()->for($transcript, 'transcript')->create(['subject_code' => 'MATH', 'grade_level' => '10']);
+    expect(fn () => CandidateTranscriptScore::factory()->for($transcript, 'transcript')->create(['subject_code' => 'MATH', 'grade_level' => '10']))
         ->toThrow(QueryException::class);
-    CandidateTranscriptScore::factory()->for($transcript, 'transcript')->create(['subject_code' => 'MATH', 'grade_level' => 11]);
+    CandidateTranscriptScore::factory()->for($transcript, 'transcript')->create(['subject_code' => 'MATH', 'grade_level' => '11']);
 });
 
 test('transcript grade levels reject unsupported values', function () {
@@ -86,7 +86,7 @@ test('transcript grade levels reject unsupported values', function () {
 
     expect(fn () => DB::table('candidate_transcript_scores')->insert([
         'candidate_transcript_id' => $transcript->id, 'subject_code' => 'MATH', 'subject_name' => 'Toán',
-        'grade_level' => 9, 'score' => 8.25,
+        'grade_level' => '9', 'score' => 8.25,
     ]))->toThrow(QueryException::class);
 });
 

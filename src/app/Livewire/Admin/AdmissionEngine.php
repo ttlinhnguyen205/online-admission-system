@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Actions\AdmissionEngineSnapshot;
 use App\Actions\NativeRoundScoringReport;
 use App\Actions\ProcessAdmissionRound;
+use App\Models\AdmissionProgram;
 use App\Models\AdmissionRound;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
@@ -114,6 +115,10 @@ class AdmissionEngine extends Component
     {
         AdmissionEngineSnapshot::actor();
 
-        return view('livewire.admin.admission-engine', ['rounds' => AdmissionRound::query()->orderByDesc('year')->orderBy('id')->get()]);
+        return view('livewire.admin.admission-engine', [
+            'rounds' => AdmissionRound::query()->orderByDesc('year')->orderBy('id')->get(),
+            'programLabels' => AdmissionProgram::query()->with(['major', 'admissionMethod'])
+                ->whereIn('id', array_column($this->previewData['programs'] ?? [], 'id'))->get()->keyBy('id'),
+        ]);
     }
 }

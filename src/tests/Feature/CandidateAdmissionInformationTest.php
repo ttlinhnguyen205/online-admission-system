@@ -236,7 +236,7 @@ test('transcript stores only nonempty normalized grade cells', function () {
             ['subject_code' => 'ENG', 'grade_10' => '8.50', 'grade_11' => null, 'grade_12' => null],
         ])
         ->call('saveTranscript')->assertHasNoErrors();
-    expect($transcript->scores()->where('subject_code', 'ENG')->where('grade_level', 10)->value('score'))->toBe('8.50');
+    expect($transcript->scores()->where('subject_code', 'ENG')->where('grade_level', '10')->value('score'))->toBe('8.50');
     $page->call('deleteTranscript', $transcript->id)->assertHasNoErrors();
     $this->assertModelMissing($transcript);
 });

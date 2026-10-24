@@ -81,7 +81,7 @@ function scoringSource(Application $application, User $admin, bool $transcript =
     foreach ($values as $index => $value) {
         $subject = ($transcript ? ['MATH', 'LITERATURE', 'ENG'] : ['MATH', 'PHYSICS', 'CHEMISTRY'])[$index];
         if ($transcript) {
-            CandidateTranscriptScore::factory()->create(['candidate_transcript_id' => $parent->id, 'subject_code' => $subject, 'grade_level' => $grade, 'score' => $value]);
+            CandidateTranscriptScore::factory()->create(['candidate_transcript_id' => $parent->id, 'subject_code' => $subject, 'grade_level' => (string) $grade, 'score' => $value]);
         } else {
             CandidateExamSubjectScore::factory()->create(['candidate_exam_result_id' => $parent->id, 'subject_code' => $subject, 'score' => $value]);
         }
