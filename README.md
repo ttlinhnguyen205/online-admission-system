@@ -82,31 +82,6 @@ Thuật toán hiện tại là **Deferred Acceptance phía thí sinh**, định 
 
 Unit/property tests kiểm tra substitutability, IRC, LAD, ổn định và các bất biến trên những thị trường kiểm thử, bao gồm nhiều bindings/nguyện vọng, Q/q và xung đột thứ hạng. Đây không phải khẳng định tính đúng đắn cho mọi chính sách tuyển sinh ngoài mô hình hiện tại.
 
-
-### Tests và quality checks
-
-Chạy tại `src/`:
-
-```powershell
-php artisan test --compact
-php vendor/bin/phpstan analyse --memory-limit=1G
-php vendor/bin/pint --test
-npm run build
-git diff --check
-```
-
-`phpunit.xml` cấu hình `APP_ENV=testing`, SQLite `:memory:`, cache/session/mail array và queue sync; tests thông thường không dùng database tuyển sinh local. PHPStan được cấu hình level 7. `composer test` còn chạy kiểm tra định dạng và phân tích tĩnh trước test suite.
-
-Coverage thực tế gồm đăng ký và snapshot, nguồn điểm/scoring, authorization, Q/q, chính sách phối hợp, DA/property tests, result workflow, Candidate visibility, báo cáo và luồng end-to-end. Bài `tests/Unit/NativeMariaDbAcceptanceTest.php` kiểm tra transactions đồng thời, idempotency, rollback/stale và E2E trên MariaDB; mặc định **skip** nếu chưa chỉ định database nghiệm thu riêng.
-
-Để chạy bài MariaDB, phải chuẩn bị database nghiệm thu dùng một lần, có schema cần thiết và tên đúng dạng `online_admission_acceptance_YYYYMMDD_HHMMSS`; cấu hình connection MySQL loopback và biến `NATIVE_MARIADB_ACCEPTANCE_DATABASE` trỏ tới database đó. Sau đó chạy:
-
-```powershell
-php vendor/bin/pest tests/Unit/NativeMariaDbAcceptanceTest.php --compact
-```
-
-Bài nghiệm thu MariaDB ghi fixtures và thực hiện transactions thật, không được chạy trên `online_admission` đang sử dụng. SQLite không chứng minh được row locking/concurrency MariaDB. Kết quả tests phải lấy từ output lần chạy tương ứng; không suy ra PASS chỉ vì có file test hoặc từ số lượng tests của một phiên bản source khác.
-
 ## . Giới hạn nghiệp vụ và phạm vi mô phỏng
 
 - Native chỉ hỗ trợ chấm điểm hai template THPT/học bạ nêu trên; APTITUDE_SCORE và CERTIFICATE_CONDITION còn unsupported. Có màn hình nhập dữ liệu/chứng chỉ không đồng nghĩa đã có công thức xét tuyển Native cho chúng.
