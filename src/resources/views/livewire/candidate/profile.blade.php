@@ -1,13 +1,5 @@
-<section class="mx-auto flex w-full max-w-5xl flex-col gap-6">
-    <div>
-        <flux:heading size="xl" level="1">
-            {{ __('Hồ sơ cá nhân') }}
-        </flux:heading>
-
-        <flux:text class="mt-2">
-            {{ __('Hoàn thiện hồ sơ cá nhân để đăng ký xét tuyển. Bạn có thể lưu thông tin bất cứ lúc nào.') }}
-        </flux:text>
-    </div>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admission.workspace-heading :title="__('Hồ sơ cá nhân')" :description="__('Hoàn thiện hồ sơ cá nhân để đăng ký xét tuyển. Bạn có thể lưu thông tin bất cứ lúc nào.')" />
 
     <div class="flex flex-wrap items-center gap-3">
         <flux:badge>
@@ -15,7 +7,7 @@
         </flux:badge>
 
         <flux:badge
-            :color="$profile?->profile_status === App\Enums\ProfileStatus::Verified ? 'rose' : 'zinc'"
+            :color="$profile?->profile_status === App\Enums\ProfileStatus::Verified ? 'green' : 'zinc'"
         >
             {{ $profile ? App\Support\CandidateStatusLabels::profile($profile->profile_status) : __('Chưa hoàn thiện') }}
         </flux:badge>

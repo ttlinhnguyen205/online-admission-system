@@ -42,14 +42,10 @@
             </button>
         </div>
     @else
-        <section class="mx-auto flex w-full max-w-6xl flex-col gap-6">
-            <div class="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                    <flux:heading size="xl" level="1">{{ __('Tư vấn tuyển sinh') }}</flux:heading>
-                    <flux:text class="mt-2">Tra cứu tuyển sinh và hướng dẫn sử dụng các chức năng cho thí sinh.</flux:text>
-                </div>
+        <section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+            <x-admission.workspace-heading :title="__('Tư vấn tuyển sinh')" description="Tra cứu tuyển sinh và hướng dẫn sử dụng các chức năng cho thí sinh.">
                 <flux:button wire:click="clear" wire:loading.attr="disabled" wire:target="send,clear">{{ __('Xóa cuộc trò chuyện') }}</flux:button>
-            </div>
+            </x-admission.workspace-heading>
             <x-admission.counseling-conversation :turns="$turns" :ready="$ready" :enabled="$enabled" :failure="$failure" :suggestions="$suggestions" />
         </section>
     @endif

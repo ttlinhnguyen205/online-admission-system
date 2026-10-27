@@ -51,7 +51,9 @@ test('invalid profile photo shows an immediate error and preserves stored photo'
 
     Livewire::test(Profile::class)->set('photo', correctionImage())
         ->assertHasErrors('photo')->assertDontSee('Ảnh hồ sơ mới chưa lưu')
-        ->call('save')->assertHasErrors('photo');
+        ->assertSee('Ảnh hồ sơ phải là ảnh dọc tỷ lệ 3:4, có chiều rộng từ 300 đến 3000 pixel và chiều cao từ 400 đến 4000 pixel (ví dụ: 600×800 pixel).')
+        ->call('save')->assertHasErrors('photo')
+        ->assertSee('Ảnh hồ sơ phải là ảnh dọc tỷ lệ 3:4, có chiều rộng từ 300 đến 3000 pixel và chiều cao từ 400 đến 4000 pixel (ví dụ: 600×800 pixel).');
     expect($profile->fresh()->photo_path)->toBe('candidate-photos/old.png');
     Storage::disk(CandidateFiles::DISK)->assertExists($profile->photo_path);
 });

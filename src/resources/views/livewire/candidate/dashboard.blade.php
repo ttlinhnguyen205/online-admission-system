@@ -2,15 +2,11 @@
     $primaryMetrics = ['Hồ sơ của tôi' => 'document-text', 'Nguyện vọng' => 'academic-cap', 'Kết quả đã công bố' => 'check-circle', 'Thông báo chưa đọc' => 'bell'];
     $statusColors = ['draft' => 'zinc', 'submitted' => 'rose', 'under_review' => 'rose', 'needs_revision' => 'rose', 'verified' => 'rose', 'rejected' => 'rose', 'processing' => 'rose', 'completed' => 'rose'];
 @endphp
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6 text-zinc-900 dark:text-zinc-100 sm:gap-8">
-    <div>
-        <p class="mb-2 text-xs font-semibold tracking-widest text-rose-600 uppercase dark:text-rose-400">Đồng hành cùng thí sinh</p>
-        <flux:heading size="xl" level="1">Tổng quan hồ sơ của tôi</flux:heading>
-        <flux:text class="mt-2 break-words">Xin chào {{ $candidate->name }}! Theo dõi hồ sơ, nguyện vọng và những việc cần thực hiện.</flux:text>
-    </div>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admission.workspace-heading title="Tổng quan hồ sơ của tôi" description="Xin chào {{ $candidate->name }}! Theo dõi hồ sơ, nguyện vọng và những việc cần thực hiện." />
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Thống kê cá nhân">
         @foreach ($primaryMetrics as $label => $icon)
-            <article wire:key="candidate-metric-{{ $icon }}" class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"><div class="flex items-center justify-between gap-3"><h2 class="text-sm font-medium text-zinc-600 dark:text-zinc-300">{{ $label }}</h2><flux:icon :name="$icon" variant="mini" class="size-5 text-rose-500" aria-hidden="true" /></div><p class="mt-3 text-3xl font-semibold tracking-tight tabular-nums">{{ number_format($metrics[$label]) }}</p></article>
+            <article wire:key="candidate-metric-{{ $icon }}" class="admission-panel p-5"><div class="flex items-center justify-between gap-3"><h2 class="text-sm font-medium text-zinc-600 dark:text-zinc-300">{{ $label }}</h2><flux:icon :name="$icon" variant="mini" class="size-5 text-rose-500" aria-hidden="true" /></div><p class="mt-3 text-3xl font-semibold tracking-tight tabular-nums">{{ number_format($metrics[$label]) }}</p></article>
         @endforeach
     </div>
     @if ($metrics['Hồ sơ cần bổ sung'] > 0)
@@ -27,7 +23,7 @@
             <div class="mt-4">{{ $revisionApplications->links() }}</div>
         </section>
     @endif
-    <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
+    <div class="flex flex-wrap items-center justify-between gap-4 admission-panel p-5 sm:p-6">
         <div><flux:heading level="2">Hồ sơ cá nhân</flux:heading><flux:text class="mt-2">{{ $profile === null ? 'Bạn chưa tạo hồ sơ cá nhân.' : App\Support\CandidateStatusLabels::profile($profile->profile_status) }}</flux:text>@if ($profile)<p class="mt-2 text-sm">Mã thí sinh: {{ $profile->candidate_code }}</p>@endif</div>
         <p class="w-full text-sm text-zinc-600 dark:text-zinc-300">{{ $profileComplete ? 'Đã có đủ thông tin bắt buộc theo yêu cầu hồ sơ.' : 'Hồ sơ chưa đáp ứng đủ thông tin bắt buộc. Hãy kiểm tra và hoàn thiện trước khi nộp.' }}</p>
         <flux:button :href="route('candidate.profile.edit')" icon:trailing="arrow-right" wire:navigate>Hoàn thiện hồ sơ cá nhân</flux:button>
@@ -35,7 +31,7 @@
     <div class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3"><flux:heading level="2">Hồ sơ và nguyện vọng</flux:heading><flux:button :href="route('candidate.applications.index')" wire:navigate>Đăng ký nguyện vọng</flux:button></div>
         @forelse ($applications as $application)
-            <article wire:key="own-application-{{ $application->id }}" class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
+            <article wire:key="own-application-{{ $application->id }}" class="admission-panel p-5 sm:p-6">
                 <div class="flex flex-col items-start justify-between gap-3 sm:flex-row"><div class="min-w-0"><h3 class="font-semibold break-words">{{ $application->admissionRound->name }}</h3><p class="mt-1 text-xs break-all text-zinc-500 dark:text-zinc-400">Mã hồ sơ: {{ $application->application_code }}</p></div><flux:badge :color="$statusColors[$application->status->value] ?? 'zinc'">{{ App\Support\CandidateStatusLabels::application($application->status) }}</flux:badge></div>
                 @if ($application->revision_reason)<p class="mt-3 whitespace-pre-wrap break-words text-sm">Cần bổ sung: {{ $application->revision_reason }}</p>@endif
                 <ol class="mt-4 space-y-3 border-t border-zinc-100 pt-4 text-sm dark:border-zinc-800">
@@ -52,14 +48,14 @@
         {{ $applications->links() }}
     </div>
     <div class="grid items-start gap-5 lg:grid-cols-2">
-        <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
+        <div class="admission-panel p-5 sm:p-6">
             <flux:heading level="2">Kết quả đã công bố</flux:heading>
             <ul class="mt-3 space-y-3">
                 @forelse ($results as $result)<li wire:key="own-result-{{ $result->id }}" class="text-sm">{{ $result->admissionWish->admissionProgram->major->name }} | {{ $result->admissionWish->application->admissionRound->name }}<p class="mt-1 font-medium">{{ App\Support\CandidateStatusLabels::result($result->decision) }}</p></li>@empty<li class="text-sm text-zinc-500">Chưa có kết quả được phép công bố.</li>@endforelse
             </ul>
             <flux:button class="mt-4" :href="route('candidate.results.index')" wire:navigate>Xem kết quả và xác nhận nhập học</flux:button>
         </div>
-        <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
+        <div class="admission-panel p-5 sm:p-6">
             <flux:heading level="2">Thông báo gần đây</flux:heading>
             <ul class="mt-3 space-y-3">
                 @forelse ($notifications as $notification)
