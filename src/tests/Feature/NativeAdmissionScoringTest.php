@@ -35,8 +35,11 @@ beforeEach(function () {
     config(['admission_registration.native_registration' => true]);
 });
 
-/** @return array{application: Application, admin: User, thpt: AdmissionProgram, transcript: AdmissionProgram} */
-function scoringFixture(): array
+/**
+ * @param  list<string>  $subjects
+ * @return array{application: Application, admin: User, thpt: AdmissionProgram, transcript: AdmissionProgram}
+ */
+function scoringFixture(array $subjects = ['MATH', 'PHYSICS', 'CHEMISTRY']): array
 {
     Notification::fake();
     $admin = User::factory()->create(['role' => UserRole::Admin]);
@@ -47,7 +50,7 @@ function scoringFixture(): array
     $offering = CandidateMajorOffering::factory()->for($thpt)->create();
     foreach ([$thpt, $transcript] as $program) {
         $isTranscript = $program->id === $transcript->id;
-        $payload = ['subjects' => $isTranscript ? ['MATH', 'LITERATURE', 'ENG'] : ['MATH', 'PHYSICS', 'CHEMISTRY'],
+        $payload = ['subjects' => $isTranscript ? ['MATH', 'LITERATURE', 'ENG'] : $subjects,
             'source_year' => 2026, 'minimum_subject_score' => 1, 'minimum_total_score' => 18, 'policy_reference' => 'Approved test policy: equal weights'];
         if ($isTranscript) {
             $payload['grade_level'] = 12;
@@ -275,4 +278,29 @@ test('missing migration yields actionable warning without scoring or Candidate e
     expect(fn () => app(NativeAdmissionScoring::class)->score($fixture['application']->id))->toThrow(ValidationException::class);
     $this->actingAs($fixture['application']->candidateProfile->user);
     Livewire::test(ApplicationDetails::class, ['application' => $fixture['application']->id])->assertSee('Chờ đánh giá nội bộ');
+});
+
+test('THPT scoring selects only the subjects in the approved rule from a broader exam record', function () {
+    $fixture = scoringFixture(['MATH', 'LITERATURE', 'ENG']);
+    scoringSource($fixture['application'], $fixture['admin'], values: [8, 1, 1]);
+    $exam = $fixture['application']->candidateProfile->examResults()->sole();
+    foreach (['LITERATURE' => 7, 'ENG' => 6] as $code => $score) {
+        $exam->subjectScores()->create(['subject_code' => $code, 'subject_name' => config('admission_data.subjects.'.$code), 'score' => $score]);
+    }
+
+    $result = app(NativeAdmissionScoring::class)->score($fixture['application']->id)[0];
+
+    expect($result->status)->toBe('eligible');
+    expect($result->score)->toBe('21.000');
+});
+
+test('incomplete THPT sources report the missing subjects without assuming zero points', function () {
+    $fixture = scoringFixture();
+    scoringSource($fixture['application'], $fixture['admin'], values: [8]);
+
+    $result = app(NativeAdmissionScoring::class)->score($fixture['application']->id)[0];
+
+    expect($result->status)->toBe('pending_data');
+    expect($result->score)->toBeNull();
+    expect($result->reasons)->toBe(['Thiếu điểm các môn theo tổ hợp xét tuyển: Hóa học, Vật lý.']);
 });

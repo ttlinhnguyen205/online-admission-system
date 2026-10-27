@@ -86,7 +86,7 @@
             <flux:input wire:model="form.exam_year" :label="__('Năm thi *')" type="number" min="1900" :max="now()->year" required />
             <div>
                 <label for="candidate-score-evidence" class="mb-2 block text-sm font-medium text-zinc-800 dark:text-white">{{ __('Ảnh minh chứng') }} {{ $recordId ? __('(thay thế nếu cần)') : '*' }}</label>
-                <input id="candidate-score-evidence" type="file" wire:model="evidence" accept="image/jpeg,image/png" class="block w-full text-sm text-zinc-800 file:me-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 dark:text-white dark:file:bg-zinc-700" />
+                <flux:input id="candidate-score-evidence" type="file" wire:model="evidence" accept="image/jpeg,image/png" />
                 <flux:error name="evidence" />
                 <flux:text>{{ __('Bắt buộc khi thêm điểm mới. Chỉ nhận ảnh JPG, JPEG hoặc PNG, tối đa 2 MiB. Điểm chưa xác minh có thể thay ảnh minh chứng.') }}</flux:text>
             </div>

@@ -43,7 +43,7 @@
             <flux:select wire:model="certificateForm.certificate_type" :label="__('Loại chứng chỉ')" required><option value="">{{ __('Chọn loại chứng chỉ') }}</option>@foreach ($certificateTypes as $value => $definition)<option value="{{ $value }}">{{ $definition['label'] }}</option>@endforeach</flux:select>
             <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="certificateForm.score" type="number" step="0.01" min="0" :label="__('Điểm')" required /><flux:input wire:model="certificateForm.certificate_number" :label="__('Số chứng chỉ (không bắt buộc)')" /></div>
             <div class="grid gap-4 sm:grid-cols-2"><flux:input wire:model="certificateForm.issued_at" type="date" :label="__('Ngày cấp')" /><flux:input wire:model="certificateForm.expires_at" type="date" :label="__('Ngày hết hạn')" /></div>
-            <flux:input wire:model="certificateEvidence" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" :label="$certificateId ? __('Thay ảnh minh chứng (không bắt buộc)') : __('Ảnh minh chứng')" />
+            <flux:input wire:model="certificateEvidence" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" :label="$certificateId ? __('Ảnh minh chứng (không bắt buộc)') : __('Ảnh minh chứng')" />
             <flux:error name="certificateForm.certificate_type" /><flux:error name="certificateForm.score" />
             <div class="flex justify-end gap-3"><flux:button type="submit" variant="primary" wire:loading.attr="disabled">{{ __('Lưu') }}</flux:button></div>
         </form>
@@ -75,7 +75,7 @@
                         <form id="declaration-form-{{ $type }}" wire:submit="saveDeclaration('{{ $type }}')" class="flex flex-col gap-3">
                             <flux:textarea wire:model="declarations.{{ $type }}.description" :label="__('Thông tin đề nghị và căn cứ minh chứng')" maxlength="5000" />
                             <flux:input wire:model="declarations.{{ $type }}.claim_code" :label="__('Mã trên giấy tờ (nếu có)')" :description="__('Chỉ ghi mã có trên giấy tờ của bạn; đây không phải mã diện do hệ thống xác định.')" />
-                            <flux:input wire:model="declarationEvidence.{{ $type }}" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" :label="$declared ? __('Thay ảnh minh chứng (không bắt buộc)') : __('Ảnh minh chứng')" />
+                            <flux:input wire:model="declarationEvidence.{{ $type }}" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" :label="$declared ? __('Ảnh minh chứng (không bắt buộc)') : __('Ảnh minh chứng')" />
                         </form>
                     @endif
                 @endif

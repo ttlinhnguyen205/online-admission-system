@@ -127,6 +127,12 @@ class NativeAdmissionScoring
             return $this->result('pending_data', null, $provenance, 'Thiếu nguồn đã xác minh đầy đủ đúng năm '.$rule->payload['source_year'].'.');
         }
         $provenance['selected_source_id'] = $valid[0]['id'];
+        $missingSubjects = array_diff($rule->payload['subjects'], array_column($valid[0]['scores'], 'subject'));
+        if ($missingSubjects !== []) {
+            $labels = array_map(fn (string $subject): string => config('admission_data.subjects.'.$subject, $subject), $missingSubjects);
+
+            return $this->result('pending_data', null, $provenance, 'Thiếu điểm các môn theo tổ hợp xét tuyển: '.implode(', ', $labels).'.');
+        }
         $values = [];
         foreach ($rule->payload['subjects'] as $subject) {
             $rows = array_values(array_filter($valid[0]['scores'], fn (array $row): bool => $row['subject'] === $subject));

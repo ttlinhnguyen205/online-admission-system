@@ -4,6 +4,7 @@ use App\Actions\CandidateFiles;
 use App\Enums\ExamType;
 use App\Enums\VerificationStatus;
 use App\Livewire\Candidate\AdmissionInformation;
+use App\Livewire\Candidate\NativeExamScores;
 use App\Models\CandidateAdmissionClaim;
 use App\Models\CandidateCertificate;
 use App\Models\CandidateExamResult;
@@ -23,7 +24,8 @@ function admissionInformationImage(string $name = 'evidence.png'): UploadedFile
     return UploadedFile::fake()->createWithContent($name, file_get_contents(base_path('tests/Fixtures/small.png')));
 }
 
-test('candidate admission information page contains four Vietnamese sections', function () {
+test('legacy candidate admission information page contains four Vietnamese sections', function () {
+    config(['admission_registration.native_registration' => false]);
     $profile = CandidateProfile::factory()->create();
 
     $response = $this->actingAs($profile->user)->get(route('candidate.admission-information.index'))
@@ -37,6 +39,18 @@ test('candidate admission information page contains four Vietnamese sections', f
         ->assertSee('Điểm & minh chứng')->assertSee(route('candidate.scores.index'))
         ->assertDontSee('Điểm thi tốt nghiệp THPT');
     expect(substr_count($response->getContent(), 'data-admission-section='))->toBe(4);
+});
+
+test('native candidate admission information includes the general THPT score form', function () {
+    config(['admission_registration.native_registration' => true]);
+    $profile = CandidateProfile::factory()->create();
+
+    $response = $this->actingAs($profile->user)->get(route('candidate.admission-information.index'))
+        ->assertSeeLivewire(NativeExamScores::class)
+        ->assertSee('Điểm thi tốt nghiệp THPT')
+        ->assertDontSee('THPT A00');
+
+    expect(substr_count($response->getContent(), 'data-admission-section='))->toBe(5);
 });
 
 test('candidate creates edits replaces evidence and deletes a certificate', function () {
