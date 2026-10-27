@@ -11,29 +11,6 @@
 - Thực hiện luồng Native nhiều nguyện vọng, nhiều phương thức, kiểm tra điều kiện và công bố có kiểm soát.
 - Cung cấp thống kê, thông báo và báo cáo phục vụ quản lý, nghiệm thu đồ án.
 
-## Kiến trúc hệ thống
-Ứng dụng Laravel dạng monolith, giao diện Blade/Livewire; trạng thái tương tác và xử lý nghiệp vụ nằm phía server.
-
-```text
-Trình duyệt: Candidate / Staff / Admin
-              │
-       Routes + Middleware
-              │
-       Livewire / Controllers
-              │
-       Policies + Actions nghiệp vụ
-              │
-       Eloquent + Transactions + Locks
-              │
-       MariaDB / Kho minh chứng riêng tư
-```
-
-- **Xác thực:** Fortify hỗ trợ đăng ký, đăng nhập, đặt lại mật khẩu, xác minh email và xác thực hai yếu tố. Middleware kiểm tra tài khoản hoạt động; policies/gates bảo vệ từng thao tác và quyền sở hữu hồ sơ.
-- **Nghiệp vụ:** `app/Actions/` chứa đăng ký Native, xác minh nguồn, chấm điểm, quản lý quy tắc/chỉ tiêu, phân bổ và vòng đời kết quả. Livewire gọi các actions thay vì chỉ dựa vào việc ẩn nút giao diện.
-- **Dữ liệu Native:** hồ sơ nộp tạo `application_submission_snapshots`, `submission_wish_entries` và `wish_method_bindings`. Mỗi binding pin phiên bản rule; dữ liệu sealed không bị ghi đè khi cấu hình hiện tại thay đổi.
-- **Chấm điểm và kết quả:** `native_method_evaluations` lưu đánh giá từng binding; `native_allocation_policies`, `native_result_versions` và `native_result_entries` tách biệt với kết quả legacy.
-- **Tính nhất quán:** transactions, catalog locking, content hash, fingerprint và kiểm tra stale bảo vệ thao tác quản trị và kết quả phụ thuộc dữ liệu đầu vào. Activity logs ghi dấu các thao tác nghiệp vụ.
-- **Minh chứng:** disk `candidate-private` lưu tại `storage/app/candidate-private`, tải qua controller có kiểm tra quyền. Không công khai thư mục này qua storage symlink.
 
 ## Vai trò và quyền hạn
 
