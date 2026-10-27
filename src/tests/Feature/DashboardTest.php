@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Admin\Dashboard as ReviewDashboard;
+use App\Livewire\Candidate\AdmissionCounseling;
 use App\Livewire\Candidate\Dashboard as CandidateDashboard;
 use App\Models\AdmissionWish;
 use App\Models\Application;
@@ -66,8 +67,11 @@ test('dashboard response mounts its role dashboard with hydration data and Livew
     $xpath = new DOMXPath($document);
     $roots = $xpath->query('//*[@*[name()="wire:id"] and @*[name()="wire:snapshot"]]');
 
-    expect($roots->length)->toBe(1);
-    expect($xpath->query('//*[@*[name()="wire:id"]]')->length)->toBe(1);
+    expect($roots->length)->toBe($role === 'candidate' ? 2 : 1);
+    expect($xpath->query('//*[@*[name()="wire:id"]]')->length)->toBe($role === 'candidate' ? 2 : 1);
+    if ($role === 'candidate') {
+        $response->assertSeeLivewire(AdmissionCounseling::class);
+    }
     if ($role === 'admin') {
         foreach (['yearFilter', 'roundFilter', 'statusFilter', 'search'] as $filter) {
             expect($xpath->query('//*[@*[name()="wire:id"]]//*[@name="'.$filter.'"]')->length)->toBe(1);

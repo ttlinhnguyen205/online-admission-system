@@ -116,7 +116,7 @@ return [
     'date_format' => 'Trường :attribute không đúng định dạng :format.',
     'decimal' => 'Trường :attribute phải có :decimal chữ số thập phân.',
     'different' => 'Trường :attribute và :other phải khác nhau.',
-    'dimensions' => 'Kích thước ảnh :attribute không hợp lệ.',
+    'dimensions' => 'Kích thước của :attribute không hợp lệ.',
     'email' => 'Trường :attribute phải là địa chỉ email hợp lệ.',
     'ends_with' => 'Trường :attribute phải kết thúc bằng một trong các giá trị: :values.',
     'enum' => 'Giá trị :attribute đã chọn không hợp lệ.',
@@ -156,6 +156,11 @@ return [
     'string' => 'Trường :attribute phải là chuỗi ký tự.',
     'unique' => 'Trường :attribute đã được sử dụng.',
     'uploaded' => 'Không thể tải tệp :attribute lên.',
+    'custom' => [
+        'photo' => [
+            'dimensions' => 'Ảnh hồ sơ phải là ảnh dọc tỷ lệ 3:4, có chiều rộng từ 300 đến 3000 pixel và chiều cao từ 400 đến 4000 pixel (ví dụ: 600×800 pixel).',
+        ],
+    ],
     'attributes' => [
         'name' => 'họ và tên',
         'email' => 'email',

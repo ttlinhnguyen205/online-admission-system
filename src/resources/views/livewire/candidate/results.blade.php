@@ -1,8 +1,5 @@
 <section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
-    <header class="admission-panel border-t-4 border-t-admission-blue p-5 sm:p-6">
-        <flux:heading size="xl" level="1">Kết quả xét tuyển</flux:heading>
-        <p class="mt-2 text-base leading-7 text-zinc-600 dark:text-zinc-300">Theo dõi kết quả các nguyện vọng theo từng đợt và xác nhận nhập học khi trúng tuyển.</p>
-    </header>
+    <x-admission.workspace-heading title="Kết quả xét tuyển" description="Theo dõi kết quả các nguyện vọng theo từng đợt và xác nhận nhập học khi trúng tuyển." />
     <flux:error name="engine" />
     @if ($nativeResults)
         @foreach ($nativeResults->groupBy('version.admission_round_id') as $entries)

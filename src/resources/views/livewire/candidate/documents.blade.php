@@ -1,5 +1,5 @@
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
-    <div><flux:heading size="xl" level="1">{{ __('Tài liệu hồ sơ') }}</flux:heading><flux:text class="mt-2">{{ __('Mỗi tài liệu thuộc về một hồ sơ xét tuyển. Hãy chọn hồ sơ để quản lý tài liệu của hồ sơ đó.') }}</flux:text></div>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admission.workspace-heading :title="__('Tài liệu hồ sơ')" :description="__('Mỗi tài liệu thuộc về một hồ sơ xét tuyển. Hãy chọn hồ sơ để quản lý tài liệu của hồ sơ đó.')" />
     <flux:error name="cleanup" />
     <div class="flex flex-wrap gap-3">
         <flux:button :href="route('candidate.applications.index')" wire:navigate>{{ __('Đăng ký nguyện vọng') }}</flux:button>
@@ -27,25 +27,31 @@
                 <flux:badge>{{ __('Không thể chỉnh sửa tài liệu ở trạng thái hồ sơ hiện tại') }}</flux:badge>
             @endcan
         </div>
-        <div class="overflow-x-auto admission-panel p-4">
-            <flux:table :paginate="$records">
-                <flux:table.columns><flux:table.column>{{ __('Tài liệu') }}</flux:table.column><flux:table.column>{{ __('Trạng thái duyệt') }}</flux:table.column><flux:table.column>{{ __('Thao tác') }}</flux:table.column></flux:table.columns>
+        <div class="admission-panel min-w-0 overflow-hidden">
+            <flux:table :paginate="$records" class="admin-records-table">
+                <flux:table.columns>
+                    <flux:table.column class="table-stt">STT</flux:table.column>
+                    <flux:table.column>{{ __('Tài liệu') }}</flux:table.column>
+                    <flux:table.column>{{ __('Trạng thái duyệt') }}</flux:table.column>
+                    <flux:table.column>{{ __('Thao tác') }}</flux:table.column>
+                </flux:table.columns>
                 <flux:table.rows>
                     @forelse ($records as $record)
                         <flux:table.row :key="$record->id">
-                            <flux:table.cell><div>{{ $record->document_type }}</div><div class="max-w-sm whitespace-normal break-words text-xs">{{ $record->original_name }}</div></flux:table.cell>
-                            <flux:table.cell>
-                                <flux:badge :color="match ($record->status) { App\Enums\DocumentStatus::Verified => 'rose', App\Enums\DocumentStatus::Rejected => 'rose', default => 'zinc' }">{{ App\Support\CandidateStatusLabels::document($record->status) }}</flux:badge>
+                            <flux:table.cell class="table-stt" data-label="STT">{{ $records->firstItem() + $loop->index }}</flux:table.cell>
+                            <flux:table.cell data-label="Tài liệu"><div>{{ $record->document_type }}</div><div class="max-w-sm whitespace-normal break-words text-xs">{{ $record->original_name }}</div></flux:table.cell>
+                            <flux:table.cell data-label="Trạng thái duyệt">
+                                <flux:badge :color="match ($record->status) { App\Enums\DocumentStatus::Verified => 'green', App\Enums\DocumentStatus::Rejected => 'rose', default => 'zinc' }">{{ App\Support\CandidateStatusLabels::document($record->status) }}</flux:badge>
                                 @if ($record->status === App\Enums\DocumentStatus::Rejected && $record->rejection_reason)<p class="mt-2 max-w-md whitespace-pre-wrap break-words text-sm">{{ $record->rejection_reason }}</p>@endif
                             </flux:table.cell>
-                            <flux:table.cell><div class="flex flex-wrap gap-2">
+                            <flux:table.cell data-label="Thao tác"><div class="flex flex-wrap gap-2">
                                 @can('download', $record)<flux:button size="sm" :href="route('admission.documents.download', $record->id)">{{ __('Tải xuống') }}</flux:button>@endcan
                                 @can('update', $record)<flux:button size="sm" wire:click="edit({{ $record->id }})">{{ __('Thay thế / Sửa') }}</flux:button>@endcan
                                 @can('delete', $record)<flux:button size="sm" variant="ghost" wire:click="confirmDeletion({{ $record->id }})">{{ __('Xóa') }}</flux:button>@endcan
                             </div></flux:table.cell>
                         </flux:table.row>
                     @empty
-                        <flux:table.row><flux:table.cell colspan="3"><div class="py-10 text-center">{{ __('Hồ sơ này chưa có tài liệu.') }}</div></flux:table.cell></flux:table.row>
+                        <flux:table.row><flux:table.cell colspan="4"><div class="py-10 text-center">{{ __('Hồ sơ này chưa có tài liệu.') }}</div></flux:table.cell></flux:table.row>
                     @endforelse
                 </flux:table.rows>
             </flux:table>

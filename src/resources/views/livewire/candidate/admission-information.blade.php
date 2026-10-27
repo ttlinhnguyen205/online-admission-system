@@ -1,8 +1,5 @@
-<section class="w-full space-y-6">
-    <div>
-        <flux:heading size="xl" level="1">{{ __('Thông tin tuyển sinh') }}</flux:heading>
-        <flux:text class="mt-2">{{ __('Chỉ cung cấp những thông tin phù hợp với hồ sơ của bạn. Bạn có thể bỏ qua các mục không áp dụng.') }}</flux:text>
-    </div>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admission.workspace-heading :title="__('Thông tin tuyển sinh')" :description="__('Chỉ cung cấp những thông tin phù hợp với hồ sơ của bạn. Bạn có thể bỏ qua các mục không áp dụng.')" />
     @if ($profile === null)
         <flux:callout variant="warning">{{ __('Vui lòng hoàn thiện hồ sơ cá nhân trước khi khai báo thông tin tuyển sinh.') }}</flux:callout>
     @else

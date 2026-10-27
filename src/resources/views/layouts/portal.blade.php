@@ -96,7 +96,6 @@
                 @if (auth()->user()?->isActive() && auth()->user()?->isCandidate())
                     <p class="mt-5 mb-2 px-3 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{{ __('Tuyển sinh thí sinh') }}</p>
                     @foreach ([
-                        ['candidate.counseling.index', 'academic-cap', 'Tư vấn tuyển sinh'],
                         ['candidate.profile.edit', 'user-circle', 'Hồ sơ cá nhân'],
                         ['candidate.admission-information.index', 'book-open', 'Thông tin tuyển sinh'],
                         ['candidate.scores.index', 'document-text', 'Điểm & minh chứng'],
@@ -184,7 +183,7 @@
         </aside>
 
         <main x-ref="portalContent" class="min-h-screen min-w-0 pt-16 transition-[margin]" x-bind:class="desktopCollapsed ? 'lg:ms-0' : 'lg:ms-60'">
-            <div class="mx-auto min-h-[calc(100svh-4rem)] max-w-[1440px] bg-admission-canvas p-4 sm:p-5 lg:p-6 dark:bg-zinc-950">
+            <div class="mx-auto min-h-[calc(100svh-4rem)] max-w-[1440px] bg-admission-canvas p-4 sm:p-5 lg:p-6 dark:bg-zinc-950 {{ auth()->user()?->can('use-admission-counseling') ? 'pb-24 sm:pb-24 lg:pb-24' : '' }}">
                 <div class="mb-4 sm:hidden">
                     <input type="search" x-model.debounce.150ms="search" aria-label="{{ __('Tìm kiếm thông tin trên trang') }}" placeholder="{{ __('Tìm kiếm thông tin') }}" class="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-800 focus:outline-none focus:ring-2 focus:ring-admission-blue dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" />
                 </div>
@@ -207,6 +206,8 @@
                 <p x-show="searchesPageContent && search.trim() && !Array.from($refs.portalContent.querySelectorAll('[data-portal-search]')).some(item => matches(item.dataset.portalSearch))" x-cloak role="status" class="portal-news-panel mt-5 p-6 text-center text-sm text-slate-500">{{ __('Không tìm thấy mục phù hợp. Hãy thử từ khóa khác.') }}</p>
             </div>
         </main>
+
+        <x-admission.counseling-widget />
 
         @persist('toast')
             <flux:toast.group>

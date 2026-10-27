@@ -1,8 +1,8 @@
-<div class="space-y-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+<div class="admission-panel min-w-0 space-y-4 p-5">
     <flux:heading size="lg">Điểm thi THPT A00 cho đăng ký theo ngành</flux:heading>
     <flux:text>Nhập đúng điểm thi và ảnh minh chứng. Nguồn này chờ xác minh, không tự tính điểm hoặc nộp hồ sơ.</flux:text>
     @foreach ($records as $record)
-        <div wire:key="native-thpt-{{ $record->id }}" class="space-y-2">
+        <div wire:key="native-thpt-{{ $record->id }}" class="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
             <flux:text>Nguồn #{{ $record->id }} | Năm {{ $record->exam_year }} | {{ __($record->getRawOriginal('status')) }}</flux:text>
             @foreach ($record->subjectScores as $score)<flux:text>{{ $score->subject_name }}: {{ App\Support\DisplayNumber::decimal($score->score) }}</flux:text>@endforeach
             <flux:button size="sm" :href="route('candidate.admission-information.evidence', ['type' => 'exam-results', 'record' => $record->id])" target="_blank">Xem minh chứng</flux:button>

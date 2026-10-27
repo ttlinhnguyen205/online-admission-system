@@ -7,6 +7,7 @@ use App\Support\AdmissionCounselingAnswer;
 use App\Support\AdmissionCounselingFailure;
 use App\Support\AdmissionCounselingHistory;
 use App\Support\AdmissionCounselingProvider;
+use App\Support\CandidateFunctionGuide;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -21,9 +22,10 @@ class AnswerAdmissionQuestion
         private AdmissionCounselingProvider $provider,
         private AdmissionCounselingAnswer $answers,
         private AdmissionCounselingHistory $history,
+        private CandidateFunctionGuide $guide,
     ) {}
 
-    public function answer(User $user, string $question, string $revision): void
+    public function answer(User $user, string $question, string $revision, string $screen = 'overview'): void
     {
         Gate::forUser($user->fresh())->authorize('use-admission-counseling');
         $question = trim($question);
@@ -53,6 +55,14 @@ class AnswerAdmissionQuestion
                 preg_match('/[\w.+-]+@[\w.-]+\.[a-z]{2,}|\b\d[\d .-]{8,}\d\b/iu', $question) === 1 => 'unsupported',
                 default => null,
             };
+            $guidance = $directIntent === 'unsupported' ? null : $this->guide->answer($question, $screen);
+            if ($guidance !== null) {
+                Gate::forUser($user->fresh())->authorize('use-admission-counseling');
+                $storedQuestion = $directIntent === null ? $question : 'Câu hỏi hướng dẫn xem kết quả (nội dung riêng tư không được lưu lại)';
+                $this->history->append($user, $state, $storedQuestion, $guidance);
+
+                return;
+            }
             $previous = array_slice($state['turns'], -3);
             $history = array_map(static fn (array $turn): array => [
                 'question' => Str::limit($turn['question'], 500),

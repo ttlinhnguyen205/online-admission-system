@@ -1,8 +1,5 @@
-<div class="flex flex-col gap-6">
-    <div>
-        <flux:heading size="xl">{{ $application->application_code }}</flux:heading>
-        <flux:text>{{ $round->name }} | {{ App\Support\CandidateStatusLabels::application($application->status) }}</flux:text>
-    </div>
+<div class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admission.workspace-heading :title="$application->application_code" description="{{ $round->name }} | {{ App\Support\CandidateStatusLabels::application($application->status) }}" />
     <flux:callout>Đăng ký theo ngành, xét nhiều phương thức. Kết quả chỉ hiển thị sau khi được phê duyệt và công bố.</flux:callout>
     <flux:text>Thời gian nhận hồ sơ: {{ $round->start_date->format('d/m/Y H:i') }} – {{ $round->end_date->format('d/m/Y H:i') }}</flux:text>
     @if ($round->nativeRegistrationState() === 'native_closed')
@@ -30,7 +27,7 @@
     <flux:heading>Nguyện vọng theo thứ tự ưu tiên</flux:heading>
     <div><flux:button wire:click="reloadWishes" wire:loading.attr="disabled">Kiểm tra lại hồ sơ và phương thức</flux:button></div>
     @forelse ($wishes as $wish)
-        <article wire:key="native-wish-{{ $wish->id }}" class="flex flex-col gap-3 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700 sm:flex-row sm:justify-between">
+        <article wire:key="native-wish-{{ $wish->id }}" class="flex flex-col gap-3 admission-panel min-w-0 p-5 sm:flex-row sm:justify-between">
             <div>
                 <flux:heading>NV{{ $wish->priority }} | {{ $wish->offering->major->code }} — {{ $wish->offering->major->name }}</flux:heading>
                 <flux:text>Phương thức được chấp nhận: {{ $programs->get($wish->major_id, collect())->pluck('admissionMethod.name')->join(', ') ?: 'Chưa cấu hình' }}</flux:text>
@@ -47,7 +44,7 @@
         <flux:text>Chưa có nguyện vọng.</flux:text>
     @endforelse
     @if ($editable)
-        <form wire:submit="addWish" class="flex flex-col gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
+        <form wire:submit="addWish" class="flex flex-col gap-4 admission-panel min-w-0 p-5">
             <flux:select wire:model="offeringId" label="Ngành đang mở trong đợt" required>
                 <flux:select.option value="">Chọn ngành</flux:select.option>
                 @foreach ($offerings as $offering)
@@ -61,7 +58,7 @@
     @endif
     <flux:heading>Lịch sử đã nộp</flux:heading>
     @foreach ($snapshots as $snapshot)
-        <details wire:key="submission-{{ $snapshot->id }}" class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+        <details wire:key="submission-{{ $snapshot->id }}" class="admission-panel p-4">
             <summary>Phiên bản {{ $snapshot->submission_version }} | {{ $snapshot->submitted_at->format('d/m/Y H:i') }} | Quy tắc đã cố định</summary>
             @foreach ($snapshot->manifest as $entry)
                 <flux:text>NV{{ $entry['priority'] }} | {{ $entry['major_name'] }} | {{ collect($entry['methods'])->pluck('method_name')->join(', ') }}</flux:text>

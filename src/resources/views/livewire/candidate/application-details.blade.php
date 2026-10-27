@@ -1,14 +1,10 @@
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <flux:heading size="xl" level="1">{{ $application->application_code }}</flux:heading>
-            <flux:text class="mt-2">{{ $round->name }} | {{ $round->code }}</flux:text>
-        </div>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admission.workspace-heading :title="$application->application_code" description="{{ $round->name }} | {{ $round->code }}">
         <div class="flex flex-wrap gap-3">
             <flux:button :href="route('candidate.applications.index')" wire:navigate>{{ __('Danh sách hồ sơ') }}</flux:button>
             <flux:button :href="route('candidate.applications.documents.index', $application->id)" wire:navigate>{{ __('Tài liệu hồ sơ') }}</flux:button>
         </div>
-    </div>
+    </x-admission.workspace-heading>
     <div class="flex flex-col gap-3 admission-panel p-5">
         <div class="flex flex-wrap gap-3">
             <flux:badge>{{ App\Support\CandidateStatusLabels::application($application->status) }}</flux:badge>

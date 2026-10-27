@@ -1,18 +1,14 @@
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <flux:heading size="xl" level="1">{{ __('Điểm & minh chứng') }}</flux:heading>
-            <flux:text class="mt-2">{{ __('Quản lý các điểm đã khai báo. Đây không phải là điểm xét tuyển được hệ thống tính.') }}</flux:text>
-        </div>
+<section class="admission-workspace mx-auto flex min-w-0 w-full max-w-7xl flex-col gap-6">
+    <x-admission.workspace-heading :title="__('Điểm & minh chứng')" :description="__('Quản lý các điểm đã khai báo. Đây không phải là điểm xét tuyển được hệ thống tính.')">
         @if ($profile)
         <flux:button variant="primary" wire:click="create">{{ __('Thêm điểm') }}</flux:button>
         @endif
-    </div>
+    </x-admission.workspace-heading>
     <flux:error name="cleanup" />
     @if (! $profile)
     <flux:callout>{{ __('Hãy tạo hồ sơ cá nhân trước khi thêm điểm.') }} <a class="underline" href="{{ route('candidate.profile.edit') }}" wire:navigate>{{ __('Mở hồ sơ') }}</a></flux:callout>
     @else
-    <div class="grid grid-cols-2 items-end gap-4 lg:grid-cols-[1fr_1fr_auto]">
+    <div class="admission-panel grid min-w-0 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
         <flux:select wire:model.live="typeFilter" :label="__('Loại điểm')">
             <flux:select.option value="">{{ __('Tất cả loại điểm') }}</flux:select.option>
             @foreach (App\Livewire\Candidate\Scores::SCORE_TYPES as $value => $label)
@@ -25,14 +21,15 @@
             <flux:select.option :value="(string) $year">{{ $year }}</flux:select.option>
             @endforeach
         </flux:select>
-        <div class="col-span-2 lg:col-span-1">
+        <div class="sm:col-span-2 lg:col-span-1">
             <flux:button class="w-full lg:w-auto" wire:click="resetFilters">{{ __('Đặt lại bộ lọc') }}</flux:button>
         </div>
     </div>
     <div role="status" wire:loading.delay>{{ __('Đang cập nhật điểm...') }}</div>
-    <div class="overflow-x-auto admission-panel p-4">
-        <flux:table :paginate="$records">
+    <div class="admission-panel min-w-0 overflow-hidden">
+        <flux:table :paginate="$records" class="admin-records-table">
             <flux:table.columns>
+                    <flux:table.column class="table-stt">STT</flux:table.column>
                 <flux:table.column>{{ __('Loại điểm / Môn học') }}</flux:table.column>
                 <flux:table.column>{{ __('Điểm') }}</flux:table.column>
                 <flux:table.column>{{ __('Năm') }}</flux:table.column>
@@ -43,24 +40,25 @@
             <flux:table.rows>
                 @forelse ($records as $record)
                 <flux:table.row :key="$record->id">
-                    <flux:table.cell>
+                    <flux:table.cell class="table-stt" data-label="STT">{{ $records->firstItem() + $loop->index }}</flux:table.cell>
+                    <flux:table.cell data-label="Loại điểm / Môn học">
                         <div>{{ App\Livewire\Candidate\Scores::SCORE_TYPES[$record->score_type] ?? $record->score_type }}</div>
                         <div class="text-xs">{{ $record->subject_code }} {{ $record->subject_name }}</div>
                     </flux:table.cell>
-                    <flux:table.cell>{{ App\Support\DisplayNumber::decimal($record->score) }}</flux:table.cell>
-                    <flux:table.cell>{{ $record->exam_year }}</flux:table.cell>
-                    <flux:table.cell>@if ($evidenceAvailability->get($record->id))<flux:button size="sm" :href="route('admission.scores.evidence', $record->id)" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@else<flux:badge color="rose">{{ __('Chưa có minh chứng hợp lệ') }}</flux:badge>@endif</flux:table.cell>
-                    <flux:table.cell>
-                        <flux:badge :color="$record->verified ? 'rose' : 'zinc'">{{ $record->verified ? __('Đã xác minh') : __('Chưa xác minh') }}</flux:badge>
+                    <flux:table.cell data-label="Điểm">{{ App\Support\DisplayNumber::decimal($record->score) }}</flux:table.cell>
+                    <flux:table.cell data-label="Năm">{{ $record->exam_year }}</flux:table.cell>
+                    <flux:table.cell data-label="Minh chứng">@if ($evidenceAvailability->get($record->id))<flux:button size="sm" :href="route('admission.scores.evidence', $record->id)" target="_blank">{{ __('Xem minh chứng') }}</flux:button>@else<flux:badge color="rose">{{ __('Chưa có minh chứng hợp lệ') }}</flux:badge>@endif</flux:table.cell>
+                    <flux:table.cell data-label="Trạng thái">
+                        <flux:badge :color="$record->verified ? 'green' : 'zinc'">{{ $record->verified ? __('Đã xác minh') : __('Chưa xác minh') }}</flux:badge>
                     </flux:table.cell>
-                    <flux:table.cell>
+                    <flux:table.cell data-label="Thao tác">
                         @can('update', $record)<flux:button size="sm" wire:click="edit({{ $record->id }})">{{ __('Sửa') }}</flux:button>@endcan
                         @can('delete', $record)<flux:button size="sm" variant="ghost" wire:click="confirmDeletion({{ $record->id }})">{{ __('Xóa') }}</flux:button>@endcan
                     </flux:table.cell>
                 </flux:table.row>
                 @empty
                 <flux:table.row>
-                    <flux:table.cell colspan="6">
+                    <flux:table.cell colspan="7">
                         <div class="py-10 text-center">{{ __('Không tìm thấy điểm nào. Hãy thêm điểm hoặc điều chỉnh bộ lọc.') }}</div>
                     </flux:table.cell>
                 </flux:table.row>
