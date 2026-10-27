@@ -227,3 +227,14 @@ test('demo transcript rule UI defaults correctly and approves binds a separate v
     expect($program->fresh()->evaluationRule->version)->toBe(2);
     expect($old->fresh()->getAttributes())->toBe($before);
 });
+
+test('source verification names missing THPT subjects required by the approved combination', function () {
+    $fixture = sourceWorkflowFixture();
+    $fixture['exam']->subjectScores()->whereIn('subject_code', ['PHYSICS', 'CHEMISTRY'])->delete();
+    $verification = app(NativeSourceVerification::class);
+
+    expect(fn () => $verification->verify($fixture['application']->id, 'thpt', $fixture['exam']->id,
+        NativeWishRegistration::hash($verification->inspect($fixture['exam']))))
+        ->toThrow(ValidationException::class, 'Chưa đủ điểm theo tổ hợp xét tuyển. Các môn còn thiếu: Hóa học, Vật lý.');
+    expect($fixture['exam']->fresh()->getRawOriginal('status'))->toBe('pending');
+});

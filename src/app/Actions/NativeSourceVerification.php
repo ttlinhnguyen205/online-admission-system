@@ -40,18 +40,24 @@ class NativeSourceVerification
             $rules = $snapshot->entries->flatMap(fn ($entry) => $entry->bindings)->map->rule
                 ->filter(fn ($rule) => $rule->template_identifier === ($type === 'thpt' ? 'THPT_SCORE' : 'TRANSCRIPT_SCORE'));
             $matched = false;
+            $missingSubjects = [];
             foreach ($rules as $rule) {
                 if ((int) $source->getAttribute($type === 'thpt' ? 'exam_year' : 'graduation_year') !== $rule->payload['source_year']) {
                     continue;
                 }
                 $scores = collect($data['scores'])->filter(fn (array $row): bool => in_array($row['subject_code'], $rule->payload['subjects'], true)
                     && ($type === 'thpt' || (int) $row['grade_level'] === $rule->payload['grade_level']));
+                $missingSubjects = array_merge($missingSubjects, array_diff($rule->payload['subjects'], $scores->pluck('subject_code')->all()));
                 if ($scores->count() === 3 && $scores->pluck('subject_code')->unique()->count() === 3
                     && $scores->every(fn (array $row): bool => is_numeric($row['score']) && $row['score'] >= 0 && $row['score'] <= 10)) {
                     $matched = true;
                 }
             }
-            $this->ensure($matched, 'Nguồn không khớp năm/lớp/tổ hợp hợp lệ của rule đã pin.');
+            if (! $matched && $missingSubjects !== []) {
+                $labels = array_map(fn (string $subject): string => config('admission_data.subjects.'.$subject, $subject), array_unique($missingSubjects));
+                $this->ensure(false, 'Chưa đủ điểm theo tổ hợp xét tuyển. Các môn còn thiếu: '.implode(', ', $labels).'.');
+            }
+            $this->ensure($matched, 'Dữ liệu không khớp năm, lớp hoặc tổ hợp môn trong quy tắc xét tuyển đã duyệt.');
             $paths = array_filter([$source->getAttribute('evidence_path'), ...array_column($data['images'], 'path')]);
             $this->ensure($paths !== [], 'Thiếu ảnh minh chứng.');
             foreach ($paths as $path) {
