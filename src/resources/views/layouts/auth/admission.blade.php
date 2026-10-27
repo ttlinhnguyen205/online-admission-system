@@ -38,6 +38,8 @@
             </flux:toast.group>
         @endpersist
 
+        <x-admission.counseling-widget />
+
         @fluxScripts
     </body>
 </html>
