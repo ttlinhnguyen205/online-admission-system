@@ -6,6 +6,8 @@ use App\Concerns\PasswordValidationRules;
 use Exception;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
 use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
@@ -17,6 +19,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use RuntimeException;
 
 #[Title('Security settings')]
 class Security extends Component
@@ -74,6 +77,9 @@ class Security extends Component
      */
     public function updatePassword(): void
     {
+        abort_unless(Auth::check(), 403);
+        $this->resetErrorBag();
+
         try {
             $validated = $this->validate([
                 'current_password' => $this->currentPasswordRules(),
@@ -85,11 +91,22 @@ class Security extends Component
             throw $e;
         }
 
-        Auth::user()->update([
-            'password' => $validated['password'],
-        ]);
+        try {
+            DB::transaction(function () use ($validated): void {
+                $user = Auth::user()->fresh();
 
-        $this->reset('current_password', 'password', 'password_confirmation');
+                if (! $user || ! $user->update(['password' => $validated['password']])
+                    || ! Hash::check($validated['password'], $user->fresh()?->password ?? '')) {
+                    throw new RuntimeException('Password update was not persisted.');
+                }
+            });
+        } catch (Exception) {
+            $this->addError('passwordUpdate', __('Không thể lưu mật khẩu mới. Vui lòng thử lại.'));
+
+            return;
+        } finally {
+            $this->reset('current_password', 'password', 'password_confirmation');
+        }
 
         Flux::toast(variant: 'success', text: __('Password updated.'));
     }

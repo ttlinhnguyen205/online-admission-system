@@ -62,7 +62,10 @@ test('password can be reset with valid token', function () {
 
         $response
             ->assertSessionHasNoErrors()
+            ->assertSessionHas('status', __('passwords.reset'))
             ->assertRedirect(route('login', absolute: false));
+
+        $this->get(route('login'))->assertSee(__('passwords.reset'));
 
         return true;
     });

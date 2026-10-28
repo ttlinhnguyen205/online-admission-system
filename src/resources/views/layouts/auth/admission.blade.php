@@ -1,3 +1,4 @@
+@props(['title', 'recovery' => false])
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -21,12 +22,14 @@
 
         <main class="auth-hero">
             <img class="auth-hero-background" src="{{ asset('admission-auth-hero.jpg') }}" alt="" fetchpriority="high" />
-            <div class="auth-hero-content">
+            <div @class(['auth-hero-content', 'grid-cols-1! max-w-xl! px-5! items-center! justify-items-center' => $recovery])>
+                @unless ($recovery)
                 <div class="auth-hero-message">
                     <p>Khám phá<br /><span>Tiềm năng</span> và <span>Tài năng</span><br />tại UniCamp</p>
                 </div>
-                <section class="auth-form-panel" aria-labelledby="auth-title">
-                    <h1 id="auth-title">{{ $title }} {{ __('tài khoản của bạn') }}</h1>
+                @endunless
+                <section @class(['auth-form-panel', 'w-full min-w-0 break-words' => $recovery]) aria-labelledby="auth-title">
+                    <h1 id="auth-title">{{ $title }}@unless ($recovery) {{ __('tài khoản của bạn') }}@endunless</h1>
                     {{ $slot }}
                 </section>
             </div>
