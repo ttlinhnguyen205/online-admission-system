@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Actions\AdmissionReviewSnapshot;
 use App\Actions\CandidateFiles;
+use App\Models\CandidateAdmissionClaim;
+use App\Models\CandidateCertificate;
 use App\Models\CandidateExamResult;
 use App\Models\CandidateTranscript;
 use App\Models\CandidateTranscriptEvidence;
 use App\Models\User;
+use App\Support\AdmissionSourceEvidence;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -22,16 +25,35 @@ class CandidateAdmissionEvidenceController extends Controller
         abort_unless($user instanceof User, 403);
         if (! $user->isCandidate()) {
             AdmissionReviewSnapshot::reviewer();
+            if (! $request->has('application')) {
+                abort_unless(in_array($type, ['exam-results', 'transcripts', 'transcript-images'], true), 403);
+            }
             $model = match ($type) {
-                'exam-results' => CandidateExamResult::query()->where('exam_type', 'thpt')->findOrFail($record),
+                'exam-results' => CandidateExamResult::query()->findOrFail($record),
                 'transcripts' => CandidateTranscript::query()->findOrFail($record),
                 'transcript-images' => CandidateTranscriptEvidence::query()->with('transcript')->findOrFail($record),
+                'certificates' => CandidateCertificate::query()->findOrFail($record),
+                'admission-claims' => CandidateAdmissionClaim::query()->findOrFail($record),
                 default => abort(403),
             };
             $source = $model instanceof CandidateTranscriptEvidence ? $model->transcript : $model;
-            $application = $source->candidateProfile->applications()->where('registration_mode', 'native')->whereNotNull('submitted_at')->firstOrFail();
+            if (! $request->has('application') && $source instanceof CandidateExamResult) {
+                abort_unless($source->getRawOriginal('exam_type') === 'thpt', 404);
+            }
+            $applications = $source->candidateProfile->applications()->whereNotNull('submitted_at')->where('status', '!=', 'draft');
+            $application = $request->has('application')
+                ? $applications->findOrFail($request->integer('application'))
+                : $applications->where('registration_mode', 'native')->firstOrFail();
             Gate::authorize('view', $application);
-            $prefix = ($type === 'exam-results' ? 'candidate-exam-results/' : 'candidate-transcripts/').$application->candidate_profile_id.'/';
+            if ($application->registration_mode === 'native') {
+                abort_unless($source instanceof CandidateTranscript || ($source instanceof CandidateExamResult && $source->getRawOriginal('exam_type') === 'thpt'), 403);
+            }
+            $prefix = 'candidate-'.($type === 'transcript-images' ? 'transcripts' : $type).'/'.$application->candidate_profile_id.'/';
+            if ($application->registration_mode === 'legacy') {
+                $path = $model->getAttribute($type === 'transcript-images' ? 'path' : 'evidence_path');
+                abort_unless(is_string($path) && AdmissionSourceEvidence::available($path, $prefix), 404);
+                $prefix = dirname(rtrim($prefix, '/')).'/';
+            }
 
             return $this->response($model, $prefix, $type === 'transcript-images' ? 'path' : 'evidence_path');
         }
@@ -41,8 +63,9 @@ class CandidateAdmissionEvidenceController extends Controller
                 ->whereHas('transcript', fn ($query) => $query->where('candidate_profile_id', $profile->id))
                 ->findOrFail($record);
             Gate::authorize('view', $image->transcript);
+            abort_unless(AdmissionSourceEvidence::available($image->path, 'candidate-transcripts/'.$profile->id.'/'), 404);
 
-            return $this->response($image, 'candidate-transcripts/'.$profile->id.'/', 'path');
+            return $this->response($image, 'candidate-transcripts/', 'path');
         }
         [$model, $prefix] = match ($type) {
             'exam-results' => [$profile->examResults()->findOrFail($record), 'candidate-exam-results/'],

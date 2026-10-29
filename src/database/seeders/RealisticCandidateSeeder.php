@@ -104,18 +104,19 @@ class RealisticCandidateSeeder extends Seeder
                     $school = $localSchools[(intdiv($number - 1, 34) * 7) % $localSchools->count()];
                     $records[] = $this->record($number, $province->code, $province->name, $school->code, $school->name);
                 }
-                $images = app(RealisticCandidateEvidence::class)->render($records);
+                $recordsByCode = array_column($records, null, 'code');
                 $passwordHash = Hash::make($password);
                 $identities = [];
-                foreach ($records as $record) {
+                foreach (app(RealisticCandidateEvidence::class)->render($records) as $code => $images) {
+                    $record = $recordsByCode[$code];
                     $number = $record['number'];
                     $verified = $number <= 65;
                     $missing = $number >= 66 && $number <= 80;
                     $round = $rounds[$number <= 70 ? 'RAC26-ENGINE' : 'RAC26-REGISTER'];
                     $time = $number <= 70 ? $round->end_date->copy()->subHour() : now();
-                    $photo = $this->store($record['code'], 'candidate-photos', 'profile', $images[$record['code']]['profile'], $createdFiles);
-                    $front = $this->store($record['code'], 'candidate-citizen-ids', 'front', $images[$record['code']]['profile'], $createdFiles);
-                    $back = $this->store($record['code'], 'candidate-citizen-ids', 'back', $images[$record['code']]['profile'], $createdFiles);
+                    $photo = $this->store($record['code'], 'candidate-photos', 'profile', $images['profile'], $createdFiles);
+                    $front = $this->store($record['code'], 'candidate-citizen-ids', 'front', $images['profile'], $createdFiles);
+                    $back = $this->store($record['code'], 'candidate-citizen-ids', 'back', $images['profile'], $createdFiles);
                     $user = User::create(['name' => $record['name'], 'email' => sprintf('realistic-candidate-%03d@example.test', $number),
                         'password' => $passwordHash, 'role' => 'candidate', 'status' => 'active', 'email_verified_at' => $time]);
                     $profile = CandidateProfile::create(['user_id' => $user->id, 'candidate_code' => $record['code'], 'date_of_birth' => $record['birth'],
@@ -140,18 +141,18 @@ class RealisticCandidateSeeder extends Seeder
                             'priority' => $index + 1, 'status' => 'pending']);
                     }
                     foreach (['exam', 'transcript'] as $kind) {
-                        $path = $this->store($record['code'], 'candidate-documents', $kind, $images[$record['code']][$kind], $createdFiles);
+                        $path = $this->store($record['code'], 'candidate-documents', $kind, $images[$kind], $createdFiles);
                         CandidateDocument::create(['application_id' => $application->id, 'document_type' => $kind === 'exam' ? 'exam_result' : 'transcript',
                             'original_name' => $record['code'].'-'.$kind.'-DU-LIEU-MAU.png', 'file_path' => $path, 'mime_type' => 'image/png',
-                            'file_size' => strlen($images[$record['code']][$kind]), 'status' => $verified ? 'verified' : 'pending', 'verified_at' => $verified ? $time : null]);
+                            'file_size' => strlen($images[$kind]), 'status' => $verified ? 'verified' : 'pending', 'verified_at' => $verified ? $time : null]);
                     }
                     $exam = CandidateExamResult::create(['candidate_profile_id' => $profile->id, 'exam_type' => 'thpt', 'exam_year' => 2026,
-                        'registration_number' => $record['code'], 'evidence_path' => $this->store($record['code'], 'candidate-exam-results', 'exam', $images[$record['code']]['exam'], $createdFiles),
+                        'registration_number' => $record['code'], 'evidence_path' => $this->store($record['code'], 'candidate-exam-results', 'exam', $images['exam'], $createdFiles),
                         'status' => $verified ? 'verified' : 'pending', 'verified_at' => $verified ? $time : null]);
-                    $transcriptPath = $this->store($record['code'], 'candidate-transcripts', 'transcript', $images[$record['code']]['transcript'], $createdFiles);
+                    $transcriptPath = $this->store($record['code'], 'candidate-transcripts', 'transcript', $images['transcript'], $createdFiles);
                     $transcript = CandidateTranscript::create(['candidate_profile_id' => $profile->id, 'school_name' => $record['school'], 'graduation_year' => 2026,
                         'evidence_path' => $transcriptPath, 'status' => $verified ? 'verified' : 'pending', 'verified_at' => $verified ? $time : null]);
-                    $transcript->evidenceImages()->create(['path' => $transcriptPath, 'original_name' => $record['code'].'-hoc-ba.png', 'mime_type' => 'image/png', 'size' => strlen($images[$record['code']]['transcript']), 'sort_order' => 1]);
+                    $transcript->evidenceImages()->create(['path' => $transcriptPath, 'original_name' => $record['code'].'-hoc-ba.png', 'mime_type' => 'image/png', 'size' => strlen($images['transcript']), 'sort_order' => 1]);
                     foreach (['thpt' => ['MATH', 'PHYSICS', 'CHEMISTRY'], 'hoc_ba' => ['MATH', 'LITERATURE', 'ENG']] as $type => $subjects) {
                         foreach ($subjects as $subject) {
                             if (! isset($record['scores'][$subject])) {
@@ -162,7 +163,7 @@ class RealisticCandidateSeeder extends Seeder
                             $kind = $type === 'thpt' ? 'exam' : 'transcript';
                             CandidateScore::create(['candidate_profile_id' => $profile->id, 'score_type' => $type, 'subject_code' => $subject, 'subject_name' => $name,
                                 'score' => $score, 'exam_year' => 2026, 'verified' => $verified,
-                                'evidence_path' => $this->store($record['code'], 'candidate-scores', $type.'-'.$subject, $images[$record['code']][$kind], $createdFiles)]);
+                                'evidence_path' => $this->store($record['code'], 'candidate-scores', $type.'-'.$subject, $images[$kind], $createdFiles)]);
                             if ($type === 'thpt') {
                                 $exam->subjectScores()->create(['subject_code' => $subject, 'subject_name' => $name, 'score' => $score]);
                             } else {

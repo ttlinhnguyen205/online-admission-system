@@ -53,7 +53,7 @@ test('review identifiers and confirmation context cannot be hydrated with replac
     $page = Livewire::test(ApplicationDetails::class, ['application' => $application->id]);
     expect(fn () => $page->set($field, $value))->toThrow(CannotUpdateLockedPropertyException::class);
     $this->assertDatabaseCount('activity_logs', 0);
-})->with([['applicationId', 99999], ['expected', 'forged'], ['operation', 'verify'], ['childId', 99999]]);
+})->with([['applicationId', 99999], ['expected', 'forged'], ['operation', 'verify'], ['childId', 99999], ['sourceType', 'certificates']]);
 
 test('account changes after confirmation deny review mutation', function (string $field, mixed $value) {
     $application = reviewApplication(ApplicationStatus::Submitted);

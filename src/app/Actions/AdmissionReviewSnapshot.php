@@ -13,6 +13,7 @@ use App\Models\Application;
 use App\Models\CandidateProfile;
 use App\Models\Major;
 use App\Models\User;
+use App\Support\AdmissionSourceEvidence;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -82,6 +83,7 @@ class AdmissionReviewSnapshot
         $application->setRelation('documents', $documents);
         $application->setRelation('wishes', $wishes);
         $application->setRelation('admissionRound', $round);
+        $application->setRelation('admissionSources', AdmissionSourceEvidence::load($application, $lock));
         $application->setRelation('reviewer', $application->reviewer()->first());
         $application->setRelation('latestReviewActivity', ActivityLog::query()
             ->where('subject_type', $application->getMorphClass())
@@ -124,6 +126,8 @@ class AdmissionReviewSnapshot
             $data['native_snapshots'] = $application->submissionSnapshots()->with('entries.bindings')->orderBy('submission_version')->get()->toArray();
             $data['native_exam_sources'] = $profile?->examResults()->with('subjectScores')->orderBy('id')->get()->toArray();
             $data['native_transcript_sources'] = $profile?->transcripts()->with(['scores', 'evidenceImages'])->orderBy('id')->get()->toArray();
+        } else {
+            $data['admission_sources'] = $application->getRelation('admissionSources')->toArray();
         }
 
         return hash_hmac('sha256', json_encode($data, JSON_THROW_ON_ERROR), (string) config('app.key'));
@@ -222,6 +226,15 @@ class AdmissionReviewSnapshot
         }
         if ($application->registration_mode !== 'native' && $profile?->scores->contains(fn ($score): bool => ! $score->getAttribute('verified'))) {
             $errors['scores'] = __('Every existing profile score must be verified.');
+        }
+        foreach ($application->getRelation('admissionSources') as $key => $source) {
+            $files = AdmissionSourceEvidence::files(explode(':', $key)[0], $source);
+            if ($source->getRawOriginal('status') !== 'verified') {
+                $errors['admissionSources'] = __('Các minh chứng thông tin xét tuyển đã khai báo cần được xác minh trước khi hoàn tất duyệt hồ sơ.');
+            }
+            if ($files === [] || collect($files)->contains('available', false)) {
+                $errors['admissionSourceFiles'] = __('Có minh chứng thông tin xét tuyển bị thiếu hoặc không đọc được.');
+            }
         }
 
         return $errors;

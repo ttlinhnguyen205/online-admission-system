@@ -3,9 +3,11 @@
 use App\Actions\CandidateFiles;
 use App\Livewire\Candidate\NativeExamScores;
 use App\Models\CandidateExamResult;
+use App\Models\CandidateExamSubjectScore;
 use App\Models\CandidateProfile;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
@@ -128,3 +130,21 @@ test('new THPT records require evidence and cancelling editing resets the form',
         ->call('save')->assertHasErrors('evidence')->call('resetEditor')
         ->assertSet('year', '')->assertSet('scores', [])->assertHasNoErrors();
 });
+
+test('cancelled exam or subject save rolls back upload and does not report success', function (string $model, string $field) {
+    $event = 'eloquent.saving: '.$model;
+    Event::listen($event, fn () => false);
+    try {
+        Livewire::test(NativeExamScores::class)->set('year', '2026')->set('scores', ['MATH' => 8])
+            ->set('evidence', thptEvidence())->call('save')->assertHasErrors($field)->assertSet('year', '2026')
+            ->assertNotDispatched('toast-show');
+        $this->assertDatabaseCount('candidate_exam_results', 0);
+        $this->assertDatabaseCount('candidate_exam_subject_scores', 0);
+        expect(Storage::disk(CandidateFiles::DISK)->allFiles('candidate-exam-results'))->toBe([]);
+    } finally {
+        Event::forget($event);
+    }
+})->with([
+    [CandidateExamResult::class, 'evidence'],
+    [CandidateExamSubjectScore::class, 'scores'],
+]);

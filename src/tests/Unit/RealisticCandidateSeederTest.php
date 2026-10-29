@@ -146,6 +146,10 @@ test('staff can open private images review pending applications and cannot verif
     foreach ($application->documents as $document) {
         $review->verifyDocument($application->id, $document->id, $snapshots->fingerprint($snapshots->load($application->id)));
     }
+    expect(fn () => $review->verify($application->id, $snapshots->fingerprint($snapshots->load($application->id))))->toThrow(ValidationException::class);
+    foreach ($snapshots->load($application->id)->getRelation('admissionSources') as $key => $source) {
+        $review->reviewAdmissionSource($application->id, explode(':', $key)[0], $source->id, $snapshots->fingerprint($snapshots->load($application->id)), true);
+    }
     $review->verify($application->id, $snapshots->fingerprint($snapshots->load($application->id)));
     $this->assertDatabaseHas('applications', ['id' => $application->id, 'status' => 'verified', 'reviewed_by' => $staff->id]);
     $missing = Application::where('application_code', 'RC26-071')->sole();

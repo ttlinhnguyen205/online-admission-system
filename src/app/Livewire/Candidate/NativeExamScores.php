@@ -92,10 +92,15 @@ class NativeExamScores extends CandidatePage
                     $record->evidence_path = $newPath;
                 }
                 $record->fill(['exam_year' => (int) $this->year, 'status' => 'pending', 'verified_by' => null, 'verified_at' => null, 'rejection_reason' => null]);
-                $record->save();
+                if (! $record->save()) {
+                    throw ValidationException::withMessages(['evidence' => 'Không thể lưu điểm và minh chứng. Vui lòng thử lại.']);
+                }
                 $record->subjectScores()->delete();
                 foreach ($this->scores as $code => $value) {
-                    $record->subjectScores()->create(['subject_code' => $code, 'subject_name' => $subjects[$code], 'score' => $value]);
+                    $score = $record->subjectScores()->make(['subject_code' => $code, 'subject_name' => $subjects[$code], 'score' => $value]);
+                    if (! $score->save()) {
+                        throw ValidationException::withMessages(['scores' => 'Không thể lưu điểm. Vui lòng thử lại.']);
+                    }
                 }
             });
         } catch (Throwable $exception) {
@@ -106,7 +111,7 @@ class NativeExamScores extends CandidatePage
         if (! $files->remove($oldPath)) {
             $this->addError('evidence', 'Điểm đã được lưu nhưng chưa thể xóa minh chứng cũ. Vui lòng liên hệ bộ phận tuyển sinh.');
         }
-        Flux::toast(variant: 'success', text: 'Đã lưu điểm thi THPT, chờ cán bộ tuyển sinh xác minh.');
+        Flux::toast(variant: 'success', text: 'Đã lưu điểm và minh chứng THPT. Hãy gửi hồ sơ xét duyệt trong mục Đăng ký nguyện vọng để cán bộ tiếp nhận.');
     }
 
     public function render(): View

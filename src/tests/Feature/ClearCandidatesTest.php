@@ -24,6 +24,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -141,8 +142,10 @@ test('cleanup requires interactive confirmation and declines safely', function (
 test('dry run displays candidate counts without deleting anything', function () {
     Storage::fake(CandidateFiles::DISK);
     $candidate = User::factory()->create();
-    $this->artisan('dev:clear-candidates', ['--dry-run' => true])
-        ->expectsOutput('Candidate user IDs: '.$candidate->id)->expectsOutput('No changes made.')->assertSuccessful();
+    $this->withoutMockingConsoleOutput();
+    $exitCode = Artisan::call('dev:clear-candidates', ['--dry-run' => true]);
+    expect(Artisan::output())->toContain('Candidate user IDs: '.$candidate->id, 'No changes made.');
+    expect($exitCode)->toBe(0);
     $this->assertModelExists($candidate);
 });
 

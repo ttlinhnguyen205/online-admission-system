@@ -8,6 +8,8 @@
     @if (! $profile)
     <flux:callout>{{ __('Hãy tạo hồ sơ cá nhân trước khi thêm điểm.') }} <a class="underline" href="{{ route('candidate.profile.edit') }}" wire:navigate>{{ __('Mở hồ sơ') }}</a></flux:callout>
     @else
+    @include('livewire.candidate.admission-source-scores')
+    <flux:heading size="lg">{{ __('Điểm khai báo tại trang này') }}</flux:heading>
     <div class="admission-panel grid min-w-0 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
         <flux:select wire:model.live="typeFilter" :label="__('Loại điểm')">
             <flux:select.option value="">{{ __('Tất cả loại điểm') }}</flux:select.option>
@@ -59,7 +61,7 @@
                 @empty
                 <flux:table.row>
                     <flux:table.cell colspan="7">
-                        <div class="py-10 text-center">{{ __('Không tìm thấy điểm nào. Hãy thêm điểm hoặc điều chỉnh bộ lọc.') }}</div>
+                        <div class="py-10 text-center">{{ __('Không có điểm khai báo tại trang này phù hợp bộ lọc. Điểm đã nhập ở Thông tin tuyển sinh được hiển thị trong bảng phía trên, không cần nhập lại.') }}</div>
                     </flux:table.cell>
                 </flux:table.row>
                 @endforelse

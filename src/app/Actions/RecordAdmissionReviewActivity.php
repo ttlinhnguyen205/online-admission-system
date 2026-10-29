@@ -4,8 +4,12 @@ namespace App\Actions;
 
 use App\Models\ActivityLog;
 use App\Models\Application;
+use App\Models\CandidateAdmissionClaim;
+use App\Models\CandidateCertificate;
 use App\Models\CandidateDocument;
+use App\Models\CandidateExamResult;
 use App\Models\CandidateScore;
+use App\Models\CandidateTranscript;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -19,6 +23,8 @@ class RecordAdmissionReviewActivity
         return match (true) {
             $subject instanceof Application => ['status', 'reviewed_by', 'reviewed_at', 'revision_reason'],
             $subject instanceof CandidateDocument => ['status', 'verified_by', 'verified_at', 'rejection_reason'],
+            $subject instanceof CandidateExamResult, $subject instanceof CandidateTranscript,
+            $subject instanceof CandidateCertificate, $subject instanceof CandidateAdmissionClaim => ['status', 'verified_by', 'verified_at', 'rejection_reason'],
             $subject instanceof CandidateScore => ['verified', 'verified_by'],
             default => throw new \LogicException('Unsupported review subject.'),
         };

@@ -2,6 +2,7 @@
     <div>
         <flux:heading size="lg">Điểm thi tốt nghiệp THPT</flux:heading>
         <flux:text class="mt-2">Khai báo điểm các môn đã thi và ảnh minh chứng theo từng năm. Hệ thống lấy điểm theo tổ hợp môn trong quy tắc xét tuyển của từng ngành, sau khi dữ liệu được xác minh.</flux:text>
+        <flux:text class="mt-2">Lưu điểm và minh chứng chưa phải là gửi hồ sơ. Hãy vào <a class="underline" href="{{ route('candidate.applications.index') }}" wire:navigate>Đăng ký nguyện vọng</a>, mở hồ sơ đúng đợt và chọn nộp hồ sơ. Hồ sơ cần bổ sung phải được nộp lại sau khi sửa.</flux:text>
     </div>
     @foreach ($records as $record)
         <article wire:key="native-thpt-{{ $record->id }}" class="space-y-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">

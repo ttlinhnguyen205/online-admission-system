@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\ApplicationReviewStarted;
 use App\Notifications\ApplicationRevisionRequested;
 use App\Notifications\CandidateScoreVerified;
+use App\Support\AdmissionSourceEvidence;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -141,6 +142,30 @@ class StaffApplicationReview
             }
             $this->save($score, ['verified' => true, 'verified_by' => Auth::id()], 'score.verified');
             $score->candidateProfile()->firstOrFail()->user()->firstOrFail()->notify(new CandidateScoreVerified($score->getKey()));
+        });
+    }
+
+    /** @param array<string, mixed> $form */
+    public function reviewAdmissionSource(int $id, string $type, int $sourceId, string $expected, bool $verify, array $form = []): void
+    {
+        $this->mutate($id, $expected, ApplicationStatus::UnderReview, function (Application $application) use ($type, $sourceId, $verify, $form): void {
+            abort_unless($application->registration_mode === 'legacy' && $application->submitted_at !== null, 403);
+            $source = $application->getRelation('admissionSources')->get($type.':'.$sourceId);
+            abort_if($source === null, 404);
+            if ($source->getRawOriginal('status') !== 'pending') {
+                throw ValidationException::withMessages(['review' => __('Chỉ xét duyệt minh chứng đang chờ xác minh.')]);
+            }
+            $reason = $verify ? null : $this->reason($form, 'rejection_reason');
+            $files = AdmissionSourceEvidence::files($type, $source);
+            if ($verify && ($files === [] || collect($files)->contains('available', false))) {
+                throw ValidationException::withMessages(['review' => __('Minh chứng bị thiếu hoặc không đọc được. Không thể xác minh.')]);
+            }
+            $this->save($source, [
+                'status' => $verify ? 'verified' : 'rejected',
+                'verified_by' => $verify ? Auth::id() : null,
+                'verified_at' => $verify ? now() : null,
+                'rejection_reason' => $reason,
+            ], $verify ? 'admission_source.verified' : 'admission_source.rejected');
         });
     }
 

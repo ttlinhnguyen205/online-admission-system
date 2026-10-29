@@ -8,6 +8,8 @@
     <flux:error name="review" />
     @if ($application->registration_mode === 'native')
         <livewire:admin.native-scoring :application-id="$application->id" :key="'scoring-'.$application->id" />
+    @else
+        @include('livewire.admin.admission-source-evidence')
     @endif
     <flux:error name="form" />
     @if ($stale)<flux:callout variant="warning">{{ __('The review data changed. Reload and inspect the current information before making a decision.') }}</flux:callout>@endif
@@ -222,10 +224,11 @@
             <flux:heading>{{ match ($operation) { 'start' => __('Start review?'), 'revision' => __('Request revision?'),'reject' => __('Từ chối hồ sơ?'), 'verify' => __('Mark application review complete?'), 'verifyDocument' => __('Verify this document?'), 'rejectDocument' => __('Reject this document?'), 'verifyScore' => __('Xác minh điểm này?'), default => __('Confirm review decision') } }}</flux:heading>
             <flux:text>{{ __('The current saved records and your permissions will be checked again before this decision is recorded.') }}</flux:text>
             @if ($operation === 'verifyScore')<flux:callout>{{ __('Điểm này dùng chung cho các hồ sơ đăng ký. Sau khi xác minh, thí sinh không thể sửa, xóa hoặc thay ảnh minh chứng.') }}</flux:callout>@endif
+            @if ($operation === 'verifyAdmissionSource')<flux:callout>{{ __('Thông tin và minh chứng này dùng chung cho các hồ sơ đăng ký của thí sinh. Sau khi xác minh, thí sinh không thể sửa hoặc thay minh chứng.') }}</flux:callout>@endif
             @if ($operation === 'revision')
             <flux:textarea wire:model="form.revision_reason" :label="__('Revision reason')" maxlength="5000" required />
             <flux:callout>{{ __('Candidate wish changes and resubmission still require an open round within its date window. Requesting revision does not extend the deadline.') }}</flux:callout>
-            @elseif (in_array($operation, ['reject', 'rejectDocument'], true))
+            @elseif (in_array($operation, ['reject', 'rejectDocument', 'rejectAdmissionSource'], true))
             <flux:textarea
                 wire:model="form.rejection_reason"
                 :label="$operation === 'reject' ? __('Lý do từ chối hồ sơ *') : __('Rejection reason')"

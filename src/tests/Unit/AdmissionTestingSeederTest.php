@@ -132,6 +132,10 @@ test('staff can verify a pending fixture and incomplete profile remains blocked'
     $review = app(StaffApplicationReview::class);
     $id = Application::where('application_code', 'AT-V1-066')->value('id');
     $review->start($id, $snapshots->fingerprint($snapshots->load($id)));
+    expect(fn () => $review->verify($id, $snapshots->fingerprint($snapshots->load($id))))->toThrow(ValidationException::class);
+    foreach ($snapshots->load($id)->getRelation('admissionSources') as $key => $source) {
+        $review->reviewAdmissionSource($id, explode(':', $key)[0], $source->id, $snapshots->fingerprint($snapshots->load($id)), true);
+    }
     expect($snapshots->checklist($snapshots->load($id)))->toBe([]);
     $review->verify($id, $snapshots->fingerprint($snapshots->load($id)));
     $this->assertDatabaseHas('applications', ['id' => $id, 'status' => 'verified']);

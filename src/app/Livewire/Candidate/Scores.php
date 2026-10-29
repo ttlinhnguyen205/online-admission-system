@@ -9,6 +9,7 @@ use App\Models\CandidateScore;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -194,6 +195,22 @@ class Scores extends CandidatePage
             Gate::authorize('view', $profile);
         }
 
+        $sources = collect();
+        if ($profile !== null) {
+            foreach (['exam-results' => $profile->examResults()->with('subjectScores')->get(),
+                'transcripts' => $profile->transcripts()->with(['scores', 'evidenceImages'])->get(),
+                'certificates' => $profile->certificates()->get(),
+                'admission-claims' => $profile->admissionClaims()->get()] as $type => $items) {
+                foreach ($items as $source) {
+                    $sources->push(['type' => $type, 'source' => $source]);
+                }
+            }
+        }
+        $sources = $sources->sortByDesc(fn (array $item) => $item['source']->updated_at)->values();
+        $sourceRecords = new LengthAwarePaginator($sources->forPage($this->getPage('sourcePage'), 15), $sources->count(), 15, $this->getPage('sourcePage'), [
+            'path' => request()->url(), 'pageName' => 'sourcePage',
+        ]);
+
         $availableYears = $profile?->scores()->select('exam_year')->distinct()->orderByDesc('exam_year')->pluck('exam_year') ?? collect();
         $validType = $this->typeFilter === '' || array_key_exists($this->typeFilter, self::SCORE_TYPES);
         $validYear = $this->yearFilter === '' || $availableYears->contains(fn ($year) => (string) $year === $this->yearFilter);
@@ -206,6 +223,6 @@ class Scores extends CandidatePage
             $score->getKey() => (new AdmissionReviewSnapshot)->fileAvailable($score->getAttribute('evidence_path'), scoreEvidence: true),
         ]) ?? collect();
 
-        return view('livewire.candidate.scores', compact('profile', 'records', 'evidenceAvailability', 'availableYears'));
+        return view('livewire.candidate.scores', compact('profile', 'records', 'sourceRecords', 'evidenceAvailability', 'availableYears'));
     }
 }
