@@ -101,7 +101,7 @@
             <div class="grid items-start gap-5 lg:grid-cols-2">
                 <x-admin-admission-chart title="Hồ sơ theo trạng thái" :rows="$summary['statuses']" :total="$metrics['Hồ sơ đã nộp']" unit="hồ sơ đã nộp" :colors="$statusColors" />
                 @foreach ($summary['charts'] as $title => $rows)
-                    <x-admin-admission-chart :title="$title" :rows="$rows" :total="$metrics['Nguyện vọng']" unit="nguyện vọng" wire:key="admin-figure-{{ $title }}" />
+                    <x-admin-admission-chart :title="$title" :rows="$rows" :total="$metrics['Nguyện vọng']" unit="nguyện vọng" :group-label="match ($title) { 'Nguyện vọng theo ngành' => 'Ngành', 'Nguyện vọng theo phương thức' => 'Phương thức', default => 'Chương trình' }" wire:key="admin-figure-{{ $title }}" />
                 @endforeach
             </div>
         </section>

@@ -17,7 +17,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 
-#[Title('Ngành mở xét tuyển')]
+#[Title('Ngành nhận đăng ký')]
 class CandidateMajorOfferings extends ConfigurationPage
 {
     #[Url]

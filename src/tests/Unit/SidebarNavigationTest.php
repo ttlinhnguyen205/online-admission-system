@@ -17,7 +17,7 @@ test('admin sidebar has exactly the requested three groups and nine destinations
         'QUẢN LÝ HỒ SƠ', 'Hồ sơ xét tuyển', 'Lịch sử xử lý',
         'QUẢN LÝ XÉT TUYỂN', 'Công cụ xét tuyển', 'Kết quả xét tuyển',
         'CẤU HÌNH TUYỂN SINH', 'Đợt tuyển sinh', 'Ngành đào tạo',
-        'Phương thức xét tuyển', 'Chương trình tuyển sinh', 'Ngành mở xét tuyển',
+        'Phương thức xét tuyển', 'Chương trình tuyển sinh', 'Ngành nhận đăng ký',
     ])->assertDontSeeText('Hệ thống')->assertDontSeeText('Trang cấu hình');
     expect(preg_match_all('/\sdata-flux-sidebar-group[\s>]/', (string) $view))->toBe(3);
     $view->assertSeeInOrder(array_map(fn (string $name): string => 'href="'.route($name).'"', [
