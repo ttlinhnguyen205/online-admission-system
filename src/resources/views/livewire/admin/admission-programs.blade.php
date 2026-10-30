@@ -41,9 +41,6 @@
         </flux:select>
     </x-slot:filters>
 
-    @can('viewAny', App\Models\EvaluationRuleVersion::class)
-        <flux:button wire:click="manageRules">Quản lý quy tắc Native</flux:button>
-    @endcan
     <flux:table :paginate="$records" class="workspace-table admin-records-table {{ $canManageRules ? 'sm:min-w-[1200px]' : 'sm:min-w-[1000px]' }}" container:class="min-w-0">
         <flux:table.columns>
             <flux:table.column class="table-stt">STT</flux:table.column>

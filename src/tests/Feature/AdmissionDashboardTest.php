@@ -315,13 +315,22 @@ test('admin dashboard highlights four KPIs and retains all other metrics in coll
 test('admin and staff charts show full labels without redundant expansion controls', function () {
     $fullLabel = str_repeat('Công nghệ thông tin ', 5).' (7480201) — Phương thức xét tuyển — ROUND-2026';
     $html = view('components.admin-admission-chart', [
-        'title' => 'Nguyện vọng theo ngành', 'total' => 4, 'unit' => 'nguyện vọng',
+        'title' => 'Nguyện vọng theo ngành', 'total' => 4, 'unit' => 'nguyện vọng', 'groupLabel' => 'Ngành',
         'rows' => [['label' => $fullLabel, 'count' => 3], ['label' => '<script>KHÔNG AN TOÀN</script>', 'count' => 1]],
     ])->render();
 
     expect($html)->toContain('Tỷ lệ trên 4 nguyện vọng theo bộ lọc', '75,00%', '25,00%', 'width: 75%', 'width: 25%',
-        'scope="row"', $fullLabel, '&lt;script&gt;KHÔNG AN TOÀN&lt;/script&gt;')
+        'scope="row"', '>Ngành</th>', $fullLabel, '&lt;script&gt;KHÔNG AN TOÀN&lt;/script&gt;')
         ->not->toContain('<details', '<summary', 'truncate', 'overflow-y-auto', 'max-h-96', '<script>KHÔNG AN TOÀN</script>');
+});
+
+test('empty wish chart shows a message without table headers', function () {
+    $html = view('components.admin-admission-chart', [
+        'title' => 'Nguyện vọng theo ngành', 'total' => 0, 'unit' => 'nguyện vọng', 'rows' => [],
+    ])->render();
+
+    expect($html)->toContain('Chưa có nguyện vọng.')
+        ->not->toContain('<table', 'Nhóm', 'Số lượng | Tỷ lệ', 'Tỷ lệ trên');
 });
 
 test('admin chart handles an empty denominator without invalid percentages', function () {

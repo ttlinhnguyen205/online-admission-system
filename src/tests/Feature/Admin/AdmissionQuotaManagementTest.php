@@ -62,8 +62,9 @@ test('legacy offerings direct quota management to admission programs', function 
     $offering = CandidateMajorOffering::factory()->create();
 
     Livewire::test(OfferingPage::class)->assertDontSee('wire:click="manageQuota(', false)
-        ->assertDontSee('Chỉ tiêu Q/q')->assertSee('Chỉ tiêu quản lý tại')
-        ->assertSee('Không áp dụng')->assertSee('Đợt đang xét theo chương trình.')
+        ->assertDontSee('Chỉ tiêu Q/q')->assertSee('Chỉ tiêu')->assertDontSee('Chỉ tiêu quản lý tại')
+        ->assertSee('Không áp dụng')->assertDontSee('Đợt đang xét theo chương trình.')
+        ->assertDontSee('Hướng dẫn cấu hình')->assertDontSee('Chương trình xét tuyển được ánh xạ')
         ->assertDontSee('Chưa có quy tắc tính điểm đã được phê duyệt và hợp lệ.')
         ->assertSee(route('admin.admission-programs.index', ['roundFilter' => $offering->admission_round_id, 'majorFilter' => $offering->major_id]));
 });
@@ -73,9 +74,10 @@ test('native offerings display the clear quota management action', function (str
     $program = AdmissionProgram::factory()->for($round)->create();
     $offering = CandidateMajorOffering::factory()->create(['admission_program_id' => $program->id]);
 
-    Livewire::test(OfferingPage::class)->assertSee('Quản lý chỉ tiêu')->assertDontSee('Chỉ tiêu Q/q')
+    Livewire::test(OfferingPage::class)->assertSee('Chỉ tiêu')->assertDontSee('Chỉ tiêu Q/q')
         ->assertDontSee('Chỉ tiêu quản lý tại')
-        ->assertSee('Chưa có quy tắc tính điểm đã được phê duyệt và hợp lệ.')
+        ->assertDontSee('Chưa có quy tắc tính điểm đã được phê duyệt và hợp lệ.')
+        ->assertDontSee('Chi tiết cấu hình')->assertSee('Tính điểm')
         ->assertDontSee('Thiếu rule')->assertDontSee('payload/ranking/hash')
         ->assertSee('wire:click="manageQuota('.$offering->id.')"', false)
         ->call('manageQuota', $offering->id)->assertSee('Chưa có phiên bản chỉ tiêu');

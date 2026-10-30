@@ -1,16 +1,19 @@
-@props(['title', 'rows', 'total', 'unit', 'colors' => []])
+@props(['title', 'rows', 'total', 'unit', 'colors' => [], 'groupLabel' => 'Nhóm'])
 <figure {{ $attributes->class('min-w-0 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 sm:p-6') }}>
     <figcaption class="text-base font-semibold text-zinc-900 dark:text-white">{{ $title }}</figcaption>
+    @if (count($rows) > 0)
     <p class="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
         Tỷ lệ trên {{ number_format($total) }} {{ $unit }} theo bộ lọc. Làm tròn đến 2 chữ số thập phân.
     </p>
-    @if ($total === 0)
-        <p class="mt-5 rounded-lg bg-zinc-50 p-4 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">Chưa có dữ liệu phù hợp.</p>
     @endif
+    @if ($total === 0 || count($rows) === 0)
+        <p class="mt-5 rounded-lg bg-zinc-50 p-4 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">{{ $unit === 'nguyện vọng' ? 'Chưa có nguyện vọng.' : 'Chưa có dữ liệu phù hợp.' }}</p>
+    @endif
+    @if (count($rows) > 0)
     <table class="mt-5 w-full table-fixed text-left text-sm">
         <caption class="sr-only">{{ $title }} — số lượng và tỷ lệ trên tổng {{ number_format($total) }} {{ $unit }} theo bộ lọc</caption>
         <thead class="text-xs text-zinc-500 dark:text-zinc-400">
-            <tr><th scope="col" class="pb-2 font-medium">Nhóm</th><th scope="col" class="w-24 pb-2 text-right font-medium sm:w-28">Số lượng | Tỷ lệ</th></tr>
+            <tr><th scope="col" class="pb-2 font-medium">{{ $groupLabel }}</th><th scope="col" class="w-24 pb-2 text-right font-medium sm:w-28">Số lượng | Tỷ lệ</th></tr>
         </thead>
         <tbody>
             @foreach ($rows as $index => $row)
@@ -43,4 +46,5 @@
             @endforeach
         </tbody>
     </table>
+    @endif
 </figure>

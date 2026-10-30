@@ -7,22 +7,21 @@
                 <option wire:key="offering-filter-round-{{ $round->id }}" value="{{ $round->id }}">{{ $round->code }} | {{ $round->name }}</option>
             @endforeach
         </flux:select>
-        <flux:select wire:model.live="statusFilter" :label="__('Candidate registration')">
+        <flux:select wire:model.live="statusFilter" :label="__('Đăng ký')">
             <option value="">{{ __('All offerings') }}</option>
             <option value="enabled">{{ __('Registration enabled') }}</option>
             <option value="disabled">{{ __('Registration disabled') }}</option>
         </flux:select>
     </x-slot:filters>
-    <flux:callout>Cấu hình xét theo ngành chỉ áp dụng cho đợt đăng ký Theo ngành. Trạng thái sẵn sàng cho biết quy tắc xét tuyển đã hợp lệ, chưa phải kết quả xét tuyển. Hiện hỗ trợ điểm thi THPT và học bạ; chưa hỗ trợ HSA.</flux:callout>
     <flux:table :paginate="$records" class="admin-records-table">
         <flux:table.columns>
             <flux:table.column class="table-stt">STT</flux:table.column>
             <flux:table.column>{{ __('Major') }}</flux:table.column>
             <flux:table.column>{{ __('Round') }}</flux:table.column>
-            <flux:table.column>{{ __('Compatibility program') }}</flux:table.column>
-            <flux:table.column>Phương thức của ngành</flux:table.column>
-            <flux:table.column>{{ __('Candidate registration') }}</flux:table.column>
-            <flux:table.column>Cấu hình xét theo ngành</flux:table.column>
+            <flux:table.column>{{ __('Chương trình') }}</flux:table.column>
+            <flux:table.column>Phương thức</flux:table.column>
+            <flux:table.column>{{ __('Đăng ký') }}</flux:table.column>
+            <flux:table.column>Tính điểm</flux:table.column>
             <flux:table.column>{{ __('Actions') }}</flux:table.column>
         </flux:table.columns>
         <flux:table.rows>
@@ -31,57 +30,50 @@
                     <flux:table.cell class="table-stt" data-label="STT">{{ $records->firstItem() + $loop->index }}</flux:table.cell>
                     <flux:table.cell data-label="{{ __('Major') }}">{{ $record->major->name }} | {{ $record->major->code }}</flux:table.cell>
                     <flux:table.cell data-label="{{ __('Round') }}">{{ $record->admissionRound->code }}</flux:table.cell>
-                    <flux:table.cell data-label="{{ __('Compatibility program') }}">
+                    <flux:table.cell data-label="{{ __('Chương trình') }}">
                         {{ $record->admissionProgram?->admissionMethod?->name ?? __('Not configured') }}
                         @if ($record->admissionProgram)
                             <div class="text-xs text-zinc-500">#{{ $record->admission_program_id }} | {{ $record->admissionProgram->admissionMethod->code }}</div>
                         @endif
                     </flux:table.cell>
-                    <flux:table.cell data-label="Phương thức của ngành">
+                    <flux:table.cell data-label="Phương thức">
                         <div class="flex flex-wrap gap-1">
                             @foreach ($catalogPrograms->get($record->admission_round_id.'-'.$record->major_id, collect()) as $catalogProgram)
                                 <flux:badge wire:key="offering-method-{{ $record->id }}-{{ $catalogProgram->id }}" :color="$catalogProgram->status === 'active' && $catalogProgram->admissionMethod->is_active ? 'green' : 'zinc'">
-                                    {{ $catalogProgram->admissionMethod->name }} | {{ $catalogProgram->status === 'active' && $catalogProgram->admissionMethod->is_active ? 'Chấp nhận' : 'Ngừng hoạt động' }}
+                                    {{ $catalogProgram->admissionMethod->name }}
+                                    @if ($catalogProgram->status !== 'active' || ! $catalogProgram->admissionMethod->is_active)
+                                        · Tạm ngừng
+                                    @endif
                                 </flux:badge>
                             @endforeach
                         </div>
-                        <p class="mt-1 text-xs text-zinc-500">Nguyện vọng hiện tại vẫn dùng chương trình legacy đã chọn.</p>
-                        <flux:button size="sm" variant="ghost" :href="route('admin.admission-programs.index', ['roundFilter' => $record->admission_round_id, 'majorFilter' => $record->major_id])" wire:navigate>Cấu hình phương thức</flux:button>
+                        <flux:button size="sm" variant="ghost" :href="route('admin.admission-programs.index', ['roundFilter' => $record->admission_round_id, 'majorFilter' => $record->major_id])" wire:navigate>Cấu hình</flux:button>
                     </flux:table.cell>
-                    <flux:table.cell data-label="{{ __('Candidate registration') }}">
+                    <flux:table.cell data-label="{{ __('Đăng ký') }}">
                         <flux:badge :color="$record->is_selectable ? 'green' : 'zinc'">{{ $record->is_selectable ? __('Registration enabled') : __('Registration disabled') }}</flux:badge>
-                        @if ($record->is_selectable)
-                            <p class="mt-2 max-w-xs text-xs text-zinc-500 dark:text-zinc-400">
+                        @if ($record->is_selectable && $record->admissionRound->nativeRegistrationState() === 'legacy')
+                            <p class="mt-2 max-w-xs whitespace-normal text-xs text-zinc-500 dark:text-zinc-400">
                                 {{ App\Actions\CandidateMajorOfferings::available($record, $record->admissionProgram, $record->admissionRound) ? __('Currently accepting registration') : ($record->admissionProgram ? App\Actions\CandidateWishes::unavailableReason($record->admissionProgram, $record->admissionRound) : __('Not configured')) }}
                             </p>
                         @endif
                     </flux:table.cell>
-                    <flux:table.cell data-label="Cấu hình xét theo ngành">
+                    <flux:table.cell data-label="Tính điểm">
                         @if ($record->admissionRound->nativeRegistrationState() === 'legacy')
                             <flux:badge color="zinc">Không áp dụng</flux:badge>
-                            <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">Đợt đang xét theo chương trình.</p>
                         @else
                         <flux:badge :color="$nativeReadiness[$record->id]['status'] === 'READY' ? 'green' : 'amber'">{{ __($nativeReadiness[$record->id]['status']) }}</flux:badge>
-                        <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $nativeReadiness[$record->id]['total'] }} phương thức | {{ $nativeReadiness[$record->id]['approved'] }} hợp lệ | {{ $nativeReadiness[$record->id]['missing'] }} thiếu | {{ $nativeReadiness[$record->id]['unsupported'] }} chưa hỗ trợ</div>
-                        @foreach ($nativeReadiness[$record->id]['methods'] as $methodState)
-                            @if (! $methodState['ready'])<div wire:key="rule-readiness-{{ $record->id }}-{{ $methodState['program_id'] }}" class="mt-1 max-w-xs whitespace-normal text-xs text-rose-700 dark:text-rose-300">{{ $methodState['name'] }}: {{ $methodState['reason'] }}</div>@endif
-                        @endforeach
                         @endif
                     </flux:table.cell>
                     <flux:table.cell data-label="{{ __('Actions') }}">
                         <div class="flex flex-wrap justify-start gap-2">
                             <flux:button size="sm" wire:click="edit({{ $record->id }})">{{ __('Edit') }}</flux:button>
                             @if ($record->admissionRound->nativeRegistrationState() !== 'legacy')
-                                <flux:button size="sm" wire:click="manageQuota({{ $record->id }})">Quản lý chỉ tiêu</flux:button>
+                                <flux:button size="sm" wire:click="manageQuota({{ $record->id }})">Chỉ tiêu</flux:button>
+                            @else
+                                <flux:button size="sm" :href="route('admin.admission-programs.index', ['roundFilter' => $record->admission_round_id, 'majorFilter' => $record->major_id])" wire:navigate>Chỉ tiêu</flux:button>
                             @endif
                             <flux:button size="sm" variant="ghost" wire:click="confirmDeletion({{ $record->id }})">{{ __('Delete') }}</flux:button>
                         </div>
-                        @if ($record->admissionRound->nativeRegistrationState() === 'legacy')
-                            <p class="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                                Chỉ tiêu quản lý tại
-                                <a href="{{ route('admin.admission-programs.index', ['roundFilter' => $record->admission_round_id, 'majorFilter' => $record->major_id]) }}" wire:navigate class="font-medium text-admission-blue hover:underline dark:text-rose-300">Chương trình tuyển sinh</a>.
-                            </p>
-                        @endif
                     </flux:table.cell>
                 </flux:table.row>
             @empty
@@ -93,9 +85,6 @@
         <livewire:admin.offering-quotas :offering-id="$quotaOfferingId" :key="'offering-quotas-'.$quotaOfferingId" />
     @endif
     <x-slot:editor>
-        <div class="sm:col-span-2">
-            <flux:callout>{{ __('The compatibility program is transitional: each wish is evaluated only under its explicitly mapped legacy program, not every admission method. Candidates see only the major. Enabling registration also requires an open round within its dates, an active major/program/method and positive quota.') }}</flux:callout>
-        </div>
         @if ($this->relationshipsLocked)
             <div class="sm:col-span-2"><flux:callout>{{ __('This offering has wishes. Its round, major and compatibility program cannot change. Existing wishes retain their pinned program.') }}</flux:callout></div>
         @endif
@@ -111,7 +100,7 @@
                 <option value="{{ $major->id }}" wire:key="offering-major-{{ $major->id }}">{{ $major->code }} | {{ $major->name }}</option>
             @endforeach
         </flux:select>
-        <flux:select wire:model="form.admission_program_id" :label="__('Explicit compatibility program')" :disabled="$this->relationshipsLocked" wire:key="offering-program-options-{{ $this->form['admission_round_id'] ?? '' }}-{{ $this->form['major_id'] ?? '' }}">
+        <flux:select wire:model="form.admission_program_id" :label="__('Chương trình')" :disabled="$this->relationshipsLocked" wire:key="offering-program-options-{{ $this->form['admission_round_id'] ?? '' }}-{{ $this->form['major_id'] ?? '' }}">
             <option value="">{{ __('Not configured') }}</option>
             @foreach ($programs as $program)
                 <option value="{{ $program->id }}" wire:key="offering-program-{{ $program->id }}">#{{ $program->id }} | {{ $program->admissionMethod->name }} ({{ $program->admissionMethod->code }})</option>
