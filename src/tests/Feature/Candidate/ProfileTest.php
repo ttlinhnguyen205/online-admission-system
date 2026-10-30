@@ -371,7 +371,7 @@ test('school options follow province ids rather than administrative codes and su
         $schools[] = HighSchool::query()->create(['province_id' => $province->id, 'code' => '001', 'name' => $schoolName]);
     }
     $this->actingAs(User::factory()->create());
-    $page = Livewire::test(Profile::class);
+    $page = Livewire::test(Profile::class)->assertSeeHtml('wire:model.live.debounce.300ms="schoolSearch"');
 
     foreach ($schools as $school) {
         $page->set('selectedProvinceId', $school->province_id)

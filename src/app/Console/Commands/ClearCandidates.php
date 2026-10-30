@@ -71,6 +71,7 @@ class ClearCandidates extends Command
 
     /** Reviewed references to history/catalog records that cleanup must preserve. */
     private const PROTECTED_REFERENCES = [
+        'news_articles' => ['created_by' => 'users'],
         'admission_rounds' => ['native_activated_by' => 'users'],
         'admission_quota_versions' => ['approved_by' => 'users'],
         'evaluation_rule_versions' => ['approved_by' => 'users'],

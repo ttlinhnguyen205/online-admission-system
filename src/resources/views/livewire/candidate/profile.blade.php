@@ -146,9 +146,16 @@
 
                 {{-- Trường THPT --}}
                 <div>
+                    <flux:input
+                        wire:model.live.debounce.300ms="schoolSearch"
+                        :label="__('Tìm trường THPT')"
+                        :placeholder="__('Nhập tên hoặc mã trường')"
+                        :disabled="$selectedProvinceId === null"
+                        class="mb-3"
+                    />
                     <flux:select
                         wire:model.live="selectedHighSchoolId"
-                        wire:key="school-select-{{ $selectedProvinceId ?? 'none' }}"
+                        wire:key="high-school-select-{{ $selectedProvinceId ?? 'none' }}"
                         :label="__('Trường THPT')"
                         placeholder="Chọn hoặc tìm trường THPT..."
                         :disabled="$selectedProvinceId === null || ! $hasHighSchools"
@@ -169,6 +176,8 @@
                         <flux:text>
                             Tỉnh/thành này chưa có dữ liệu trường THPT.
                         </flux:text>
+                    @elseif ($selectedProvinceId !== null && $highSchools->isEmpty())
+                        <flux:text>{{ __('Không tìm thấy trường phù hợp.') }}</flux:text>
                     @endif
                 </div>
 

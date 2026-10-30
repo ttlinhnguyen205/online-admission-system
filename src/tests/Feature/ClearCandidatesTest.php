@@ -18,13 +18,14 @@ use App\Models\CandidateScore;
 use App\Models\CandidateTranscript;
 use App\Models\CandidateTranscriptScore;
 use App\Models\HighSchool;
+use App\Models\NewsArticle;
 use App\Models\Province;
 use App\Models\User;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -213,6 +214,25 @@ test('an unknown cascading dependency blocks cleanup before confirmation', funct
         Schema::drop('unreviewed_candidate_records');
     }
 });
+
+test('cleanup preserves staff news and refuses to detach a candidate author', function (bool $candidateAuthor) {
+    Storage::fake(CandidateFiles::DISK);
+    $candidate = User::factory()->create();
+    $staff = User::factory()->create(['role' => UserRole::Staff]);
+    $article = NewsArticle::factory()->published()->create(['created_by' => $candidateAuthor ? $candidate->id : $staff->id]);
+    $before = $article->fresh()->getAttributes();
+    if ($candidateAuthor) {
+        $this->artisan('dev:clear-candidates')
+            ->expectsOutputToContain('news_articles.created_by. Cleanup blocked')
+            ->assertFailed();
+        $this->assertModelExists($candidate);
+    } else {
+        $this->artisan('dev:clear-candidates')->expectsConfirmation(ClearCandidates::CONFIRMATION, 'yes')->assertSuccessful();
+        $this->assertModelMissing($candidate);
+    }
+    expect($article->fresh()->getAttributes())->toBe($before);
+    $this->assertModelExists($staff);
+})->with([true, false]);
 
 test('database failure rolls back all candidate deletions and keeps private files', function () {
     Storage::fake(CandidateFiles::DISK);
