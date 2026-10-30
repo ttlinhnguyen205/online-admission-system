@@ -1,95 +1,144 @@
-# Online Admission System
+# Website tuyển sinh trực tuyến
 
-**Hệ thống tuyển sinh trực tuyến**
+Đồ án liên ngành **Xây dựng Website Tuyển sinh Trực tuyến**
+## Nhóm thực hiện
 
-Ứng dụng quản lý tuyển sinh từ đăng ký tài khoản, tiếp nhận và xác minh hồ sơ đến tính điểm, phân bổ chỉ tiêu, phê duyệt và công bố kết quả. Dự án sử dụng Laravel, Livewire và cơ sở dữ liệu quan hệ; hỗ trợ luồng tuyển sinh legacy và luồng Native có phiên bản quy tắc, snapshot hồ sơ và kết quả độc lập.
+| Thành viên | Mã sinh viên |
+| --- | --- |
+| Nguyễn Thị Thùy Linh | 23010633 |
+| Nguyễn Anh Quân | 23010375 |
+| Trần Thảo Vy | 23010588 |
 
-## Mục tiêu và phạm vi
-- Số hóa hồ sơ, điểm, minh chứng và nguyện vọng của thí sinh.
-- Phân tách trách nhiệm thí sinh, cán bộ tuyển sinh và quản trị viên.
-- Quản lý catalog tuyển sinh, quy tắc chấm điểm và chỉ tiêu có phiên bản.
-- Thực hiện luồng Native nhiều nguyện vọng, nhiều phương thức, kiểm tra điều kiện và công bố có kiểm soát.
-- Cung cấp thống kê, thông báo và báo cáo phục vụ quản lý, nghiệm thu đồ án.
+**Giảng viên hướng dẫn:** ThS. Vũ Quang Dũng.  
+**Đơn vị:** Trường Công nghệ Thông tin – Đại học Phenikaa.  
+
+## Giới thiệu
+
+UNICAMP là hệ thống web hỗ trợ quản lý quy trình tuyển sinh, từ đăng ký tài khoản, khai báo hồ sơ, đăng ký nguyện vọng, kiểm tra và xác minh hồ sơ đến tổ chức xét tuyển và công bố kết quả. Hệ thống phục vụ ba nhóm người dùng: **Thí sinh**, **Nhân viên tuyển sinh** và **Quản trị viên**.
+
+## Chức năng chính
+
+- **Thí sinh:** Đăng ký, đăng nhập; quản lý hồ sơ cá nhân, điểm và minh chứng; đăng ký nguyện vọng; theo dõi tình trạng hồ sơ và tra cứu kết quả.
+- **Nhân viên tuyển sinh:** Tiếp nhận, kiểm tra, xác minh và xử lý hồ sơ; hỗ trợ quản lý hoạt động xét tuyển.
+- **Quản trị viên:** Quản lý tài khoản, phân quyền, đợt tuyển sinh, ngành đào tạo, phương thức và chương trình tuyển sinh; tổ chức xét tuyển và công bố kết quả; quản lý tin tức và theo dõi thống kê.
+- **Chatbot Gemini AI:** Hỗ trợ giải đáp thông tin tuyển sinh. Chatbot không thay thế quy trình xác minh hoặc quyết định kết quả xét tuyển.
+
+### Hai chế độ xét tuyển
+
+| Chế độ | Mô tả |
+| --- | --- |
+| **Legacy** | Quản lý nguyện vọng theo **chương trình tuyển sinh**, sử dụng cấu hình điều kiện, điểm và chỉ tiêu tương ứng. |
+| **Native** | Quản lý nguyện vọng theo **ngành học** và **phương thức xét tuyển** được hỗ trợ, áp dụng quy tắc xét tuyển, chỉ tiêu và thứ tự ưu tiên nguyện vọng. |
+
+Hai chế độ sử dụng các luồng nghiệp vụ riêng và được áp dụng theo cấu hình đợt tuyển sinh.
+
+## Công nghệ sử dụng
+
+- **Backend:** PHP, Laravel, Laravel Fortify.
+- **Frontend:** Blade, Livewire.
+- **Cơ sở dữ liệu:** MySQL.
+- **Tích hợp:** Gemini API cho chatbot tư vấn thông tin.
+- **Công cụ phát triển:** Composer, Laravel Artisan, Git/GitHub, XAMPP.
+- **Kiểm thử:** Laravel Test; cơ sở dữ liệu SQLite `:memory:` trong môi trường kiểm thử.
+
+## Hướng dẫn cài đặt và chạy cục bộ
+
+### 1. Chuẩn bị
+
+Cài đặt PHP, Composer, MySQL, Node.js/npm (nếu dự án sử dụng công cụ biên dịch tài nguyên frontend) và Git. Có thể dùng XAMPP để chạy MySQL trên Windows.
+
+### 2. Lấy mã nguồn
+
+```bash
+git clone https://github.com/ttlinhnguyen205/online-admission-system.git
+cd online-admission-system
+```
+
+**Lưu ý:** Trong quá trình phát triển, mã nguồn Laravel có thể được đặt trong thư mục `src/`. Hãy chuyển vào thư mục **chứa tệp `artisan` và `composer.json`** trước khi chạy các lệnh bên dưới.
+
+### 3. Cài đặt thư viện
+
+```bash
+composer install
+```
+
+Nếu mã nguồn có `package.json`, cài đặt các thư viện frontend:
+
+```bash
+npm install
+```
+
+### 4. Thiết lập môi trường
+
+Sao chép tệp cấu hình mẫu và tạo khóa ứng dụng:
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Trên Windows PowerShell, có thể dùng `Copy-Item .env.example .env` thay cho `cp`.
+
+Tạo cơ sở dữ liệu MySQL, ví dụ `online_admission`, rồi cập nhật các biến tương ứng trong `.env`:
+
+```dotenv
+APP_ENV=local
+APP_DEBUG=true
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=online_admission
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Đặt mật khẩu MySQL đúng với máy của bạn; không đưa mật khẩu hoặc khóa API thật lên GitHub. Nếu sử dụng chatbot, cấu hình khóa Gemini theo tên biến được mã nguồn dự án yêu cầu.
+
+### 5. Khởi tạo cơ sở dữ liệu
+
+```bash
+php artisan migrate
+```
+
+Nếu dự án cung cấp seeders phù hợp với môi trường thử nghiệm, có thể chạy:
+
+```bash
+php artisan db:seed
+```
+
+**Chú ý:** Seeder có thể tạo hoặc thay đổi dữ liệu. Chỉ chạy trên cơ sở dữ liệu thử nghiệm sau khi kiểm tra nội dung seeder.
+
+### 6. Chạy ứng dụng
+
+```bash
+php artisan serve
+```
+
+Mặc định có thể truy cập tại `http://127.0.0.1:8000`.
+
+Nếu dự án sử dụng Vite và có cấu hình frontend tương ứng, mở terminal khác:
+
+```bash
+npm run dev
+```
+
+## Kiểm thử
+
+Tại thư mục chứa tệp `artisan`, chạy:
+
+```bash
+php artisan test
+```
+
+Các bài kiểm thử tự động được thiết kế để kiểm tra các nghiệp vụ của hệ thống. Việc chạy kiểm thử và kết quả thực tế phụ thuộc phiên bản mã nguồn, cấu hình và dữ liệu kiểm thử đang sử dụng.
+
+## Tài liệu và thiết kế
+
+- **Mã nguồn:** https://github.com/ttlinhnguyen205/online-admission-system
+- **Thiết kế Figma:** https://www.figma.com/design/899TWwMF0XzUuW2ZOcbcpj/%C4%90ALN
 
 
-## Vai trò và quyền hạn
+## Phạm vi
 
-| Vai trò | Quyền hạn chính đã triển khai |
-|---|---|
-| Candidate | Đăng ký tài khoản; quản lý hồ sơ của mình, điểm và minh chứng; lập/sắp xếp nguyện vọng, nộp hồ sơ; theo dõi thông báo và trạng thái; xem kết quả của mình khi đã công bố. |
-| Staff | Xem và kiểm tra hồ sơ, lịch sử xử lý; xác minh nguồn điểm/minh chứng, yêu cầu bổ sung hoặc xử lý hồ sơ không hợp lệ; chạy chấm điểm Native theo quyền; xem thống kê và xuất báo cáo trong phạm vi được phép. |
-| Admin | Có quyền nghiệp vụ kiểm tra hồ sơ; quản lý đợt, ngành, phương thức, chương trình, offering; phê duyệt rules/chỉ tiêu/chính sách phối hợp; điều khiển đăng ký Native, phân bổ, phê duyệt và công bố kết quả. |
+Dự án được xây dựng và kiểm thử trong môi trường phát triển cục bộ. Khả năng triển khai ở quy mô lớn, vận hành thực tế và hiệu năng khi có nhiều người dùng đồng thời cần được đánh giá bổ sung.
 
-Candidate không được đọc hồ sơ người khác hoặc kết quả chưa công bố. Staff không có quyền thay Admin thực hiện phân bổ Native, phê duyệt hay công bố kết quả. Các quyền còn phụ thuộc trạng thái tài khoản, xác minh email và trạng thái dữ liệu.
-
-## 5. Chức năng đã triển khai
-
-### Hồ sơ và tiếp nhận
-
-- Hồ sơ cá nhân, thông tin tuyển sinh, điểm, tài liệu và minh chứng; nguồn THPT/học bạ được chuẩn hóa riêng.
-- Quản lý hồ sơ theo đợt, trạng thái xử lý và lịch sử kiểm tra.
-- Luồng legacy được giữ riêng; luồng Native đăng ký theo ngành, một nguyện vọng có nhiều method bindings.
-- Thêm/xóa/sắp xếp nguyện vọng khi còn được phép chỉnh sửa; submit tạo snapshot có phiên bản, sealed và hash.
-- Native có bốn chế độ theo đợt: `legacy`, `native_draft`, `native_open`, `native_closed`; độc lập với lifecycle và thời gian nhận hồ sơ.
-
-### Cấu hình và chấm điểm Native
-
-- Draft → approve → retire evaluation rule; approved payload bất biến, chỉnh sửa bằng phiên bản mới và bind rõ ràng vào program.
-- Readiness theo offering: accepted methods, rule hợp lệ, rule thiếu và template unsupported. READY không đồng nghĩa sẵn sàng phân bổ hoặc công bố.
-- `THPT_SCORE v1`: tổng ba môn hệ số 1, thang 30; kiểm tra năm thi, ngưỡng từng môn và tổng.
-- `TRANSCRIPT_SCORE v1`: tổng ba môn hệ số 1 của lớp 10/11/12 được rule chỉ định; kiểm tra năm tốt nghiệp của nguồn, ngưỡng từng môn và tổng.
-- Chỉ dùng nguồn đã xác minh đúng phạm vi rule đã pin. Kết quả gồm `eligible`, `ineligible`, `pending_data`, `unsupported`, `needs_resolution`, kèm điểm, provenance và phiên bản thuật toán.
-- Nếu có nhiều nguồn hợp lệ, trả về `needs_resolution`; không tự lấy điểm cao nhất hoặc lần thi mới nhất. Scoring được chạy bằng thao tác rõ ràng, không tự chạy lúc submit.
-
-### Vận hành và báo cáo
-
-- Quản lý chỉ tiêu Q/q có phiên bản và phê duyệt; Native allocation có policy, kiểm tra bất biến và chứng nhận lại kết quả.
-- Kết quả Native có draft, kiểm tra, phê duyệt, từ chối và công bố; dữ liệu đầu vào thay đổi có thể khiến phiên bản stale và bị chặn.
-- Candidate chỉ tra cứu phiên bản đã công bố; thông báo kết quả được gửi qua hệ thống notifications.
-- Dashboard/thống kê hồ sơ, nguyện vọng, chỉ tiêu và kết quả; xuất XLSX/PDF, cùng báo cáo scoring Native dạng CSV. Giới hạn xuất hiện tại: XLSX 100.000 dòng, PDF 1.000 dòng.
-- Tư vấn tuyển sinh có tích hợp Gemini tùy chọn, mặc định tắt; cần cấu hình provider/API key riêng và không thay thế quyết định xét tuyển.
-
-## Quy trình end-to-end
-
-| Bước | Người thực hiện | Xử lý chính |
-|---|---|---|
-| 1. Chuẩn bị | Admin | Tạo catalog, approved rules, bindings, chỉ tiêu và policy phối hợp. Policy allocation phải được phê duyệt **trước thời điểm bắt đầu đợt và trước khi có hồ sơ**. |
-| 2. Mở đăng ký | Admin | Kiểm tra readiness/conflicts; chuẩn bị và mở Native rõ ràng. Global feature flag phải cho phép và thời gian tiếp nhận phải hợp lệ. |
-| 3. Đăng ký | Candidate | Đăng ký/xác minh email, hoàn thiện hồ sơ, nhập nguồn điểm và nộp minh chứng. |
-| 4. Nộp hồ sơ | Candidate | Chọn ngành và thứ tự nguyện vọng; submit tạo snapshot sealed, entries và bindings pin rule version. |
-| 5. Xác minh | Staff/Admin | Kiểm tra hồ sơ và nguồn điểm; xác minh đúng nguồn/năm/lớp, yêu cầu xử lý thiếu sót khi cần. |
-| 6. Chấm điểm | Staff/Admin | Chạy tính điểm Native cho từng binding; xử lý pending/ambiguous/unsupported trước khi phân bổ. |
-| 7. Xét tuyển | Admin | Đóng tiếp nhận theo điều kiện vận hành; kiểm tra policy, Q/q, nguồn và fingerprint; chạy allocation để tạo kết quả draft. |
-| 8. Phê duyệt | Admin | Kiểm tra chứng nhận thuật toán, tính toàn vẹn, stale và các bất biến; phê duyệt đúng phiên bản. |
-| 9. Công bố | Admin | Công bố bằng thao tác riêng sau phê duyệt; không tự công bố khi chấm điểm hoặc phân bổ. |
-| 10. Tra cứu | Candidate | Xem kết quả đã công bố và thông báo của chính mình. |
-
-Trang **Chương trình tuyển sinh** tích hợp quản lý rules; trang quản lý đợt có đăng ký Native; chi tiết hồ sơ có scoring; trang **Kết quả** tích hợp policy, allocation và phiên bản kết quả Native. Trang engine legacy không được dùng để xử lý đợt Native.
-
-## Nguyên tắc Native Admission Engine
-
-Thuật toán hiện tại là **Deferred Acceptance phía thí sinh**, định danh `student-da-matroid-v1`, trong phạm vi mô hình và chính sách được hỗ trợ.
-
-- Thí sinh đề xuất theo thứ tự nguyện vọng ngành/offering của mình. NV1 không tạo ưu tiên tuyển sinh cao hơn NV2 đối với một thí sinh khác.
-- Mỗi offering có thứ tự ưu tiên thí sinh cố định từ các thứ hạng hợp lệ theo phương thức. Thứ tự chung phải bảo toàn các thứ hạng đó; xung đột tạo chu trình thì BLOCKED.
-- Không so sánh trực tiếp điểm khác thang đo. `method_priority` phải do Admin cấu hình và phê duyệt; chỉ hoàn thiện ưu tiên khi chưa có quan hệ thứ hạng và xác định binding cuối cùng, không ghi đè thứ hạng hợp lệ.
-- Hàm chọn greedy theo thứ tự chung, kiểm tra khả năng matching bindings trong Q/q; được đổi binding của người đang giữ để tìm phép gán hợp lệ.
-- **Q** là trần tổng của offering; **q_i** là trần cứng từng phương thức/program trong phạm vi đó. Không chuyển chỉ tiêu dư, không vượt Q/q và không bắt buộc dùng hết chỉ tiêu.
-- Mỗi hồ sơ được phân bổ tối đa một nguyện vọng trong đợt. Không tối đa hóa số người trúng tuyển bằng cách đẩy thí sinh xếp hạng cao xuống nguyện vọng thấp hơn.
-- Policy hiện tại chỉ hỗ trợ `ties=block`: đồng điểm chưa có cách xử lý được hỗ trợ thì BLOCKED, không dùng ID, timestamp hay thứ tự database làm tie-break.
-- Rule versions khác nhau chỉ xếp hạng chung khi thuộc nhóm tương đương đã phê duyệt. V1 chỉ chấp nhận cùng phương thức, template, payload và ranking contract; không hỗ trợ bảng quy đổi tùy ý.
-- Kết quả có tính deterministic/idempotent theo đầu vào và policy; trước phê duyệt/công bố phải kiểm tra lại dữ liệu và chứng nhận allocation.
-
-Unit/property tests kiểm tra substitutability, IRC, LAD, ổn định và các bất biến trên những thị trường kiểm thử, bao gồm nhiều bindings/nguyện vọng, Q/q và xung đột thứ hạng. Đây không phải khẳng định tính đúng đắn cho mọi chính sách tuyển sinh ngoài mô hình hiện tại.
-
-## . Giới hạn nghiệp vụ và phạm vi mô phỏng
-
-- Native chỉ hỗ trợ chấm điểm hai template THPT/học bạ nêu trên; APTITUDE_SCORE và CERTIFICATE_CONDITION còn unsupported. Có màn hình nhập dữ liệu/chứng chỉ không đồng nghĩa đã có công thức xét tuyển Native cho chúng.
-- Không tự đổi DGNL legacy thành HSA/V-ACT/TSA, quy đổi chứng chỉ, cộng điểm ưu tiên hoặc áp dụng công thức học bạ legacy tiếng Anh hệ số 2 cho template Native hệ số 1.
-- Không có tie-break Native tùy ý: policy hiện tại chặn đồng điểm. Không hỗ trợ tương đương điểm giữa các payload/thang đo khác nhau.
-- Approved policy không được phê duyệt hồi tố cho đợt đã bắt đầu hoặc có hồ sơ. Demo đã nộp thiếu policy/rule phù hợp không được sửa snapshot để vượt điều kiện; cần một đợt/hồ sơ thử nghiệm mới đúng quy trình.
-- Readiness đăng ký, nguồn điểm hợp lệ, chỉ tiêu approved và điều kiện công bố là những kiểm tra khác nhau. Một offering READY không bảo đảm một hồ sơ đủ điểm hoặc một đợt có thể allocation.
-- Native và legacy độc lập; engine legacy chặn xử lý đợt Native. Không trộn dữ liệu hoặc dùng ID giả để vượt ràng buộc.
-- Candidate xem kết quả Native đã công bố; không mặc định luồng xác nhận nhập học legacy là chức năng xác nhận nhập học Native đã hoàn thiện.
-- Không tự allocation/publication khi submit hay scoring. Quyết định xét tuyển phải qua các bước kiểm tra, phê duyệt và công bố có quyền phù hợp.
-- Tài khoản, ngưỡng, học phí, ngày và catalog có nhãn DEMO chỉ phục vụ đồ án. Triển khai thực tế cần chính sách hợp lệ, bảo vệ dữ liệu cá nhân, vận hành backup và nghiệm thu riêng cho môi trường triển khai.
