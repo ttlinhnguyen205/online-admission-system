@@ -1,6 +1,4 @@
 # Website tuyển sinh trực tuyến
-
-Đồ án liên ngành **Xây dựng Website Tuyển sinh Trực tuyến**
 ## Nhóm thực hiện
 
 | Thành viên | Mã sinh viên |
