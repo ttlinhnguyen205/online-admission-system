@@ -8,7 +8,7 @@
 | Trần Thảo Vy | 23010588 |
 
 **Giảng viên hướng dẫn:** ThS. Vũ Quang Dũng.  
-**Đơn vị:** Trường Công nghệ Thông tin – Đại học Phenikaa.  
+**Thiết kế Figma:** https://www.figma.com/design/899TWwMF0XzUuW2ZOcbcpj/%C4%90ALN
 
 ## Giới thiệu
 
@@ -129,12 +129,6 @@ php artisan test
 ```
 
 Các bài kiểm thử tự động được thiết kế để kiểm tra các nghiệp vụ của hệ thống. Việc chạy kiểm thử và kết quả thực tế phụ thuộc phiên bản mã nguồn, cấu hình và dữ liệu kiểm thử đang sử dụng.
-
-## Tài liệu và thiết kế
-
-- **Mã nguồn:** https://github.com/ttlinhnguyen205/online-admission-system
-- **Thiết kế Figma:** https://www.figma.com/design/899TWwMF0XzUuW2ZOcbcpj/%C4%90ALN
-
 
 ## Phạm vi
 
